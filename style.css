@@ -63,10 +63,20 @@ body {
     align-content: start;
 }
 
-@keyframes neonGlow {
-    0% { box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.4), inset 0 0 0px rgba(59, 130, 246, 0); }
-    50% { box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(59, 130, 246, 0.1); }
-    100% { box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.4), inset 0 0 0px rgba(59, 130, 246, 0); }
+@keyframes lpPulseWave {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.lp-fill-animated {
+    background-size: 200% 100%;
+    animation: lpPulseWave 2.5s linear infinite;
+}
+
+@keyframes cardRadarWave {
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.15; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.35; }
+    100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.15; }
 }
 
 .account-card {
@@ -82,21 +92,11 @@ body {
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: neonGlow 4s infinite ease-in-out;
-}
-
-.account-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; width: 4px; height: 100%;
-    background: #3b82f6;
-    box-shadow: 0 0 12px #3b82f6;
 }
 
 .account-card:hover {
-    border-color: #60a5fa;
     transform: translateY(-4px);
-    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.8), 0 0 25px rgba(59, 130, 246, 0.4);
+    filter: brightness(1.05);
 }
 
 .name {
@@ -112,16 +112,8 @@ body {
     font-family: 'Cinzel', sans-serif;
 }
 
-.account-card img, .rank-icon {
-    width: 36px;
-    height: 36px;
-    object-fit: contain;
-    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.2));
-}
-
 .rank {
     margin: 0;
-    color: #f4c87b;
     font-weight: bold;
     font-family: 'Cinzel', sans-serif;
 }
@@ -222,16 +214,6 @@ body {
     border-color: #ef4444;
 }
 
-.region-tag {
-    font-size: 10px;
-    color: #38bdf8;
-    background: rgba(56, 189, 248, 0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: bold;
-    font-family: 'Cinzel', sans-serif;
-}
-
 .note-input {
     background: #07080a;
     border: 1px solid #1f2233;
@@ -275,25 +257,3 @@ body {
     border-color: #3b82f6;
     box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
 }
-
-.dist-bar {
-    height: 6px;
-    border-radius: 3px;
-    transition: all 0.3s ease;
-}
-
-.dist-bar.inactive { 
-    opacity: 0.15; 
-    background: #64748b; 
-}
-
-.dist-bar.challenger { background: #f43f5e; box-shadow: 0 0 10px #f43f5e; opacity: 1; }
-.dist-bar.grandmaster { background: #ef4444; box-shadow: 0 0 10px #ef4444; opacity: 1; }
-.dist-bar.master { background: #a855f7; box-shadow: 0 0 10px #a855f7; opacity: 1; }
-.dist-bar.diamond { background: #38bdf8; box-shadow: 0 0 10px #38bdf8; opacity: 1; }
-.dist-bar.emerald { background: #10b981; box-shadow: 0 0 10px #10b981; opacity: 1; }
-.dist-bar.platinum { background: #0ea5e9; box-shadow: 0 0 10px #0ea5e9; opacity: 1; }
-.dist-bar.gold { background: #eab308; box-shadow: 0 0 10px #eab308; opacity: 1; }
-.dist-bar.silver { background: #94a3b8; box-shadow: 0 0 10px #94a3b8; opacity: 1; }
-.dist-bar.bronze { background: #b45309; box-shadow: 0 0 10px #b45309; opacity: 1; }
-.dist-bar.iron { background: #475569; box-shadow: 0 0 8px #475569; opacity: 1; }

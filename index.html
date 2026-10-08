@@ -21,23 +21,6 @@
             gap: 20px;
             align-content: start;
         }
-        .account-card {
-            background: linear-gradient(145deg, #14151c, #101117);
-            border: 1px solid #232430;
-            border-radius: 12px;
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.4), 0 0 10px rgba(59, 130, 246, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .account-card:hover {
-            border-color: #3b82f6;
-            transform: translateY(-3px);
-            box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.15);
-        }
         .sidebar-btn {
             width: 100%;
             padding: 9px 12px;
@@ -76,12 +59,21 @@
             border-color: #3b82f6;
         }
 
-        @keyframes neonPulse {
-            0% { filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.2)); }
-            50% { filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 14px rgba(59, 130, 246, 0.4)); }
-            100% { filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.2)); }
+        /* Animación de pulso deslizante de izquierda a derecha para la barra de LP */
+        @keyframes lpPulseWave {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
-        .neon-icon { animation: neonPulse 3s infinite ease-in-out; }
+        .lp-fill-animated {
+            background-size: 200% 100%;
+            animation: lpPulseWave 2.5s linear infinite;
+        }
+
+        @keyframes cardRadarWave {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.15; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.35; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.15; }
+        }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -303,6 +295,26 @@
             return translations[currentLang][key] || translations['en'][key] || key;
         }
 
+        const rankThemeConfig = {
+            'CHALLENGER': { primary: '#f4c430', neon: '#ffd700', glow: 'rgba(255, 215, 0, 0.4)', cardBorder: '#f4c430' },
+            'GRANDMASTER': { primary: '#ef4444', neon: '#ff4646', glow: 'rgba(255, 70, 70, 0.4)', cardBorder: '#ef4444' },
+            'MASTER': { primary: '#a855f7', neon: '#d043ff', glow: 'rgba(208, 67, 255, 0.4)', cardBorder: '#a855f7' },
+            'DIAMOND': { primary: '#38bdf8', neon: '#00d2ff', glow: 'rgba(0, 210, 255, 0.4)', cardBorder: '#38bdf8' },
+            'EMERALD': { primary: '#10b981', neon: '#00ff7f', glow: 'rgba(0, 255, 127, 0.4)', cardBorder: '#10b981' },
+            'PLATINUM': { primary: '#0ea5e9', neon: '#38bdf8', glow: 'rgba(14, 165, 233, 0.4)', cardBorder: '#0ea5e9' },
+            'GOLD': { primary: '#eab308', neon: '#ffd700', glow: 'rgba(234, 179, 8, 0.4)', cardBorder: '#eab308' },
+            'SILVER': { primary: '#94a3b8', neon: '#cbd5e1', glow: 'rgba(148, 163, 184, 0.4)', cardBorder: '#94a3b8' },
+            'BRONZE': { primary: '#b45309', neon: '#d97706', glow: 'rgba(180, 83, 9, 0.4)', cardBorder: '#b45309' },
+            'IRON': { primary: '#475569', neon: '#64748b', glow: 'rgba(71, 85, 105, 0.4)', cardBorder: '#475569' },
+            'UNRANKED': { primary: '#334155', neon: '#475569', glow: 'rgba(51, 65, 85, 0.2)', cardBorder: '#232430' }
+        };
+
+        function getRankTheme(tier) {
+            if (!tier) return rankThemeConfig['UNRANKED'];
+            const clean = tier.toUpperCase().split(' ')[0].trim();
+            return rankThemeConfig[clean] || rankThemeConfig['UNRANKED'];
+        }
+
         function applyLanguage() {
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
@@ -390,20 +402,6 @@
             'Unranked': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-iron.png'
         };
 
-        const tierColors = {
-            'Challenger': '#f4c430',
-            'Grandmaster': '#cd3737',
-            'Master': '#9b59b6',
-            'Diamond': '#576574',
-            'Emerald': '#2ecc71',
-            'Platinum': '#16a085',
-            'Gold': '#f39c12',
-            'Silver': '#95a5a6',
-            'Bronze': '#d35400',
-            'Iron': '#3e4452',
-            'Unranked': '#4b5563'
-        };
-
         const rankWeights = { 'Challenger': 10, 'Grandmaster': 9, 'Master': 8, 'Diamond': 7, 'Emerald': 6, 'Platinum': 5, 'Gold': 4, 'Silver': 3, 'Bronze': 2, 'Iron': 1, 'Unranked': 0 };
 
         function showNeonNotification(message) {
@@ -478,7 +476,7 @@
                 if (count === 0 && t === 'Unranked') return;
 
                 const iconUrl = tierIcons[t] || tierIcons['Unranked'];
-                const barColor = tierColors[t] || '#3b82f6';
+                const theme = getRankTheme(t);
                 const percent = allAccounts.length > 0 ? (count / allAccounts.length) * 100 : 0;
                 const iconStyle = 'width: 28px; height: 28px; object-fit: contain; transform: scale(3.0); transform-origin: center;';
 
@@ -490,7 +488,7 @@
                         <span style="color: #94a3b8; font-family: 'Cinzel', sans-serif; font-size: 10px;">${t}</span>
                     </div>
                     <div style="flex-grow: 1; margin: 0 8px; background: #161821; height: 4px; border-radius: 2px; overflow: hidden;">
-                        <div style="background: ${barColor}; width: ${percent}%; height: 100%;"></div>
+                        <div style="background: ${theme.primary}; box-shadow: 0 0 8px ${theme.glow}; width: ${percent}%; height: 100%;"></div>
                     </div>
                     <span style="color: #fff; font-weight: bold; width: 15px; text-align: right;">${count}</span>
                 `;
@@ -502,41 +500,60 @@
             const newCard = document.createElement('div');
             newCard.className = 'account-card';
             
-            const soloq = account.soloq || { tier: 'Unranked', lp: 0 };
+            const soloq = account.soloq || { tier: 'Unranked', lp: 0, minLp: 0, maxLp: 100 };
             const flex = account.flex || { tier: 'Unranked', lp: 0 };
             const region = (account.region || 'euw').toUpperCase();
             const mainTierBase = soloq.tier.split(' ')[0];
             const iconUrl = tierIcons[mainTierBase] || tierIcons['Unranked'];
-            const lpPercent = Math.min(Math.max((soloq.lp / 100) * 100, 0), 100);
+            
+            // Cálculo del porcentaje de LP adaptable a rangos normales (0-100) o Apex tiers
+            let lpPercent = 0;
+            const apexTiers = ['MASTER', 'GRANDMASTER', 'CHALLENGER'];
+            if (apexTiers.includes(mainTierBase.toUpperCase())) {
+                const min = soloq.minLp !== undefined ? soloq.minLp : 0;
+                const max = soloq.maxLp !== undefined && soloq.maxLp > min ? soloq.maxLp : (min + 500);
+                lpPercent = Math.min(Math.max(((soloq.lp - min) / (max - min)) * 100, 0), 100);
+            } else {
+                lpPercent = Math.min(Math.max((soloq.lp / 100) * 100, 0), 100);
+            }
 
-            newCard.innerHTML = `
-                <div style="display: flex; gap: 12px; align-items: center;">
-                    <img src="${iconUrl}" alt="${soloq.tier}" class="neon-icon" style="width: 52px; height: 52px; min-width: 52px; min-height: 52px; object-fit: contain; transform: scale(3.2); transform-origin: center;">
+            const rankTheme = getRankTheme(soloq.tier);
+
+            newCard.style.borderColor = rankTheme.cardBorder;
+            newCard.style.boxShadow = `0 8px 16px -4px rgba(0, 0, 0, 0.4), 0 0 16px ${rankTheme.glow}`;
+
+            const radarWaveHtml = `
+                <div style="position: absolute; top: 30%; left: 50%; width: 220px; height: 220px; background: radial-gradient(circle, ${rankTheme.glow} 0%, transparent 70%); border-radius: 50%; pointer-events: none; animation: cardRadarWave 6s ease-in-out infinite; z-index: 0;"></div>
+            `;
+
+            newCard.innerHTML = radarWaveHtml + `
+                <div style="position: relative; z-index: 1; display: flex; gap: 12px; align-items: center;">
+                    <img src="${iconUrl}" alt="${soloq.tier}" style="width: 52px; height: 52px; min-width: 52px; min-height: 52px; object-fit: contain; transform: scale(3.5); transform-origin: center; filter: drop-shadow(0 0 8px ${rankTheme.glow});">
                     <div style="flex-grow: 1; overflow: hidden;">
                         <div style="display: flex; justify-content: space-between; align-items: baseline;">
                             <h3 class="name" style="margin: 0; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Cinzel', sans-serif;" title="${account.riotId}">${account.riotId}</h3>
-                            <span style="font-size: 10px; color: #38bdf8; background: rgba(56,189,248,0.1); padding: 1px 5px; border-radius: 4px; font-weight: bold; font-family: 'Cinzel', sans-serif;">${region}</span>
+                            <span style="font-size: 10px; color: ${rankTheme.primary}; background: ${rankTheme.glow}; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-family: 'Cinzel', sans-serif; border: 1px solid ${rankTheme.cardBorder};">${region}</span>
                         </div>
                         <div style="font-size: 11px; color: #6b6c75; margin-top: 2px;">${t('level')}: <strong style="color: #94a3b8;">${account.level || '30'}</strong></div>
                     </div>
                 </div>
 
-                <div class="ranks-container" style="margin-top: 12px;">
+                <div class="ranks-container" style="position: relative; z-index: 1; margin-top: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
-                        <span style="font-size: 12px; font-weight: bold; color: #e2e8f0; font-family: 'Cinzel', sans-serif;">Solo/Duo: ${soloq.tier}</span>
-                        <span style="font-size: 11px; color: #38bdf8; font-weight: bold; font-family: 'Cinzel', sans-serif;">${soloq.lp} LP</span>
+                        <span style="font-size: 12px; font-weight: bold; color: #e2e8f0; font-family: 'Cinzel', sans-serif;">Solo/Duo: <span style="color: ${rankTheme.primary};">${soloq.tier}</span></span>
+                        <span style="font-size: 11px; color: ${rankTheme.primary}; font-weight: bold; font-family: 'Cinzel', sans-serif;">${soloq.lp} LP</span>
                     </div>
-                    <div style="background: #1e2029; height: 4px; border-radius: 2px; overflow: hidden; margin-bottom: 8px;">
-                        <div style="background: linear-gradient(90deg, #3b82f6, #60a5fa); width: ${lpPercent}%; height: 100%;"></div>
+                    <div style="background: #1e2029; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px; box-shadow: inset 0 0 4px rgba(0,0,0,0.6);">
+                        <div class="lp-fill-animated" style="width: ${lpPercent}%; height: 100%; background: linear-gradient(90deg, ${rankTheme.primary}, ${rankTheme.neon}, #ffffff, ${rankTheme.neon}, ${rankTheme.primary}); box-shadow: 0 0 10px ${rankTheme.glow};"></div>
                     </div>
                     <div style="font-size: 11px; color: #6b6c75;">${t('flex')}: <strong style="color: #94a3b8;">${flex.tier} (${flex.lp} LP)</strong></div>
                 </div>
 
-                <div style="margin-top: 10px;">
+                <div style="position: relative; z-index: 1; margin-top: 10px;">
                     <input type="text" class="note-input" placeholder="${t('addNote')}" value="${account.note || ''}" data-riotid="${account.riotId}">
                 </div>
 
-                <div class="card-actions" style="margin-top: 12px; display: flex; gap: 8px; border-top: 1px solid #1f2029; padding-top: 10px;">
+                <div class="card-actions" style="position: relative; z-index: 1; margin-top: 12px; display: flex; gap: 8px; border-top: 1px solid #1f2029; padding-top: 10px;">
                     <button class="btn-login" style="flex-grow: 1; padding: 7px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; font-family: 'Cinzel', sans-serif;">${t('loginBtn')}</button>
                     <button class="btn-delete" title="${t('deleteTitle')}" style="background: #161821; border: 1px solid #232430; padding: 7px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">🗑️</button>
                 </div>
@@ -651,101 +668,87 @@
                         (async () => {
                             for (let i = 0; i < 30; i++) {
                                 const bodyText = document.body.innerText;
-                                if (bodyText.includes("Level") || bodyText.includes("Nivel") || bodyText.includes("LP") || bodyText.includes("Unranked") || bodyText.includes("Silver") || bodyText.includes("Gold")) {
+                                if (bodyText.includes("Level") || bodyText.includes("Nivel") || bodyText.includes("LP") || bodyText.includes("Unranked") || bodyText.includes("Silver") || bodyText.includes("Gold") || bodyText.includes("Platinum")) {
                                     break;
                                 }
                                 await new Promise(r => setTimeout(r, 500));
                             }
                             await new Promise(r => setTimeout(r, 1500));
 
-                            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-                            let textNodes = [];
-                            let node;
-                            while(node = walker.nextNode()) {
-                                const val = node.nodeValue.trim();
-                                if (val.length > 0) textNodes.push(val);
-                            }
-
+                            // Extracción de Nivel de invocador de forma segura
                             let level = "30";
-                            for (let i = 0; i < textNodes.length; i++) {
-                                if (textNodes[i].toLowerCase() === "level" || textNodes[i].toLowerCase() === "lvl" || textNodes[i].toLowerCase() === "nivel") {
-                                    if (textNodes[i+1] && /^\\d+$/.test(textNodes[i+1])) {
-                                        level = textNodes[i+1];
-                                        break;
-                                    }
-                                }
-                            }
-                            if (level === "30") {
-                                for (let t of textNodes) {
-                                    if (/^\\d{2,3}$/.test(t) && parseInt(t) >= 30 && parseInt(t) <= 1000) {
-                                        level = t;
-                                        break;
-                                    }
-                                }
+                            const levelEls = Array.from(document.querySelectorAll('*')).find(el => el.innerText && (el.innerText.toLowerCase().includes("level") || el.innerText.toLowerCase().includes("nivel")) && el.innerText.length < 20);
+                            if (levelEls) {
+                                const matchNum = levelEls.innerText.match(/\\d+/);
+                                if (matchNum) level = matchNum[0];
                             }
 
-                            const validTiers = ["Challenger", "Grandmaster", "Master", "Diamond", "Emerald", "Platinum", "Gold", "Silver", "Bronze", "Iron"];
+                            // Función robusta para extraer rangos y LP por bloques de cola (Solo/Duo o Flex)
+                            function parseQueue(queueKeyword) {
+                                let tier = "Unranked";
+                                let div = "";
+                                let lp = 0;
+                                let minLp = 0;
+                                let maxLp = 100;
 
-                            function getQueueInfo(queueKeywords) {
-                                let tier = "Unranked", div = "", lp = 0;
-                                let qIndex = -1;
-                                
-                                for (let idx = 0; idx < textNodes.length; idx++) {
-                                    const tLower = textNodes[idx].toLowerCase();
-                                    if (queueKeywords.some(kw => tLower.includes(kw))) {
-                                        qIndex = idx;
+                                const elements = Array.from(document.querySelectorAll('div, section, span, p'));
+                                const queueEl = elements.find(el => el.children.length === 0 && el.innerText && el.innerText.toLowerCase().includes(queueKeyword));
+
+                                if (!queueEl) return { tier: "Unranked", lp: 0, minLp: 0, maxLp: 100 };
+
+                                // Subimos al contenedor padre que agrupa la tarjeta de esa cola específica
+                                let container = queueEl.parentElement;
+                                for (let step = 0; step < 4; step++) {
+                                    if (container && container.parentElement) container = container.parentElement;
+                                }
+
+                                const containerText = container ? container.innerText : document.body.innerText;
+
+                                const validTiers = ["Challenger", "Grandmaster", "Master", "Diamond", "Emerald", "Platinum", "Gold", "Silver", "Bronze", "Iron"];
+                                for (let vt of validTiers) {
+                                    if (new RegExp('\\\\b' + vt + '\\\\b', 'i').test(containerText)) {
+                                        tier = vt;
                                         break;
                                     }
                                 }
 
-                                if (qIndex === -1) return { tier: "Unranked", lp: 0 };
-
-                                for (let i = qIndex; i < Math.min(qIndex + 35, textNodes.length); i++) {
-                                    const txt = textNodes[i];
-                                    
-                                    for (let vt of validTiers) {
-                                        if (txt.toLowerCase() === vt.toLowerCase() || txt.toLowerCase().startsWith(vt.toLowerCase() + " ")) {
-                                            tier = vt;
-                                            const subParts = txt.split(/\\s+/);
-                                            if (subParts[1] && /^[1-4]$/.test(subParts[1])) {
-                                                div = subParts[1];
-                                            }
-                                        }
-                                    }
-
-                                    if (tier !== "Unranked" && !div && /^[1-4]$/.test(txt)) {
-                                        div = txt;
-                                    }
-
-                                    if (txt.toUpperCase().includes("LP") || txt === "LP") {
-                                        const match = txt.match(/(\\d+)\\s*LP/i);
-                                        if (match) {
-                                            const parsedLp = parseInt(match[1]);
-                                            if (parsedLp >= 0 && parsedLp <= 100) {
-                                                lp = parsedLp;
-                                                break;
-                                            }
-                                        } else if (i > 0 && /^\\d+$/.test(textNodes[i-1])) {
-                                            const candidateLp = parseInt(textNodes[i-1]);
-                                            if (candidateLp >= 0 && candidateLp <= 100) {
-                                                lp = candidateLp;
-                                                break;
-                                            }
-                                        }
+                                // Buscar división (1 a 4) si aplica
+                                if (tier !== "Unranked" && !["Challenger", "Grandmaster", "Master"].includes(tier)) {
+                                    const divMatch = containerText.match(new RegExp(tier + '\\s*([1-4])', 'i'));
+                                    if (divMatch) {
+                                        div = divMatch[1];
+                                    } else {
+                                        const numMatch = containerText.match(/\\b([1-4])\\b/);
+                                        if (numMatch) div = numMatch[1];
                                     }
                                 }
 
-                                const finalTier = ["Master", "Grandmaster", "Challenger"].includes(tier) 
+                                // Buscar LP asociados a esta cola
+                                const lpMatch = containerText.match(/(\\d+)\\s*LP/i);
+                                if (lpMatch) {
+                                    lp = parseInt(lpMatch[1]);
+                                }
+
+                                const apexTiers = ["Master", "Grandmaster", "Challenger"];
+                                if (!apexTiers.includes(tier)) {
+                                    lp = lp % 100;
+                                    if (!div) div = "4"; // Por defecto división 4 si no se detecta
+                                } else {
+                                    minLp = 0;
+                                    maxLp = Math.max(lp + 200, 500);
+                                }
+
+                                const finalTier = apexTiers.includes(tier) 
                                     ? tier 
                                     : (div ? \`\${tier} \${div}\` : (tier !== "Unranked" ? \`\${tier} 4\` : "Unranked"));
 
-                                return { tier: finalTier, lp };
+                                return { tier: finalTier, lp, minLp, maxLp };
                             }
 
                             return { 
                                 level, 
-                                solo: getQueueInfo(["solo", "duo", "ranked solo"]), 
-                                flex: getQueueInfo(["flex", "ranked flex"]) 
+                                solo: parseQueue("solo"), 
+                                flex: parseQueue("flex") 
                             };
                         })()
                     `);
@@ -810,7 +813,7 @@
             if (loginUser && riotId && password) {
                 let accounts = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
                 accounts = accounts.filter(a => a.riotId !== riotId);
-                accounts.push({ loginUser, riotId, region, password, soloq: {tier:"Unranked", lp:0}, flex:{tier:"Unranked", lp:0}, level: "30", note: "" });
+                accounts.push({ loginUser, riotId, region, password, soloq: {tier:"Unranked", lp:0, minLp:0, maxLp:100}, flex:{tier:"Unranked", lp:0}, level: "30", note: "" });
                 fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
                 loadAccounts();
                 modal.style.display = 'none';
@@ -825,7 +828,7 @@
         
         applyLanguage();
 
-        const REFRESH_INTERVAL_SECONDS = 15 * 60;
+        const REFRESH_INTERVAL_SECONDS = 15;
         let secondsRemaining = REFRESH_INTERVAL_SECONDS;
         let isRefreshing = false;
 
