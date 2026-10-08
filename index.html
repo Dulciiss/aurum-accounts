@@ -24,9 +24,18 @@
     <div id="add-modal" class="modal">
         <div class="modal-content">
             <h3>ADD ACCOUNT</h3>
-            <input type="text" id="login-user" placeholder="Usuario de Login (Riot)">
-            <input type="text" id="riot-id" placeholder="Riot ID (ej. Nombre#TAG)">
-            <input type="password" id="password" placeholder="Contraseña">
+            <input type="text" id="login-user" placeholder="Usuario de Login (Riot)"[cite: 2]>
+            <input type="text" id="riot-id" placeholder="Riot ID (ej. Nombre#TAG)"[cite: 2]>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 5px;">Región</label>
+                <select id="region" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px;">
+                    <option value="euw">EUW</option>
+                    <option value="eune">EUNE</option>
+                    <option value="na">NA</option>
+                    <option value="kr">KR</option>
+                </select>
+            </div>
+            <input type="password" id="password" placeholder="Contraseña"[cite: 2]>
             <button id="save-account" class="btn-add">Save</button>
             <button id="close-modal" class="btn-login" style="margin-top: 10px; width: 100%;">Cancel</button>
         </div>
@@ -36,6 +45,7 @@
         const fs = require('fs');
         const path = require('path');
         const { exec } = require('child_process');
+        const { shell } = require('electron'); // Importado para abrir enlaces externos
 
         const btnAdd = document.querySelector('.btn-add');
         const modal = document.getElementById('add-modal');
@@ -43,6 +53,7 @@
         const btnSave = document.getElementById('save-account');
         const inputLoginUser = document.getElementById('login-user');
         const inputRiotId = document.getElementById('riot-id');
+        const inputRegion = document.getElementById('region');
         const inputPassword = document.getElementById('password');
         const mainContent = document.querySelector('.main-content');
 
@@ -85,20 +96,53 @@
             });
         }
 
-        function renderCard(loginUser, riotId, password) {
+        function deleteAccount(riotId) {
+            if (fs.existsSync(dataPath)) {
+                const data = fs.readFileSync(dataPath, 'utf-8');
+                let accounts = JSON.parse(data);
+                accounts = accounts.filter(acc => acc.riotId !== riotId);
+                fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
+                loadAccounts();
+            }
+        }
+
+        function renderCard(loginUser, riotId, region, password) {
             const newCard = document.createElement('div');
             newCard.className = 'account-card';
+            
+            // Formatear Riot ID para OP.GG (Ej: "Hide on bush#EUW" -> "hide-on-bush-euw")
+            const formattedTag = riotId.toLowerCase().replace(/#/g, '-').replace(/\s+/g, '-');
+            const regCode = (region || 'euw').toLowerCase();
+            const opggUrl = `https://op.gg/lol/summoners/${regCode}/${encodeURIComponent(formattedTag)}`;
+
             newCard.innerHTML = `
                 <div class="account-info">
-                    <h3 class="name">${riotId}</h3>
-                    <p class="rank">Unranked <span class="lp">0 LP</span></p>
+                    <h3 class="name">${riotId} <span class="region-tag">[${(region || 'euw').toUpperCase()}]</span></h3>
+                    <p class="rank">Ver estadísticas en <a href="#" class="opgg-link" data-url="${opggUrl}">OP.GG ↗</a></p>
                 </div>
-                <button class="btn-login">➔ Log in</button>
+                <div class="card-actions">
+                    <button class="btn-login">➔ Log in</button>
+                    <button class="btn-delete" title="Eliminar cuenta">🗑️</button>
+                </div>
             `;
+
+            // Enlace a OP.GG usando el shell nativo de Electron
+            const linkOpgg = newCard.querySelector('.opgg-link');
+            linkOpgg.addEventListener('click', (e) => {
+                e.preventDefault();
+                shell.openExternal(opggUrl);
+            });
 
             const btnLogin = newCard.querySelector('.btn-login');
             btnLogin.addEventListener('click', () => {
                 triggerLogin(loginUser, password);
+            });
+
+            const btnDelete = newCard.querySelector('.btn-delete');
+            btnDelete.addEventListener('click', () => {
+                if (confirm(`¿Seguro que quieres eliminar la cuenta ${riotId}?`)) {
+                    deleteAccount(riotId);
+                }
             });
 
             mainContent.appendChild(newCard);
@@ -110,20 +154,21 @@
                 const accounts = JSON.parse(data);
                 mainContent.innerHTML = '';
                 accounts.forEach(acc => {
-                    // Soporte por si alguna cuenta antigua no tiene loginUser guardado
                     const user = acc.loginUser || acc.riotId; 
-                    renderCard(user, acc.riotId, acc.password);
+                    const reg = acc.region || 'euw';
+                    renderCard(user, acc.riotId, reg, acc.password);
                 }); 
             }
         }
 
-        function saveAccountToFile(loginUser, riotId, password) {
+        function saveAccountToFile(loginUser, riotId, region, password) {
             let accounts = [];
             if (fs.existsSync(dataPath)) {
                 const data = fs.readFileSync(dataPath, 'utf-8');
                 accounts = JSON.parse(data);
             }
-            accounts.push({ loginUser, riotId, password }); 
+            accounts = accounts.filter(acc => acc.riotId !== riotId);
+            accounts.push({ loginUser, riotId, region, password }); 
             fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
         }
 
@@ -133,11 +178,12 @@
         btnSave.addEventListener('click', () => {
             const loginUser = inputLoginUser.value.trim();
             const riotId = inputRiotId.value.trim();
+            const region = inputRegion.value;
             const password = inputPassword.value.trim();
 
             if (loginUser !== "" && riotId !== "" && password !== "") {
-                saveAccountToFile(loginUser, riotId, password);
-                renderCard(loginUser, riotId, password);
+                saveAccountToFile(loginUser, riotId, region, password);
+                loadAccounts();
 
                 modal.style.display = 'none';
                 inputLoginUser.value = '';
