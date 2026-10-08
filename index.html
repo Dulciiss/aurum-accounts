@@ -12,6 +12,7 @@
             <h2 class="title">LEAGUE ACCOUNTS</h2>
         </div>
         <button class="btn-add">+ Add account</button>
+        <button class="btn-refresh" id="btn-refresh-all" style="margin-top: 10px; width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; cursor: pointer;">🔄 Refresh Ranks</button>
         <div class="spacer"></div>
         <button class="btn-menu">Settings</button>
     </div>
@@ -20,12 +21,12 @@
         <!-- Las tarjetas se cargarán aquí -->
     </div>
 
-    <!-- Ventana modal actualizada -->
+    <!-- Ventana modal -->
     <div id="add-modal" class="modal">
         <div class="modal-content">
             <h3>ADD ACCOUNT</h3>
-            <input type="text" id="login-user" placeholder="Usuario de Login (Riot)"[cite: 2]>
-            <input type="text" id="riot-id" placeholder="Riot ID (ej. Nombre#TAG)"[cite: 2]>
+            <input type="text" id="login-user" placeholder="Usuario de Login (Riot)">
+            <input type="text" id="riot-id" placeholder="Riot ID (ej. Nombre#TAG)">
             <div class="input-group" style="margin-bottom: 15px;">
                 <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 5px;">Región</label>
                 <select id="region" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px;">
@@ -35,7 +36,7 @@
                     <option value="kr">KR</option>
                 </select>
             </div>
-            <input type="password" id="password" placeholder="Contraseña"[cite: 2]>
+            <input type="password" id="password" placeholder="Contraseña">
             <button id="save-account" class="btn-add">Save</button>
             <button id="close-modal" class="btn-login" style="margin-top: 10px; width: 100%;">Cancel</button>
         </div>
@@ -45,9 +46,10 @@
         const fs = require('fs');
         const path = require('path');
         const { exec } = require('child_process');
-        const { shell } = require('electron'); // Importado para abrir enlaces externos
+        const { BrowserWindow } = require('@electron/remote');
 
         const btnAdd = document.querySelector('.btn-add');
+        const btnRefreshAll = document.getElementById('btn-refresh-all');
         const modal = document.getElementById('add-modal');
         const btnClose = document.getElementById('close-modal');
         const btnSave = document.getElementById('save-account');
@@ -106,42 +108,42 @@
             }
         }
 
-        function renderCard(loginUser, riotId, region, password) {
+        function renderCard(account) {
             const newCard = document.createElement('div');
             newCard.className = 'account-card';
             
-            // Formatear Riot ID para OP.GG (Ej: "Hide on bush#EUW" -> "hide-on-bush-euw")
-            const formattedTag = riotId.toLowerCase().replace(/#/g, '-').replace(/\s+/g, '-');
-            const regCode = (region || 'euw').toLowerCase();
-            const opggUrl = `https://op.gg/lol/summoners/${regCode}/${encodeURIComponent(formattedTag)}`;
+            const soloq = account.soloq || { tier: 'Unranked', lp: 0 };
+            const flex = account.flex || { tier: 'Unranked', lp: 0 };
+            const region = (account.region || 'euw').toUpperCase();
 
             newCard.innerHTML = `
                 <div class="account-info">
-                    <h3 class="name">${riotId} <span class="region-tag">[${(region || 'euw').toUpperCase()}]</span></h3>
-                    <p class="rank">Ver estadísticas en <a href="#" class="opgg-link" data-url="${opggUrl}">OP.GG ↗</a></p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 class="name" style="margin: 0;">${account.riotId}</h3>
+                        <span class="region-tag" style="font-size: 11px; color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">[${region}]</span>
+                    </div>
+                    <div class="ranks-container" style="display: flex; gap: 20px; margin-top: 10px; font-size: 13px; color: #94a3b8;">
+                        <div class="rank-solo">
+                            <span>Solo/Duo:</span> <strong style="color: #fff;">${soloq.tier}</strong> <span class="lp" style="color: #38bdf8;">(${soloq.lp} LP)</span>
+                        </div>
+                        <div class="rank-flex">
+                            <span>Flex:</span> <strong style="color: #fff;">${flex.tier}</strong> <span class="lp" style="color: #38bdf8;">(${flex.lp} LP)</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-actions">
+                <div class="card-actions" style="margin-top: 12px; display: flex; gap: 8px;">
                     <button class="btn-login">➔ Log in</button>
                     <button class="btn-delete" title="Eliminar cuenta">🗑️</button>
                 </div>
             `;
 
-            // Enlace a OP.GG usando el shell nativo de Electron
-            const linkOpgg = newCard.querySelector('.opgg-link');
-            linkOpgg.addEventListener('click', (e) => {
-                e.preventDefault();
-                shell.openExternal(opggUrl);
+            newCard.querySelector('.btn-login').addEventListener('click', () => {
+                triggerLogin(account.loginUser || account.riotId, account.password);
             });
 
-            const btnLogin = newCard.querySelector('.btn-login');
-            btnLogin.addEventListener('click', () => {
-                triggerLogin(loginUser, password);
-            });
-
-            const btnDelete = newCard.querySelector('.btn-delete');
-            btnDelete.addEventListener('click', () => {
-                if (confirm(`¿Seguro que quieres eliminar la cuenta ${riotId}?`)) {
-                    deleteAccount(riotId);
+            newCard.querySelector('.btn-delete').addEventListener('click', () => {
+                if (confirm(`¿Seguro que quieres eliminar la cuenta ${account.riotId}?`)) {
+                    deleteAccount(account.riotId);
                 }
             });
 
@@ -150,30 +152,152 @@
 
         function loadAccounts() {
             if (fs.existsSync(dataPath)) {
-                const data = fs.readFileSync(dataPath, 'utf-8');
-                const accounts = JSON.parse(data);
-                mainContent.innerHTML = '';
-                accounts.forEach(acc => {
-                    const user = acc.loginUser || acc.riotId; 
-                    const reg = acc.region || 'euw';
-                    renderCard(user, acc.riotId, reg, acc.password);
-                }); 
+                try {
+                    const data = fs.readFileSync(dataPath, 'utf-8');
+                    const accounts = JSON.parse(data);
+                    mainContent.innerHTML = '';
+                    accounts.forEach(acc => {
+                        renderCard(acc);
+                    }); 
+                } catch (e) {
+                    console.error("Error leyendo accounts.json", e);
+                }
+            }
+        }
+
+        // Extracción automática de rangos usando DeepLol mediante ventana fantasma
+        async function refreshRanksFromDeeplol() {
+            if (!fs.existsSync(dataPath)) {
+                alert("No se encontró el archivo accounts.json");
+                return;
+            }
+            
+            let accounts = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+            let updated = false;
+
+            if (accounts.length === 0) {
+                alert("No hay cuentas guardadas.");
+                return;
+            }
+
+            for (let acc of accounts) {
+                try {
+                    const parts = acc.riotId.split('#');
+                    if (parts.length < 2) continue;
+                    const namePart = encodeURIComponent(parts[0].trim().toLowerCase());
+                    const tagPart = encodeURIComponent(parts[1].trim().toLowerCase());
+                    const regCode = (acc.region || 'euw').toLowerCase();
+
+                    const targetUrl = `https://www.deeplol.gg/summoner/${regCode}/${namePart}-${tagPart}`;
+
+                    const ghostWindow = new BrowserWindow({
+                        show: false,
+                        webPreferences: { nodeIntegration: false, contextIsolation: true }
+                    });
+
+                    await ghostWindow.loadURL(targetUrl);
+
+                    // Esperar a que la página cargue los datos y extraer textos estructurados con precisión
+                    const extractedRanks = await ghostWindow.webContents.executeJavaScript(`
+                        (async () => {
+                            for (let i = 0; i < 15; i++) {
+                                const text = document.body.innerText;
+                                if (text.includes("LP") || text.includes("Solo") || text.includes("Flex")) {
+                                    break;
+                                }
+                                await new Promise(r => setTimeout(r, 400));
+                            }
+
+                            // Buscar bloques de texto específicos de las colas
+                            const queueBoxes = Array.from(document.querySelectorAll('div')).map(el => el.innerText.trim());
+                            return queueBoxes.filter(text => text.includes("Solo") || text.includes("Flex") || text.includes("LP"));
+                        })()
+                    `);
+
+                    ghostWindow.close();
+
+                    if (extractedRanks && extractedRanks.length > 0) {
+                        let soloTier = "Unranked";
+                        let soloLp = 0;
+                        let flexTier = "Unranked";
+                        let flexLp = 0;
+
+                        // Analizar cada bloque encontrado para extraer Solo/Duo y Flex por separado
+                        extractedRanks.forEach(block => {
+                            const lowerBlock = block.toLowerCase();
+                            
+                            // Procesar Solo/Duo
+                            if (lowerBlock.includes("solo") && (lowerBlock.includes("lp") || lowerBlock.includes("ranked"))) {
+                                const tierMatch = block.match(/(Challenger|Grandmaster|Master|Diamond|Emerald|Platinum|Gold|Silver|Bronze|Iron)\s*(I{1,3}|IV|V)?/i);
+                                if (tierMatch) {
+                                    soloTier = tierMatch[0].trim();
+                                }
+                                const lpMatch = block.match(/(\d+)\s*LP/i);
+                                if (lpMatch) {
+                                    soloLp = parseInt(lpMatch[1]);
+                                }
+                            }
+
+                            // Procesar Flex
+                            if (lowerBlock.includes("flex") && (lowerBlock.includes("lp") || lowerBlock.includes("ranked"))) {
+                                const tierMatch = block.match(/(Challenger|Grandmaster|Master|Diamond|Emerald|Platinum|Gold|Silver|Bronze|Iron)\s*(I{1,3}|IV|V)?/i);
+                                if (tierMatch) {
+                                    flexTier = tierMatch[0].trim();
+                                }
+                                const lpMatch = block.match(/(\d+)\s*LP/i);
+                                if (lpMatch) {
+                                    flexLp = parseInt(lpMatch[1]);
+                                }
+                            }
+                        });
+
+                        // Si encontramos datos reales en alguna de las dos colas, actualizamos
+                        if (soloTier !== "Unranked" || flexTier !== "Unranked" || soloLp > 0 || flexLp > 0) {
+                            acc.soloq = { tier: soloTier, lp: soloLp };
+                            acc.flex = { tier: flexTier, lp: flexLp };
+                            updated = true;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error al actualizar:", e);
+                }
+            }
+
+            if (updated) {
+                fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
+                loadAccounts();
+                alert("¡Rangos y LP sincronizados con precisión desde DeepLol!");
+            } else {
+                alert("No se pudieron extraer los rangos. Comprueba que el Riot ID y la región sean exactos.");
             }
         }
 
         function saveAccountToFile(loginUser, riotId, region, password) {
             let accounts = [];
             if (fs.existsSync(dataPath)) {
-                const data = fs.readFileSync(dataPath, 'utf-8');
-                accounts = JSON.parse(data);
+                try {
+                    const data = fs.readFileSync(dataPath, 'utf-8');
+                    accounts = JSON.parse(data);
+                } catch (e) {}
             }
             accounts = accounts.filter(acc => acc.riotId !== riotId);
-            accounts.push({ loginUser, riotId, region, password }); 
+            accounts.push({ 
+                loginUser, 
+                riotId, 
+                region, 
+                password,
+                soloq: { tier: "Unranked", lp: 0 },
+                flex: { tier: "Unranked", lp: 0 }
+            }); 
             fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
         }
 
         btnAdd.addEventListener('click', () => modal.style.display = 'flex');
         btnClose.addEventListener('click', () => modal.style.display = 'none');
+
+        btnRefreshAll.addEventListener('click', () => {
+            refreshRanksFromDeeplol();
+        });
 
         btnSave.addEventListener('click', () => {
             const loginUser = inputLoginUser.value.trim();
