@@ -5,23 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>League Accounts</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-color: #0b0c10;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            overflow: hidden;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+            align-content: start;
+        }
+        .account-card {
+            background: linear-gradient(145deg, #14151c, #101117);
+            border: 1px solid #232430;
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.4), 0 0 10px rgba(59, 130, 246, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .account-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.15);
+        }
+        .sidebar-btn {
+            width: 100%;
+            padding: 9px 12px;
+            background: #111218;
+            border: 1px solid #232430;
+            color: #94a3b8;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .sidebar-btn:hover {
+            background: #1e2029;
+            color: #fff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+        }
+        .note-input {
+            background: #0b0c10;
+            border: 1px solid #232430;
+            color: #cbd5e1;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .note-input:focus {
+            border-color: #3b82f6;
+        }
+    </style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="logo-area">
-            <h2 class="title">LEAGUE ACCOUNTS</h2>
+    <div class="sidebar" style="display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; padding: 15px; background: #0b0c10; border-right: 1px solid #1f2029;">
+        <div class="logo-area" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; box-shadow: 0 0 10px rgba(59,130,246,0.5);">LA</div>
+            <h2 class="title" style="font-size: 13px; color: #fff; letter-spacing: 1px; margin: 0;">LEAGUE ACCOUNTS</h2>
         </div>
-        <button class="btn-add">+ Add account</button>
-        <button class="btn-refresh" id="btn-refresh-all" style="margin-top: 10px; width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; cursor: pointer;">🔄 Refresh Ranks</button>
-        <div class="spacer"></div>
-        <button class="btn-menu">Settings</button>
+        <button class="btn-add" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: 0.2s;">+ Add account</button>
+        <button class="btn-refresh" id="btn-refresh-all" style="margin-top: 10px; width: 100%; padding: 10px; background: #161821; border: 1px solid #232430; color: white; border-radius: 6px; cursor: pointer; transition: 0.2s;">🔄 Refresh Ranks</button>
+        
+        <!-- Panel Rank Distribution -->
+        <div class="rank-distribution-panel" style="margin-top: 15px; background: #111218; border: 1px solid #232430; border-radius: 8px; padding: 12px; font-size: 11px; color: #94a3b8;">
+            <div style="font-weight: bold; color: #cbd5e1; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Rank Distribution</div>
+            <div id="rank-stats-container" style="display: flex; flex-direction: column; gap: 5px;"></div>
+        </div>
+
+        <div class="spacer" style="flex-grow: 1;"></div>
+
+        <!-- Botones de Acción Inferiores -->
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+            <button class="sidebar-btn" id="btn-import">📥 Import Accounts</button>
+            <button class="sidebar-btn" id="btn-export">📤 Export Accounts</button>
+        </div>
+
+        <button class="btn-menu sidebar-btn" style="background: #161821; color: #cbd5e1;">⚙️ Settings</button>
     </div>
     
-    <div class="main-content">
+    <div class="content-wrapper" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
+        <!-- Header Superior -->
+        <div class="app-header" style="background-color: #111218; padding: 15px 30px; border-bottom: 1px solid #1f2029; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+            <div class="search-container" style="position: relative; flex: 1; max-width: 350px;">
+                <input type="text" id="search-input" placeholder="Search name, tag or account ID..." style="width: 100%; background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s;">
+                <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #6b6c75; background: #1f2029; padding: 2px 5px; border-radius: 4px;">Ctrl+F</span>
+            </div>
+            
+            <div class="filters-container" style="display: flex; gap: 10px; align-items: center;">
+                <select id="filter-region" style="background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none;">
+                    <option value="all">All regions</option>
+                    <option value="euw">EUW</option>
+                    <option value="eune">EUNE</option>
+                    <option value="na">NA</option>
+                    <option value="kr">KR</option>
+                </select>
+
+                <select id="sort-select" style="background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none;">
+                    <option value="rank">Sort: Rank</option>
+                    <option value="name">Sort: Name</option>
+                </select>
+            </div>
+        </div>
+
         <!-- Las tarjetas se cargarán aquí -->
+        <div class="main-content" style="overflow-y: auto; padding: 30px; flex-grow: 1; background: #07080a;">
+        </div>
     </div>
 
-    <!-- Ventana modal -->
+    <!-- Modales -->
     <div id="add-modal" class="modal">
         <div class="modal-content">
             <h3>ADD ACCOUNT</h3>
@@ -42,45 +150,77 @@
         </div>
     </div>
 
+    <div id="settings-modal" class="modal">
+        <div class="modal-content" style="width: 350px;">
+            <h3>SETTINGS</h3>
+            <div style="margin-bottom: 20px; font-size: 13px; color: #94a3b8;">
+                <p style="margin-bottom: 12px;"><strong>Ruta de datos (accounts.json):</strong><br><span id="data-path-label" style="font-size: 11px; color: #38bdf8; word-break: break-all; display: inline-block; margin-top: 4px;"></span></p>
+                <p style="margin: 0;"><strong>Cuentas guardadas:</strong> <span id="accounts-count-label" style="color: #fff; font-weight: bold;">0</span></p>
+            </div>
+            <button id="btn-open-folder" class="btn-login" style="margin-bottom: 10px; width: 100%; cursor: pointer;">📂 Abrir carpeta de datos</button>
+            <button id="close-settings" class="btn-login" style="width: 100%; cursor: pointer;">Cerrar</button>
+        </div>
+    </div>
+
     <script>
         const fs = require('fs');
         const path = require('path');
         const { exec } = require('child_process');
-        const { BrowserWindow } = require('@electron/remote');
+        const { BrowserWindow, shell, dialog } = require('@electron/remote');
 
         const btnAdd = document.querySelector('.btn-add');
         const btnRefreshAll = document.getElementById('btn-refresh-all');
+        const btnSettings = document.querySelector('.btn-menu');
+        const btnImport = document.getElementById('btn-import');
+        const btnExport = document.getElementById('btn-export');
+        
         const modal = document.getElementById('add-modal');
         const btnClose = document.getElementById('close-modal');
         const btnSave = document.getElementById('save-account');
+
+        const settingsModal = document.getElementById('settings-modal');
+        const btnCloseSettings = document.getElementById('close-settings');
+        const btnOpenFolder = document.getElementById('btn-open-folder');
+        const dataPathLabel = document.getElementById('data-path-label');
+        const accountsCountLabel = document.getElementById('accounts-count-label');
+
         const inputLoginUser = document.getElementById('login-user');
         const inputRiotId = document.getElementById('riot-id');
         const inputRegion = document.getElementById('region');
         const inputPassword = document.getElementById('password');
         const mainContent = document.querySelector('.main-content');
+        const searchInput = document.getElementById('search-input');
+        const filterRegion = document.getElementById('filter-region');
+        const sortSelect = document.getElementById('sort-select');
+        const rankStatsContainer = document.getElementById('rank-stats-container');
 
         const dataPath = path.join(__dirname, 'accounts.json');
 
+        const tierIcons = {
+            'Challenger': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/challenger.png',
+            'Grandmaster': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/grandmaster.png',
+            'Master': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/master.png',
+            'Diamond': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/diamond.png',
+            'Emerald': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/emerald.png',
+            'Platinum': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/platinum.png',
+            'Gold': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/gold.png',
+            'Silver': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/silver.png',
+            'Bronze': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/bronze.png',
+            'Iron': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/iron.png',
+            'Unranked': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/unranked.png'
+        };
+
+        const rankWeights = { 'Challenger': 10, 'Grandmaster': 9, 'Master': 8, 'Diamond': 7, 'Emerald': 6, 'Platinum': 5, 'Gold': 4, 'Silver': 3, 'Bronze': 2, 'Iron': 1, 'Unranked': 0 };
+
         function triggerLogin(loginUser, password) {
             exec('taskkill /f /im RiotClientServices.exe', (err) => {
-                setTimeout(() => {
-                    exec('cmd /c start riotclient://');
-                }, 1000);
-
+                setTimeout(() => { exec('cmd /c start riotclient://'); }, 1000);
                 setTimeout(() => {
                     const psScript = `
                         Add-Type -AssemblyName System.Windows.Forms
                         $wshell = New-Object -ComObject wscript.shell
-                        
                         $found = $false
-                        for ($i = 0; $i -lt 20; $i++) {
-                            if ($wshell.AppActivate("Riot Client")) {
-                                $found = $true
-                                break
-                            }
-                            Start-Sleep -Milliseconds 500
-                        }
-                        
+                        for ($i = 0; $i -lt 20; $i++) { if ($wshell.AppActivate("Riot Client")) { $found = $true; break }; Start-Sleep -Milliseconds 500 }
                         if ($found) {
                             Start-Sleep -Seconds 1
                             [System.Windows.Forms.SendKeys]::SendWait('${loginUser}')
@@ -92,20 +232,46 @@
                             [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
                         }
                     `;
-                    const encodedCommand = Buffer.from(psScript, 'utf16le').toString('base64');
-                    exec(`powershell -EncodedCommand ${encodedCommand}`);
+                    exec(`powershell -EncodedCommand ${Buffer.from(psScript, 'utf16le').toString('base64')}`);
                 }, 7000);
             });
         }
 
         function deleteAccount(riotId) {
             if (fs.existsSync(dataPath)) {
-                const data = fs.readFileSync(dataPath, 'utf-8');
-                let accounts = JSON.parse(data);
+                let accounts = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
                 accounts = accounts.filter(acc => acc.riotId !== riotId);
                 fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
                 loadAccounts();
             }
+        }
+
+        function updateRankDistribution(allAccounts) {
+            const tiers = Object.keys(tierIcons).filter(t => t !== 'Unranked').concat(['Unranked']);
+            const counts = {};
+            tiers.forEach(t => counts[t] = 0);
+
+            allAccounts.forEach(acc => {
+                const soloTier = acc.soloq && acc.soloq.tier ? acc.soloq.tier.split(' ')[0] : 'Unranked';
+                if (counts[soloTier] !== undefined) counts[soloTier]++;
+                else counts['Unranked']++;
+            });
+
+            rankStatsContainer.innerHTML = '';
+            tiers.forEach(t => {
+                const count = counts[t];
+                if (count === 0 && t === 'Unranked') return; // Omitir si hay 0 unranked para limpiar espacio
+                const row = document.createElement('div');
+                row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-bottom: 3px;';
+                row.innerHTML = `
+                    <span style="color: #94a3b8; width: 75px;">${t}</span>
+                    <div style="flex-grow: 1; margin: 0 8px; background: #161821; height: 4px; border-radius: 2px; overflow: hidden;">
+                        <div style="background: #3b82f6; width: ${allAccounts.length > 0 ? (count / allAccounts.length) * 100 : 0}%; height: 100%;"></div>
+                    </div>
+                    <span style="color: #fff; font-weight: bold; width: 15px; text-align: right;">${count}</span>
+                `;
+                rankStatsContainer.appendChild(row);
+            });
         }
 
         function renderCard(account) {
@@ -115,27 +281,47 @@
             const soloq = account.soloq || { tier: 'Unranked', lp: 0 };
             const flex = account.flex || { tier: 'Unranked', lp: 0 };
             const region = (account.region || 'euw').toUpperCase();
+            const mainTierBase = soloq.tier.split(' ')[0];
+            const iconUrl = tierIcons[mainTierBase] || tierIcons['Unranked'];
+            const lpPercent = Math.min(Math.max((soloq.lp / 100) * 100, 0), 100);
 
             newCard.innerHTML = `
-                <div class="account-info">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 class="name" style="margin: 0;">${account.riotId}</h3>
-                        <span class="region-tag" style="font-size: 11px; color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">[${region}]</span>
-                    </div>
-                    <div class="ranks-container" style="display: flex; gap: 20px; margin-top: 10px; font-size: 13px; color: #94a3b8;">
-                        <div class="rank-solo">
-                            <span>Solo/Duo:</span> <strong style="color: #fff;">${soloq.tier}</strong> <span class="lp" style="color: #38bdf8;">(${soloq.lp} LP)</span>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <img src="${iconUrl}" alt="${soloq.tier}" style="width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+                    <div style="flex-grow: 1; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                            <h3 class="name" style="margin: 0; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${account.riotId}">${account.riotId}</h3>
+                            <span style="font-size: 10px; color: #38bdf8; background: rgba(56,189,248,0.1); padding: 1px 5px; border-radius: 4px; font-weight: bold;">${region}</span>
                         </div>
-                        <div class="rank-flex">
-                            <span>Flex:</span> <strong style="color: #fff;">${flex.tier}</strong> <span class="lp" style="color: #38bdf8;">(${flex.lp} LP)</span>
-                        </div>
+                        <div style="font-size: 11px; color: #6b6c75; margin-top: 2px;">Nivel: <strong style="color: #94a3b8;">${account.level || '30'}</strong></div>
                     </div>
                 </div>
-                <div class="card-actions" style="margin-top: 12px; display: flex; gap: 8px;">
-                    <button class="btn-login">➔ Log in</button>
-                    <button class="btn-delete" title="Eliminar cuenta">🗑️</button>
+
+                <div class="ranks-container" style="margin-top: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+                        <span style="font-size: 13px; font-weight: bold; color: #e2e8f0;">Solo/Duo: ${soloq.tier}</span>
+                        <span style="font-size: 11px; color: #38bdf8; font-weight: bold;">${soloq.lp} LP</span>
+                    </div>
+                    <div style="background: #1e2029; height: 4px; border-radius: 2px; overflow: hidden; margin-bottom: 8px;">
+                        <div style="background: linear-gradient(90deg, #3b82f6, #60a5fa); width: ${lpPercent}%; height: 100%;"></div>
+                    </div>
+                    <div style="font-size: 11px; color: #6b6c75;">Flex: <strong style="color: #94a3b8;">${flex.tier} (${flex.lp} LP)</strong></div>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <input type="text" class="note-input" placeholder="Añadir nota rápida..." value="${account.note || ''}" data-riotid="${account.riotId}">
+                </div>
+
+                <div class="card-actions" style="margin-top: 12px; display: flex; gap: 8px; border-top: 1px solid #1f2029; padding-top: 10px;">
+                    <button class="btn-login" style="flex-grow: 1; padding: 7px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;">➔ Log in</button>
+                    <button class="btn-delete" title="Eliminar cuenta" style="background: #161821; border: 1px solid #232430; padding: 7px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">🗑️</button>
                 </div>
             `;
+
+            // Guardar notas al escribir
+            newCard.querySelector('.note-input').addEventListener('input', (e) => {
+                updateAccountNote(account.riotId, e.target.value);
+            });
 
             newCard.querySelector('.btn-login').addEventListener('click', () => {
                 triggerLogin(account.loginUser || account.riotId, account.password);
@@ -150,191 +336,154 @@
             mainContent.appendChild(newCard);
         }
 
-        function loadAccounts() {
+        function updateAccountNote(riotId, noteText) {
             if (fs.existsSync(dataPath)) {
-                try {
-                    const data = fs.readFileSync(dataPath, 'utf-8');
-                    const accounts = JSON.parse(data);
-                    mainContent.innerHTML = '';
-                    accounts.forEach(acc => {
-                        renderCard(acc);
-                    }); 
-                } catch (e) {
-                    console.error("Error leyendo accounts.json", e);
+                let accounts = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+                const acc = accounts.find(a => a.riotId === riotId);
+                if (acc) {
+                    acc.note = noteText;
+                    fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
                 }
             }
         }
 
-        // Extracción automática de rangos usando DeepLol mediante ventana fantasma
-        async function refreshRanksFromDeeplol() {
-            if (!fs.existsSync(dataPath)) {
-                alert("No se encontró el archivo accounts.json");
-                return;
+        function loadAccounts() {
+            if (fs.existsSync(dataPath)) {
+                try {
+                    const data = fs.readFileSync(dataPath, 'utf-8');
+                    let allAccounts = JSON.parse(data);
+                    
+                    updateRankDistribution(allAccounts);
+
+                    const searchTerm = searchInput.value.toLowerCase();
+                    const selectedRegion = filterRegion.value;
+                    const sortBy = sortSelect.value;
+
+                    let filteredAccounts = allAccounts.filter(acc => {
+                        const matchesSearch = acc.riotId.toLowerCase().includes(searchTerm) || (acc.loginUser && acc.loginUser.toLowerCase().includes(searchTerm)) || (acc.note && acc.note.toLowerCase().includes(searchTerm));
+                        const matchesRegion = selectedRegion === 'all' || (acc.region || 'euw').toLowerCase() === selectedRegion;
+                        return matchesSearch && matchesRegion;
+                    });
+
+                    // Ordenación real
+                    filteredAccounts.sort((a, b) => {
+                        if (sortBy === 'rank') {
+                            const tierA = a.soloq && a.soloq.tier ? a.soloq.tier.split(' ')[0] : 'Unranked';
+                            const tierB = b.soloq && b.soloq.tier ? b.soloq.tier.split(' ')[0] : 'Unranked';
+                            const weightA = rankWeights[tierA] !== undefined ? rankWeights[tierA] : 0;
+                            const weightB = rankWeights[tierB] !== undefined ? rankWeights[tierB] : 0;
+                            if (weightA !== weightB) return weightB - weightA;
+                            const lpA = a.soloq ? a.soloq.lp : 0;
+                            const lpB = b.soloq ? b.soloq.lp : 0;
+                            return lpB - lpA;
+                        } else {
+                            return a.riotId.localeCompare(b.riotId);
+                        }
+                    });
+
+                    mainContent.innerHTML = '';
+                    filteredAccounts.forEach(acc => renderCard(acc)); 
+                } catch (e) {
+                    console.error("Error leyendo accounts.json", e);
+                }
+            } else {
+                updateRankDistribution([]);
             }
-            
+        }
+
+        async function refreshRanksFromDeeplol() {
+            if (!fs.existsSync(dataPath)) { alert("No se encontró accounts.json"); return; }
             let accounts = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
             let updated = false;
-
-            if (accounts.length === 0) {
-                alert("No hay cuentas guardadas.");
-                return;
-            }
+            if (accounts.length === 0) { alert("No hay cuentas."); return; }
 
             for (let acc of accounts) {
                 try {
                     const parts = acc.riotId.split('#');
                     if (parts.length < 2) continue;
-                    const namePart = encodeURIComponent(parts[0].trim().toLowerCase());
-                    const tagPart = encodeURIComponent(parts[1].trim().toLowerCase());
-                    const regCode = (acc.region || 'euw').toLowerCase();
-
-                    const targetUrl = `https://www.deeplol.gg/summoner/${regCode}/${namePart}-${tagPart}`;
-
-                    const ghostWindow = new BrowserWindow({
-                        show: false,
-                        webPreferences: { nodeIntegration: false, contextIsolation: true }
-                    });
-
+                    const targetUrl = `https://www.deeplol.gg/summoner/${(acc.region || 'euw').toLowerCase()}/${encodeURIComponent(parts[0].trim().toLowerCase())}-${encodeURIComponent(parts[1].trim().toLowerCase())}`;
+                    const ghostWindow = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
                     await ghostWindow.loadURL(targetUrl);
 
-                    // Extracción con soporte para nodos de texto separados para los LP
                     const rankedData = await ghostWindow.webContents.executeJavaScript(`
                         (async () => {
                             for (let i = 0; i < 20; i++) {
-                                const allText = document.body.innerText;
-                                if (allText.includes("LP") || allText.includes("Solo") || allText.includes("Unranked")) {
-                                    break;
-                                }
+                                if (document.body.innerText.includes("LP") || document.body.innerText.includes("Unranked")) break;
                                 await new Promise(r => setTimeout(r, 500));
                             }
-
                             const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-                            let node;
                             let textNodes = [];
-                            while(node = walker.nextNode()) {
-                                if(node.nodeValue.trim().length > 0) {
-                                    textNodes.push(node.nodeValue.trim());
-                                }
-                            }
+                            let node;
+                            while(node = walker.nextNode()) if(node.nodeValue.trim().length > 0) textNodes.push(node.nodeValue.trim());
 
                             function getQueueInfo(queueName) {
                                 const qIndex = textNodes.findIndex(t => t.toLowerCase() === queueName.toLowerCase());
                                 if (qIndex === -1) return { tier: "Unranked", lp: 0 };
-
-                                let tier = "Unranked";
-                                let div = "";
-                                let lp = 0;
+                                let tier = "Unranked", div = "", lp = 0;
                                 const validTiers = ["Challenger", "Grandmaster", "Master", "Diamond", "Emerald", "Platinum", "Gold", "Silver", "Bronze", "Iron"];
-
                                 for (let i = qIndex; i < Math.min(qIndex + 18, textNodes.length); i++) {
                                     const txt = textNodes[i];
-                                    
-                                    if (txt.toLowerCase() === "unranked") {
-                                        return { tier: "Unranked", lp: 0 };
-                                    }
-
-                                    // Buscar Tier y División
+                                    if (txt.toLowerCase() === "unranked") return { tier: "Unranked", lp: 0 };
                                     for (let t of validTiers) {
                                         if (txt.toLowerCase() === t.toLowerCase() || txt.toLowerCase().startsWith(t.toLowerCase() + " ")) {
                                             tier = t;
                                             const parts = txt.split(/\\s+/);
-                                            if (parts[1] && /^[1-4]$/.test(parts[1])) {
-                                                div = parts[1];
-                                            }
+                                            if (parts[1] && /^[1-4]$/.test(parts[1])) div = parts[1];
                                         }
                                     }
-
-                                    if (tier !== "Unranked" && !div && /^[1-4]$/.test(txt)) {
-                                        div = txt;
-                                    }
-
-                                    // Búsqueda inteligente de LP (maneja si el número y "LP" están juntos o separados en nodos)
-                                    if (txt.toUpperCase().includes("LP") || txt.toUpperCase() === "LP") {
-                                        // Revisar si el número está en el mismo texto
+                                    if (tier !== "Unranked" && !div && /^[1-4]$/.test(txt)) div = txt;
+                                    if (txt.toUpperCase().includes("LP")) {
                                         const match = txt.match(/(\\d+)/);
-                                        if (match) {
-                                            lp = parseInt(match[1]);
-                                        } 
-                                        // O si el número está en el nodo de texto inmediatamente anterior
-                                        else if (i > 0 && /^\\d+$/.test(textNodes[i - 1])) {
-                                            lp = parseInt(textNodes[i - 1]);
-                                        }
-                                    }
-                                    // Por si acaso el nodo actual es solo el número de LP y el siguiente es "LP"
-                                    else if (/^\\d+$/.test(txt) && i + 1 < textNodes.length && textNodes[i + 1].toUpperCase().includes("LP")) {
-                                        // Asegurarnos de que no sea la división (las divisiones son 1-4, los LP suelen ser más o 0)
-                                        // Si ya tenemos división y este número está más abajo cerca de LP, lo cogemos
-                                        if (parseInt(txt) > 4 || txt === "0") {
-                                            lp = parseInt(txt);
-                                        }
+                                        if (match) lp = parseInt(match[1]);
                                     }
                                 }
-
-                                if (tier === "Unranked") return { tier: "Unranked", lp: 0 };
-                                if (["Master", "Grandmaster", "Challenger"].includes(tier)) {
-                                    return { tier: tier, lp: lp };
-                                }
-
-                                return {
-                                    tier: div ? \`\${tier} \${div}\` : tier,
-                                    lp: lp
-                                };
+                                if (["Master", "Grandmaster", "Challenger"].includes(tier)) return { tier, lp };
+                                return { tier: div ? \`\${tier} \${div}\` : tier, lp };
                             }
-
-                            return {
-                                solo: getQueueInfo("Solo"),
-                                flex: getQueueInfo("Flex")
-                            };
+                            return { solo: getQueueInfo("Solo"), flex: getQueueInfo("Flex") };
                         })()
                     `);
-
                     ghostWindow.close();
-
                     if (rankedData) {
                         acc.soloq = rankedData.solo;
                         acc.flex = rankedData.flex;
                         updated = true;
                     }
-
-                } catch (e) {
-                    console.error("Error al actualizar:", e);
-                }
+                } catch (e) {}
             }
 
             if (updated) {
                 fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
                 loadAccounts();
-                alert("¡Rangos, divisiones y LP sincronizados al 100%!");
-            } else {
-                alert("No se pudieron extraer los datos. Comprueba que el Riot ID y la región sean exactos.");
+                alert("¡Rangos sincronizados!");
             }
         }
 
-        function saveAccountToFile(loginUser, riotId, region, password) {
-            let accounts = [];
-            if (fs.existsSync(dataPath)) {
-                try {
-                    const data = fs.readFileSync(dataPath, 'utf-8');
-                    accounts = JSON.parse(data);
-                } catch (e) {}
-            }
-            accounts = accounts.filter(acc => acc.riotId !== riotId);
-            accounts.push({ 
-                loginUser, 
-                riotId, 
-                region, 
-                password,
-                soloq: { tier: "Unranked", lp: 0 },
-                flex: { tier: "Unranked", lp: 0 }
-            }); 
-            fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
-        }
-
+        // Eventos generales
         btnAdd.addEventListener('click', () => modal.style.display = 'flex');
         btnClose.addEventListener('click', () => modal.style.display = 'none');
+        btnSettings.addEventListener('click', () => {
+            dataPathLabel.textContent = dataPath;
+            accountsCountLabel.textContent = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')).length : 0;
+            settingsModal.style.display = 'flex';
+        });
+        btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+        btnOpenFolder.addEventListener('click', () => shell.showItemInFolder(dataPath));
+        btnRefreshAll.addEventListener('click', refreshRanksFromDeeplol);
 
-        btnRefreshAll.addEventListener('click', () => {
-            refreshRanksFromDeeplol();
+        btnExport.addEventListener('click', async () => {
+            const res = await dialog.showSaveDialog({ defaultPath: 'accounts-backup.json', filters: [{ name: 'JSON', extensions: ['json'] }] });
+            if (!res.canceled && res.filePath && fs.existsSync(dataPath)) fs.copyFileSync(dataPath, res.filePath);
+        });
+
+        btnImport.addEventListener('click', async () => {
+            const res = await dialog.showOpenDialog({ filters: [{ name: 'JSON', extensions: ['json'] }], properties: ['openFile'] });
+            if (!res.canceled && res.filePaths.length > 0) {
+                try {
+                    fs.writeFileSync(dataPath, fs.readFileSync(res.filePaths[0], 'utf-8'));
+                    loadAccounts();
+                } catch(e){}
+            }
         });
 
         btnSave.addEventListener('click', () => {
@@ -342,20 +491,20 @@
             const riotId = inputRiotId.value.trim();
             const region = inputRegion.value;
             const password = inputPassword.value.trim();
-
-            if (loginUser !== "" && riotId !== "" && password !== "") {
-                saveAccountToFile(loginUser, riotId, region, password);
+            if (loginUser && riotId && password) {
+                let accounts = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
+                accounts = accounts.filter(a => a.riotId !== riotId);
+                accounts.push({ loginUser, riotId, region, password, soloq: {tier:"Unranked", lp:0}, flex:{tier:"Unranked", lp:0}, level: 30, note: "" });
+                fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
                 loadAccounts();
-
                 modal.style.display = 'none';
-                inputLoginUser.value = '';
-                inputRiotId.value = '';
-                inputPassword.value = '';
-            } else {
-                alert("Por favor, rellena todos los campos.");
+                inputLoginUser.value = ''; inputRiotId.value = ''; inputPassword.value = '';
             }
         });
 
+        searchInput.addEventListener('input', loadAccounts);
+        filterRegion.addEventListener('change', loadAccounts);
+        sortSelect.addEventListener('change', loadAccounts);
         loadAccounts();
     </script>
 </body>

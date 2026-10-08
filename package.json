@@ -1,18 +1,29 @@
 {
-  "name": "league-accounts-clone",
+  "name": "league-accounts",
   "version": "1.0.0",
-  "description": "Gestor de cuentas",
+  "description": "League of Legends Account Manager",
+  "author": "Tu Nombre",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "electron": "^33.0.0"
+    "start": "electron .",
+    "build": "electron-builder"
   },
   "dependencies": {
-    "@electron/remote": "^2.1.3",
-    "puppeteer": "^25.12.0"
+    "@electron/remote": "^2.1.2"
+  },
+  "devDependencies": {
+    "electron": "^28.2.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.league.accounts",
+    "productName": "League Accounts",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    }
   }
 }
