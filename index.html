@@ -72,6 +72,92 @@
         .note-input:focus {
             border-color: #3b82f6;
         }
+
+        @keyframes neonPulse {
+            0% {
+                filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.2));
+            }
+            50% {
+                filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 14px rgba(59, 130, 246, 0.4));
+            }
+            100% {
+                filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.2));
+            }
+        }
+        .neon-icon {
+            animation: neonPulse 3s infinite ease-in-out;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .rotating-spinner {
+            animation: spin 3s linear infinite;
+        }
+
+        /* Notificación Neón Bonita */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .neon-toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: linear-gradient(135deg, #111218, #171923);
+            border: 1px solid #3b82f6;
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.1);
+            font-size: 13px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .neon-toast.hiding {
+            animation: fadeOut 0.4s ease forwards;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background: #14151c;
+            border: 1px solid #232430;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+            width: 130px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        .lang-option {
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #94a3b8;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            text-align: left;
+            transition: 0.2s;
+        }
+        .lang-option:hover {
+            background: #1e2029;
+            color: #fff;
+        }
+        .lang-option.active {
+            color: #38bdf8;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -80,37 +166,47 @@
             <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; box-shadow: 0 0 10px rgba(59,130,246,0.5);">LA</div>
             <h2 class="title" style="font-size: 13px; color: #fff; letter-spacing: 1px; margin: 0;">LEAGUE ACCOUNTS</h2>
         </div>
-        <button class="btn-add" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: 0.2s;">+ Add account</button>
-        <button class="btn-refresh" id="btn-refresh-all" style="margin-top: 10px; width: 100%; padding: 10px; background: #161821; border: 1px solid #232430; color: white; border-radius: 6px; cursor: pointer; transition: 0.2s;">🔄 Refresh Ranks</button>
+        <button class="btn-add" data-i18n="addAccount" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: 0.2s;">+ Add account</button>
         
-        <!-- Panel Rank Distribution -->
+        <!-- Widget de Auto Refresh -->
+        <div style="margin-top: 15px; background: #111218; border: 1px solid #232430; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px;">
+            <svg class="rotating-spinner" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2v6h-6"></path>
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                <path d="M3 22v-6h6"></path>
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+            </svg>
+            <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 9px; color: #6b6c75; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;" data-i18n="autoRefreshLabel">AUTO REFRESH</span>
+                <span id="auto-refresh-timer" style="font-size: 11px; color: #cbd5e1; font-weight: 600;">Next refresh 30s</span>
+            </div>
+        </div>
+
         <div class="rank-distribution-panel" style="margin-top: 15px; background: #111218; border: 1px solid #232430; border-radius: 8px; padding: 12px; font-size: 11px; color: #94a3b8;">
-            <div style="font-weight: bold; color: #cbd5e1; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Rank Distribution</div>
+            <div data-i18n="rankDistribution" style="font-weight: bold; color: #cbd5e1; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Rank Distribution</div>
             <div id="rank-stats-container" style="display: flex; flex-direction: column; gap: 5px;"></div>
         </div>
 
         <div class="spacer" style="flex-grow: 1;"></div>
 
-        <!-- Botones de Acción Inferiores -->
         <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
-            <button class="sidebar-btn" id="btn-import">📥 Import Accounts</button>
-            <button class="sidebar-btn" id="btn-export">📤 Export Accounts</button>
+            <button class="sidebar-btn" id="btn-import" data-i18n="importAccounts">📥 Import Accounts</button>
+            <button class="sidebar-btn" id="btn-export" data-i18n="exportAccounts">📤 Export Accounts</button>
         </div>
 
-        <button class="btn-menu sidebar-btn" style="background: #161821; color: #cbd5e1;">⚙️ Settings</button>
+        <button class="btn-menu sidebar-btn" data-i18n="settings" style="background: #161821; color: #cbd5e1;">⚙️ Settings</button>
     </div>
     
     <div class="content-wrapper" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
-        <!-- Header Superior -->
         <div class="app-header" style="background-color: #111218; padding: 15px 30px; border-bottom: 1px solid #1f2029; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
             <div class="search-container" style="position: relative; flex: 1; max-width: 350px;">
-                <input type="text" id="search-input" placeholder="Search name, tag or account ID..." style="width: 100%; background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s;">
+                <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Search name, tag or account ID..." style="width: 100%; background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s;">
                 <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #6b6c75; background: #1f2029; padding: 2px 5px; border-radius: 4px;">Ctrl+F</span>
             </div>
             
-            <div class="filters-container" style="display: flex; gap: 10px; align-items: center;">
+            <div class="filters-container" style="display: flex; gap: 10px; align-items: center; position: relative;">
                 <select id="filter-region" style="background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none;">
-                    <option value="all">All regions</option>
+                    <option value="all" data-i18n="allRegions">All regions</option>
                     <option value="euw">EUW</option>
                     <option value="eune">EUNE</option>
                     <option value="na">NA</option>
@@ -118,25 +214,42 @@
                 </select>
 
                 <select id="sort-select" style="background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none;">
-                    <option value="rank">Sort: Rank</option>
-                    <option value="name">Sort: Name</option>
+                    <option value="rank" data-i18n="sortRank">Sort: Rank</option>
+                    <option value="name" data-i18n="sortName">Sort: Name</option>
                 </select>
+
+                <div style="position: relative;">
+                    <button id="lang-btn" title="Language" style="background: #0b0c10; border: 1px solid #232430; color: white; padding: 7px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m5 8 6 6"></path>
+                            <path d="m4 14 6-6 2-3"></path>
+                            <path d="M2 5h12"></path>
+                            <path d="M7 2h1"></path>
+                            <path d="m22 22-5-10-5 10"></path>
+                            <path d="M14 18h6"></path>
+                        </svg>
+                    </button>
+                    <div id="lang-dropdown" class="lang-dropdown">
+                        <button class="lang-option" data-lang="es">Español</button>
+                        <button class="lang-option" data-lang="en">English</button>
+                        <button class="lang-option" data-lang="fr">Français</button>
+                        <button class="lang-option" data-lang="de">Deutsch</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Las tarjetas se cargarán aquí -->
         <div class="main-content" style="overflow-y: auto; padding: 30px; flex-grow: 1; background: #07080a;">
         </div>
     </div>
 
-    <!-- Modales -->
     <div id="add-modal" class="modal">
         <div class="modal-content">
-            <h3>ADD ACCOUNT</h3>
-            <input type="text" id="login-user" placeholder="Usuario de Login (Riot)">
-            <input type="text" id="riot-id" placeholder="Riot ID (ej. Nombre#TAG)">
+            <h3 data-i18n="modalAddTitle">ADD ACCOUNT</h3>
+            <input type="text" id="login-user" data-i18n-placeholder="loginUserPlaceholder" placeholder="Usuario de Login (Riot)">
+            <input type="text" id="riot-id" data-i18n-placeholder="riotIdPlaceholder" placeholder="Riot ID (ej. Nombre#TAG)">
             <div class="input-group" style="margin-bottom: 15px;">
-                <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 5px;">Región</label>
+                <label data-i18n="regionLabel" style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 5px;">Región</label>
                 <select id="region" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px;">
                     <option value="euw">EUW</option>
                     <option value="eune">EUNE</option>
@@ -144,21 +257,21 @@
                     <option value="kr">KR</option>
                 </select>
             </div>
-            <input type="password" id="password" placeholder="Contraseña">
-            <button id="save-account" class="btn-add">Save</button>
-            <button id="close-modal" class="btn-login" style="margin-top: 10px; width: 100%;">Cancel</button>
+            <input type="password" id="password" data-i18n-placeholder="passwordPlaceholder" placeholder="Contraseña">
+            <button id="save-account" class="btn-add" data-i18n="saveBtn">Save</button>
+            <button id="close-modal" class="btn-login" data-i18n="cancelBtn" style="margin-top: 10px; width: 100%;">Cancel</button>
         </div>
     </div>
 
     <div id="settings-modal" class="modal">
         <div class="modal-content" style="width: 350px;">
-            <h3>SETTINGS</h3>
+            <h3 data-i18n="settingsTitle">SETTINGS</h3>
             <div style="margin-bottom: 20px; font-size: 13px; color: #94a3b8;">
-                <p style="margin-bottom: 12px;"><strong>Ruta de datos (accounts.json):</strong><br><span id="data-path-label" style="font-size: 11px; color: #38bdf8; word-break: break-all; display: inline-block; margin-top: 4px;"></span></p>
-                <p style="margin: 0;"><strong>Cuentas guardadas:</strong> <span id="accounts-count-label" style="color: #fff; font-weight: bold;">0</span></p>
+                <p style="margin-bottom: 12px;"><strong data-i18n="dataPathLabel">Ruta de datos (accounts.json):</strong><br><span id="data-path-label" style="font-size: 11px; color: #38bdf8; word-break: break-all; display: inline-block; margin-top: 4px;"></span></p>
+                <p style="margin: 0;"><strong data-i18n="savedAccountsLabel">Cuentas guardadas:</strong> <span id="accounts-count-label" style="color: #fff; font-weight: bold;">0</span></p>
             </div>
-            <button id="btn-open-folder" class="btn-login" style="margin-bottom: 10px; width: 100%; cursor: pointer;">📂 Abrir carpeta de datos</button>
-            <button id="close-settings" class="btn-login" style="width: 100%; cursor: pointer;">Cerrar</button>
+            <button id="btn-open-folder" class="btn-login" data-i18n="openFolderBtn" style="margin-bottom: 10px; width: 100%; cursor: pointer;">📂 Abrir carpeta de datos</button>
+            <button id="close-settings" class="btn-login" data-i18n="closeBtn" style="width: 100%; cursor: pointer;">Cerrar</button>
         </div>
     </div>
 
@@ -168,8 +281,188 @@
         const { exec } = require('child_process');
         const { BrowserWindow, shell, dialog } = require('@electron/remote');
 
+        const translations = {
+            en: {
+                addAccount: "+ Add account",
+                autoRefreshLabel: "AUTO REFRESH",
+                rankDistribution: "Rank Distribution",
+                importAccounts: "📥 Import Accounts",
+                exportAccounts: "📤 Export Accounts",
+                settings: "⚙️ Settings",
+                searchPlaceholder: "Search name, tag or account ID...",
+                allRegions: "All regions",
+                sortRank: "Sort: Rank",
+                sortName: "Sort: Name",
+                level: "Level",
+                flex: "Flex",
+                addNote: "Add quick note...",
+                loginBtn: "➔ Log in",
+                deleteTitle: "Delete account",
+                modalAddTitle: "ADD ACCOUNT",
+                loginUserPlaceholder: "Riot Login User",
+                riotIdPlaceholder: "Riot ID (e.g. Name#TAG)",
+                regionLabel: "Region",
+                passwordPlaceholder: "Password",
+                saveBtn: "Save",
+                cancelBtn: "Cancel",
+                settingsTitle: "SETTINGS",
+                dataPathLabel: "Data path (accounts.json):",
+                savedAccountsLabel: "Saved accounts:",
+                openFolderBtn: "📂 Open data folder",
+                closeBtn: "Close",
+                syncMsg: "¡Se acaban de actualizar los datos de las cuentas!",
+                noAccounts: "No accounts found.",
+                deleteConfirm: "Are you sure you want to delete account"
+            },
+            es: {
+                addAccount: "+ Añadir cuenta",
+                autoRefreshLabel: "ACTUALIZACIÓN AUTO",
+                rankDistribution: "Distribución de Rangos",
+                importAccounts: "📥 Importar Cuentas",
+                exportAccounts: "📤 Exportar Cuentas",
+                settings: "⚙️ Ajustes",
+                searchPlaceholder: "Buscar nombre, tag o ID...",
+                allRegions: "Todas las regiones",
+                sortRank: "Ordenar: Rango",
+                sortName: "Ordenar: Nombre",
+                level: "Nivel",
+                flex: "Flex",
+                addNote: "Añadir nota rápida...",
+                loginBtn: "➔ Iniciar sesión",
+                deleteTitle: "Eliminar cuenta",
+                modalAddTitle: "AÑADIR CUENTA",
+                loginUserPlaceholder: "Usuario de Login (Riot)",
+                riotIdPlaceholder: "Riot ID (ej. Nombre#TAG)",
+                regionLabel: "Región",
+                passwordPlaceholder: "Contraseña",
+                saveBtn: "Guardar",
+                cancelBtn: "Cancelar",
+                settingsTitle: "AJUSTES",
+                dataPathLabel: "Ruta de datos (accounts.json):",
+                savedAccountsLabel: "Cuentas guardadas:",
+                openFolderBtn: "📂 Abrir carpeta de datos",
+                closeBtn: "Cerrar",
+                syncMsg: "¡Se acaban de actualizar los datos de las cuentas!",
+                noAccounts: "No hay cuentas.",
+                deleteConfirm: "¿Seguro que quieres eliminar la cuenta"
+            },
+            fr: {
+                addAccount: "+ Ajouter un compte",
+                autoRefreshLabel: "MISE À JOUR AUTO",
+                rankDistribution: "Distribution des Rangs",
+                importAccounts: "📥 Importer Comptes",
+                exportAccounts: "📤 Exporter Comptes",
+                settings: "⚙️ Paramètres",
+                searchPlaceholder: "Rechercher nom, tag ou ID...",
+                allRegions: "Toutes les régions",
+                sortRank: "Trier: Rang",
+                sortName: "Trier: Nom",
+                level: "Niveau",
+                flex: "Flex",
+                addNote: "Ajouter une note rapide...",
+                loginBtn: "➔ Connexion",
+                deleteTitle: "Supprimer le compte",
+                modalAddTitle: "AJOUTER UN COMPTE",
+                loginUserPlaceholder: "Nom d'utilisateur Riot",
+                riotIdPlaceholder: "Riot ID (ex. Nom#TAG)",
+                regionLabel: "Région",
+                passwordPlaceholder: "Mot de passe",
+                saveBtn: "Enregistrer",
+                cancelBtn: "Annuler",
+                settingsTitle: "PARAMÈTRES",
+                dataPathLabel: "Chemin des données (accounts.json):",
+                savedAccountsLabel: "Comptes enregistrés:",
+                openFolderBtn: "📂 Ouvrir le dossier",
+                closeBtn: "Fermer",
+                syncMsg: "¡Se acaban de actualizar los datos de las cuentas!",
+                noAccounts: "Aucun compte.",
+                deleteConfirm: "Êtes-vous sûr de vouloir supprimer le compte"
+            },
+            de: {
+                addAccount: "+ Konto hinzufügen",
+                autoRefreshLabel: "AUTO-AKTUALISIERUNG",
+                rankDistribution: "Rangverteilung",
+                importAccounts: "📥 Konten importieren",
+                exportAccounts: "📤 Konten exportieren",
+                settings: "⚙️ Einstellungen",
+                searchPlaceholder: "Name, Tag oder ID suchen...",
+                allRegions: "Alle Regionen",
+                sortRank: "Sortieren: Rang",
+                sortName: "Sortieren: Name",
+                level: "Stufe",
+                flex: "Flex",
+                addNote: "Schnellnotiz hinzufügen...",
+                loginBtn: "➔ Anmelden",
+                deleteTitle: "Konto löschen",
+                modalAddTitle: "KONTO HINZUFÜGEN",
+                loginUserPlaceholder: "Riot-Login-Benutzer",
+                riotIdPlaceholder: "Riot ID (z.B. Name#TAG)",
+                regionLabel: "Region",
+                passwordPlaceholder: "Passwort",
+                saveBtn: "Speichern",
+                cancelBtn: "Abbrechen",
+                settingsTitle: "EINSTELLUNGEN",
+                dataPathLabel: "Datenpfad (accounts.json):",
+                savedAccountsLabel: "Gespeicherte Konten:",
+                openFolderBtn: "📂 Ordner öffnen",
+                closeBtn: "Schließen",
+                syncMsg: "¡Se acaban de actualizar los datos de las cuentas!",
+                noAccounts: "Keine Konten.",
+                deleteConfirm: "Mist du sicher, dass du das Konto löschen möchtest"
+            }
+        };
+
+        function getSystemLanguage() {
+            const sysLang = (navigator.language || navigator.userLanguage || 'en').split('-')[0];
+            return translations[sysLang] ? sysLang : 'en';
+        }
+
+        let currentLang = getSystemLanguage();
+
+        function t(key) {
+            return translations[currentLang][key] || translations['en'][key] || key;
+        }
+
+        function applyLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.placeholder = t(key);
+            });
+            document.querySelectorAll('.lang-option').forEach(btn => {
+                if (btn.getAttribute('data-lang') === currentLang) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            loadAccounts();
+        }
+
+        const langBtn = document.getElementById('lang-btn');
+        const langDropdown = document.getElementById('lang-dropdown');
+
+        langBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            langDropdown.style.display = langDropdown.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        window.addEventListener('click', () => {
+            langDropdown.style.display = 'none';
+        });
+
+        document.querySelectorAll('.lang-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                currentLang = opt.getAttribute('data-lang');
+                applyLanguage();
+                langDropdown.style.display = 'none';
+            });
+        });
+
         const btnAdd = document.querySelector('.btn-add');
-        const btnRefreshAll = document.getElementById('btn-refresh-all');
         const btnSettings = document.querySelector('.btn-menu');
         const btnImport = document.getElementById('btn-import');
         const btnExport = document.getElementById('btn-export');
@@ -193,24 +486,46 @@
         const filterRegion = document.getElementById('filter-region');
         const sortSelect = document.getElementById('sort-select');
         const rankStatsContainer = document.getElementById('rank-stats-container');
+        const autoRefreshTimerLabel = document.getElementById('auto-refresh-timer');
 
         const dataPath = path.join(__dirname, 'accounts.json');
 
         const tierIcons = {
-            'Challenger': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/challenger.png',
-            'Grandmaster': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/grandmaster.png',
-            'Master': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/master.png',
-            'Diamond': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/diamond.png',
-            'Emerald': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/emerald.png',
-            'Platinum': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/platinum.png',
-            'Gold': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/gold.png',
-            'Silver': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/silver.png',
-            'Bronze': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/bronze.png',
-            'Iron': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/iron.png',
-            'Unranked': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/unranked.png'
+            'Challenger': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Challenger.png',
+            'Grandmaster': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Grandmaster.png',
+            'Master': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Master.png',
+            'Diamond': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Diamond.png',
+            'Emerald': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Emerald.png',
+            'Platinum': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Platinum.png',
+            'Gold': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Gold.png',
+            'Silver': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Silver.png',
+            'Bronze': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Bronze.png',
+            'Iron': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Iron.png',
+            'Unranked': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Iron.png'
         };
 
         const rankWeights = { 'Challenger': 10, 'Grandmaster': 9, 'Master': 8, 'Diamond': 7, 'Emerald': 6, 'Platinum': 5, 'Gold': 4, 'Silver': 3, 'Bronze': 2, 'Iron': 1, 'Unranked': 0 };
+
+        function showNeonNotification(message) {
+            const existingToast = document.querySelector('.neon-toast');
+            if (existingToast) existingToast.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'neon-toast';
+            toast.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('hiding');
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
 
         function triggerLogin(loginUser, password) {
             exec('taskkill /f /im RiotClientServices.exe', (err) => {
@@ -260,7 +575,7 @@
             rankStatsContainer.innerHTML = '';
             tiers.forEach(t => {
                 const count = counts[t];
-                if (count === 0 && t === 'Unranked') return; // Omitir si hay 0 unranked para limpiar espacio
+                if (count === 0 && t === 'Unranked') return;
                 const row = document.createElement('div');
                 row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-bottom: 3px;';
                 row.innerHTML = `
@@ -287,13 +602,13 @@
 
             newCard.innerHTML = `
                 <div style="display: flex; gap: 12px; align-items: center;">
-                    <img src="${iconUrl}" alt="${soloq.tier}" style="width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+                    <img src="${iconUrl}" alt="${soloq.tier}" class="neon-icon" style="width: 52px; height: 52px; min-width: 52px; min-height: 52px; object-fit: contain;">
                     <div style="flex-grow: 1; overflow: hidden;">
                         <div style="display: flex; justify-content: space-between; align-items: baseline;">
                             <h3 class="name" style="margin: 0; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${account.riotId}">${account.riotId}</h3>
                             <span style="font-size: 10px; color: #38bdf8; background: rgba(56,189,248,0.1); padding: 1px 5px; border-radius: 4px; font-weight: bold;">${region}</span>
                         </div>
-                        <div style="font-size: 11px; color: #6b6c75; margin-top: 2px;">Nivel: <strong style="color: #94a3b8;">${account.level || '30'}</strong></div>
+                        <div style="font-size: 11px; color: #6b6c75; margin-top: 2px;">${t('level')}: <strong style="color: #94a3b8;">${account.level || '30'}</strong></div>
                     </div>
                 </div>
 
@@ -305,20 +620,19 @@
                     <div style="background: #1e2029; height: 4px; border-radius: 2px; overflow: hidden; margin-bottom: 8px;">
                         <div style="background: linear-gradient(90deg, #3b82f6, #60a5fa); width: ${lpPercent}%; height: 100%;"></div>
                     </div>
-                    <div style="font-size: 11px; color: #6b6c75;">Flex: <strong style="color: #94a3b8;">${flex.tier} (${flex.lp} LP)</strong></div>
+                    <div style="font-size: 11px; color: #6b6c75;">${t('flex')}: <strong style="color: #94a3b8;">${flex.tier} (${flex.lp} LP)</strong></div>
                 </div>
 
                 <div style="margin-top: 10px;">
-                    <input type="text" class="note-input" placeholder="Añadir nota rápida..." value="${account.note || ''}" data-riotid="${account.riotId}">
+                    <input type="text" class="note-input" placeholder="${t('addNote')}" value="${account.note || ''}" data-riotid="${account.riotId}">
                 </div>
 
                 <div class="card-actions" style="margin-top: 12px; display: flex; gap: 8px; border-top: 1px solid #1f2029; padding-top: 10px;">
-                    <button class="btn-login" style="flex-grow: 1; padding: 7px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;">➔ Log in</button>
-                    <button class="btn-delete" title="Eliminar cuenta" style="background: #161821; border: 1px solid #232430; padding: 7px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">🗑️</button>
+                    <button class="btn-login" style="flex-grow: 1; padding: 7px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;">${t('loginBtn')}</button>
+                    <button class="btn-delete" title="${t('deleteTitle')}" style="background: #161821; border: 1px solid #232430; padding: 7px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;">🗑️</button>
                 </div>
             `;
 
-            // Guardar notas al escribir
             newCard.querySelector('.note-input').addEventListener('input', (e) => {
                 updateAccountNote(account.riotId, e.target.value);
             });
@@ -328,7 +642,7 @@
             });
 
             newCard.querySelector('.btn-delete').addEventListener('click', () => {
-                if (confirm(`¿Seguro que quieres eliminar la cuenta ${account.riotId}?`)) {
+                if (confirm(`${t('deleteConfirm')} ${account.riotId}?`)) {
                     deleteAccount(account.riotId);
                 }
             });
@@ -365,7 +679,6 @@
                         return matchesSearch && matchesRegion;
                     });
 
-                    // Ordenación real
                     filteredAccounts.sort((a, b) => {
                         if (sortBy === 'rank') {
                             const tierA = a.soloq && a.soloq.tier ? a.soloq.tier.split(' ')[0] : 'Unranked';
@@ -392,61 +705,132 @@
         }
 
         async function refreshRanksFromDeeplol() {
-            if (!fs.existsSync(dataPath)) { alert("No se encontró accounts.json"); return; }
+            if (!fs.existsSync(dataPath)) return;
             let accounts = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
             let updated = false;
-            if (accounts.length === 0) { alert("No hay cuentas."); return; }
+            if (accounts.length === 0) return;
 
             for (let acc of accounts) {
                 try {
                     const parts = acc.riotId.split('#');
                     if (parts.length < 2) continue;
-                    const targetUrl = `https://www.deeplol.gg/summoner/${(acc.region || 'euw').toLowerCase()}/${encodeURIComponent(parts[0].trim().toLowerCase())}-${encodeURIComponent(parts[1].trim().toLowerCase())}`;
+                    
+                    const nameClean = parts[0].trim().toLowerCase();
+                    const tagClean = parts[1].trim().toLowerCase();
+                    const targetUrl = `https://www.deeplol.gg/summoner/${(acc.region || 'euw').toLowerCase()}/${encodeURIComponent(nameClean)}-${encodeURIComponent(tagClean)}`;
+                    
                     const ghostWindow = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
                     await ghostWindow.loadURL(targetUrl);
 
-                    const rankedData = await ghostWindow.webContents.executeJavaScript(`
+                    const scrapedData = await ghostWindow.webContents.executeJavaScript(`
                         (async () => {
-                            for (let i = 0; i < 20; i++) {
-                                if (document.body.innerText.includes("LP") || document.body.innerText.includes("Unranked")) break;
+                            for (let i = 0; i < 30; i++) {
+                                const bodyText = document.body.innerText;
+                                if (bodyText.includes("Level") || bodyText.includes("Nivel") || bodyText.includes("LP") || bodyText.includes("Unranked") || bodyText.includes("Silver") || bodyText.includes("Gold")) {
+                                    break;
+                                }
                                 await new Promise(r => setTimeout(r, 500));
                             }
+                            await new Promise(r => setTimeout(r, 1500));
+
                             const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
                             let textNodes = [];
                             let node;
-                            while(node = walker.nextNode()) if(node.nodeValue.trim().length > 0) textNodes.push(node.nodeValue.trim());
+                            while(node = walker.nextNode()) {
+                                const val = node.nodeValue.trim();
+                                if (val.length > 0) textNodes.push(val);
+                            }
 
-                            function getQueueInfo(queueName) {
-                                const qIndex = textNodes.findIndex(t => t.toLowerCase() === queueName.toLowerCase());
-                                if (qIndex === -1) return { tier: "Unranked", lp: 0 };
-                                let tier = "Unranked", div = "", lp = 0;
-                                const validTiers = ["Challenger", "Grandmaster", "Master", "Diamond", "Emerald", "Platinum", "Gold", "Silver", "Bronze", "Iron"];
-                                for (let i = qIndex; i < Math.min(qIndex + 18, textNodes.length); i++) {
-                                    const txt = textNodes[i];
-                                    if (txt.toLowerCase() === "unranked") return { tier: "Unranked", lp: 0 };
-                                    for (let t of validTiers) {
-                                        if (txt.toLowerCase() === t.toLowerCase() || txt.toLowerCase().startsWith(t.toLowerCase() + " ")) {
-                                            tier = t;
-                                            const parts = txt.split(/\\s+/);
-                                            if (parts[1] && /^[1-4]$/.test(parts[1])) div = parts[1];
-                                        }
-                                    }
-                                    if (tier !== "Unranked" && !div && /^[1-4]$/.test(txt)) div = txt;
-                                    if (txt.toUpperCase().includes("LP")) {
-                                        const match = txt.match(/(\\d+)/);
-                                        if (match) lp = parseInt(match[1]);
+                            let level = "30";
+                            for (let i = 0; i < textNodes.length; i++) {
+                                if (textNodes[i].toLowerCase() === "level" || textNodes[i].toLowerCase() === "lvl" || textNodes[i].toLowerCase() === "nivel") {
+                                    if (textNodes[i+1] && /^\\d+$/.test(textNodes[i+1])) {
+                                        level = textNodes[i+1];
+                                        break;
                                     }
                                 }
-                                if (["Master", "Grandmaster", "Challenger"].includes(tier)) return { tier, lp };
-                                return { tier: div ? \`\${tier} \${div}\` : tier, lp };
                             }
-                            return { solo: getQueueInfo("Solo"), flex: getQueueInfo("Flex") };
+                            if (level === "30") {
+                                for (let t of textNodes) {
+                                    if (/^\\d{2,3}$/.test(t) && parseInt(t) >= 30 && parseInt(t) <= 1000) {
+                                        level = t;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            const validTiers = ["Challenger", "Grandmaster", "Master", "Diamond", "Emerald", "Platinum", "Gold", "Silver", "Bronze", "Iron"];
+
+                            function getQueueInfo(queueKeywords) {
+                                let tier = "Unranked", div = "", lp = 0;
+                                let qIndex = -1;
+                                
+                                for (let idx = 0; idx < textNodes.length; idx++) {
+                                    const tLower = textNodes[idx].toLowerCase();
+                                    if (queueKeywords.some(kw => tLower.includes(kw))) {
+                                        qIndex = idx;
+                                        break;
+                                    }
+                                }
+
+                                if (qIndex === -1) return { tier: "Unranked", lp: 0 };
+
+                                for (let i = qIndex; i < Math.min(qIndex + 35, textNodes.length); i++) {
+                                    const txt = textNodes[i];
+                                    
+                                    for (let vt of validTiers) {
+                                        if (txt.toLowerCase() === vt.toLowerCase() || txt.toLowerCase().startsWith(vt.toLowerCase() + " ")) {
+                                            tier = vt;
+                                            const subParts = txt.split(/\\s+/);
+                                            if (subParts[1] && /^[1-4]$/.test(subParts[1])) {
+                                                div = subParts[1];
+                                            }
+                                        }
+                                    }
+
+                                    if (tier !== "Unranked" && !div && /^[1-4]$/.test(txt)) {
+                                        div = txt;
+                                    }
+
+                                    if (txt.toUpperCase().includes("LP") || txt === "LP") {
+                                        const match = txt.match(/(\\d+)\\s*LP/i);
+                                        if (match) {
+                                            const parsedLp = parseInt(match[1]);
+                                            if (parsedLp >= 0 && parsedLp <= 100) {
+                                                lp = parsedLp;
+                                                break;
+                                            }
+                                        } else if (i > 0 && /^\\d+$/.test(textNodes[i-1])) {
+                                            const candidateLp = parseInt(textNodes[i-1]);
+                                            if (candidateLp >= 0 && candidateLp <= 100) {
+                                                lp = candidateLp;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                const finalTier = ["Master", "Grandmaster", "Challenger"].includes(tier) 
+                                    ? tier 
+                                    : (div ? \`\${tier} \${div}\` : (tier !== "Unranked" ? \`\${tier} 4\` : "Unranked"));
+
+                                return { tier: finalTier, lp };
+                            }
+
+                            return { 
+                                level, 
+                                solo: getQueueInfo(["solo", "duo", "ranked solo"]), 
+                                flex: getQueueInfo(["flex", "ranked flex"]) 
+                            };
                         })()
                     `);
+                    
                     ghostWindow.close();
-                    if (rankedData) {
-                        acc.soloq = rankedData.solo;
-                        acc.flex = rankedData.flex;
+                    
+                    if (scrapedData) {
+                        acc.level = scrapedData.level;
+                        acc.soloq = scrapedData.solo;
+                        acc.flex = scrapedData.flex;
                         updated = true;
                     }
                 } catch (e) {}
@@ -455,11 +839,10 @@
             if (updated) {
                 fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
                 loadAccounts();
-                alert("¡Rangos sincronizados!");
+                showNeonNotification(t('syncMsg'));
             }
         }
 
-        // Eventos generales
         btnAdd.addEventListener('click', () => modal.style.display = 'flex');
         btnClose.addEventListener('click', () => modal.style.display = 'none');
         btnSettings.addEventListener('click', () => {
@@ -469,7 +852,6 @@
         });
         btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
         btnOpenFolder.addEventListener('click', () => shell.showItemInFolder(dataPath));
-        btnRefreshAll.addEventListener('click', refreshRanksFromDeeplol);
 
         btnExport.addEventListener('click', async () => {
             const res = await dialog.showSaveDialog({ defaultPath: 'accounts-backup.json', filters: [{ name: 'JSON', extensions: ['json'] }] });
@@ -494,18 +876,50 @@
             if (loginUser && riotId && password) {
                 let accounts = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
                 accounts = accounts.filter(a => a.riotId !== riotId);
-                accounts.push({ loginUser, riotId, region, password, soloq: {tier:"Unranked", lp:0}, flex:{tier:"Unranked", lp:0}, level: 30, note: "" });
+                accounts.push({ loginUser, riotId, region, password, soloq: {tier:"Unranked", lp:0}, flex:{tier:"Unranked", lp:0}, level: "30", note: "" });
                 fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
                 loadAccounts();
                 modal.style.display = 'none';
                 inputLoginUser.value = ''; inputRiotId.value = ''; inputPassword.value = '';
+                refreshRanksFromDeeplol();
             }
         });
 
         searchInput.addEventListener('input', loadAccounts);
         filterRegion.addEventListener('change', loadAccounts);
         sortSelect.addEventListener('change', loadAccounts);
-        loadAccounts();
+        
+        applyLanguage();
+
+        // Control de cuenta atrás del Auto Refresh (Configurado a 30 segundos para comprobación)
+        // Para cambiarlo a 30 minutos reales más adelante, cambia '30' por '(30 * 60)'
+        const REFRESH_INTERVAL_SECONDS = 30; 
+        
+        let lastRefreshTime = localStorage.getItem('last_refresh_timestamp');
+        let currentTimeEpoch = Math.floor(Date.now() / 1000);
+        let secondsPassed = lastRefreshTime ? (currentTimeEpoch - parseInt(lastRefreshTime)) : REFRESH_INTERVAL_SECONDS;
+        let totalSecondsRemaining = Math.max(0, REFRESH_INTERVAL_SECONDS - secondsPassed);
+
+        if (totalSecondsRemaining === 0) {
+            refreshRanksFromDeeplol();
+            localStorage.setItem('last_refresh_timestamp', Math.floor(Date.now() / 1000));
+        }
+
+        setInterval(() => {
+            totalSecondsRemaining--;
+            if (totalSecondsRemaining <= 0) {
+                refreshRanksFromDeeplol();
+                localStorage.setItem('last_refresh_timestamp', Math.floor(Date.now() / 1000));
+                totalSecondsRemaining = REFRESH_INTERVAL_SECONDS;
+            }
+            
+            if (totalSecondsRemaining >= 60) {
+                const minutesLeft = Math.ceil(totalSecondsRemaining / 60);
+                autoRefreshTimerLabel.textContent = `Next refresh ${minutesLeft} min`;
+            } else {
+                autoRefreshTimerLabel.textContent = `Next refresh ${totalSecondsRemaining}s`;
+            }
+        }, 1000);
     </script>
 </body>
 </html>

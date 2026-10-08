@@ -3,84 +3,118 @@ body {
     padding: 0;
     display: flex;
     height: 100vh;
-    background-color: #0b0c10;
+    background-color: #07080a;
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
 }
 
 .sidebar {
-    width: 250px;
-    background-color: #111218;
+    width: 260px;
+    background-color: #0b0c10;
     padding: 20px;
     display: flex;
     flex-direction: column;
     border-right: 1px solid #1f2029;
+    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
+    z-index: 10;
 }
 
 .title {
     color: #d4af37;
-    font-size: 16px;
-    margin-bottom: 30px;
-    letter-spacing: 1px;
+    font-size: 15px;
+    margin-bottom: 25px;
+    letter-spacing: 1.5px;
+    font-weight: bold;
 }
 
 .btn-add {
-    background-color: #d4af37;
-    color: #000;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
     border: none;
-    padding: 10px;
-    border-radius: 6px;
+    padding: 11px;
+    border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
     margin-bottom: 20px;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    transition: all 0.3s ease;
 }
 
 .btn-add:hover {
-    background-color: #fce28b;
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.8);
+    filter: brightness(1.2);
 }
 
 .spacer {
     flex-grow: 1;
 }
 
-.btn-menu {
-    background: none;
-    border: none;
-    color: #8b8c94;
-    text-align: left;
-    padding: 10px 0;
-    cursor: pointer;
-    font-size: 14px;
-}
-
 .main-content {
     flex-grow: 1;
-    padding: 40px;
-    background-color: #0b0c10;
+    padding: 30px;
+    background-color: #07080a;
     overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 20px;
+    align-content: start;
+}
+
+@keyframes neonGlow {
+    0% { box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.4), inset 0 0 0px rgba(59, 130, 246, 0); }
+    50% { box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(59, 130, 246, 0.1); }
+    100% { box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.4), inset 0 0 0px rgba(59, 130, 246, 0); }
 }
 
 .account-card {
-    background-color: #15161e;
-    border: 1px solid #232430;
-    border-radius: 8px;
+    background: linear-gradient(145deg, #13141b, #0b0c10);
+    border: 1px solid #1f2233;
+    border-radius: 14px;
     padding: 20px;
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    align-items: center;
     width: 100%;
-    max-width: 600px;
-    margin-bottom: 15px;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: neonGlow 4s infinite ease-in-out;
+}
+
+/* Franja de neón lateral decorativa en las tarjetas */
+.account-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 4px; height: 100%;
+    background: #3b82f6;
+    box-shadow: 0 0 12px #3b82f6;
+}
+
+.account-card:hover {
+    border-color: #60a5fa;
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.8), 0 0 25px rgba(59, 130, 246, 0.4);
 }
 
 .name {
-    margin: 0 0 5px 0;
-    font-size: 18px;
+    margin: 0 0 3px 0;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 .tag {
-    color: #6b6c75;
-    font-size: 14px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* Ajuste para evitar que los iconos de los rangos se rompan */
+.account-card img, .rank-icon {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.2));
 }
 
 .rank {
@@ -90,22 +124,30 @@ body {
 }
 
 .lp {
-    color: #a0a1ab;
+    color: #94a3b8;
     font-weight: normal;
     margin-left: 10px;
+    font-size: 13px;
 }
 
 .btn-login {
-    background-color: transparent;
-    color: white;
-    border: 1px solid #3c3d4a;
-    padding: 8px 16px;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: #f8fafc;
+    border: 1px solid #334155;
+    padding: 8px;
+    border-radius: 8px;
     cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .btn-login:hover {
-    background-color: #232430;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border-color: #60a5fa;
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.6);
+    color: #fff;
 }
 
 /* Ventana Modal */
@@ -116,16 +158,18 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
     justify-content: center;
     align-items: center;
+    z-index: 100;
 }
 
 .modal-content {
     background-color: #15161e;
     border: 1px solid #232430;
     padding: 30px;
-    border-radius: 8px;
+    border-radius: 12px;
     width: 300px;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
 }
 
 .modal-content h3 {
@@ -139,50 +183,112 @@ body {
     color: white;
     padding: 10px;
     margin-bottom: 15px;
-    border-radius: 4px;
+    border-radius: 6px;
     outline: none;
 }
 
 .modal-content input:focus {
-    border-color: #d4af37;
+    border-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
 }
 
 .card-actions {
     display: flex;
     gap: 8px;
     align-items: center;
+    margin-top: 12px;
+    border-top: 1px solid #1f2233;
+    padding-top: 10px;
 }
 
 .btn-delete {
-    background: transparent;
-    border: none;
+    background: #161821;
+    border: 1px solid #232430;
+    padding: 7px 10px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 16px;
-    opacity: 0.6;
-    transition: opacity 0.2s;
+    transition: 0.2s;
 }
 
 .btn-delete:hover {
-    opacity: 1;
+    background: #232430;
+    border-color: #ef4444;
 }
 
 .region-tag {
-    font-size: 12px;
+    font-size: 10px;
     color: #38bdf8;
     background: rgba(56, 189, 248, 0.1);
     padding: 2px 6px;
     border-radius: 4px;
-    margin-left: 6px;
+    font-weight: bold;
 }
 
-.opgg-link {
+.note-input {
+    background: #07080a;
+    border: 1px solid #1f2233;
+    color: #cbd5e1;
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.note-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+}
+
+.sidebar-btn {
+    width: 100%;
+    padding: 10px 12px;
+    background: #0f1015;
+    border: 1px solid #1f2233;
     color: #94a3b8;
-    text-decoration: none;
-    font-size: 13px;
-    transition: color 0.2s;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
 }
 
-.opgg-link:hover {
-    color: #38bdf8;
-    text-decoration: underline;
+.sidebar-btn:hover {
+    background: #151821;
+    color: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
 }
+
+/* ==========================================
+   DISTRIBUCIÓN DE RANGOS (Colores y Opacidad)
+   ========================================== */
+.dist-bar {
+    height: 6px;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+/* Estado inactivo (sin cuentas en este rango -> baja opacidad) */
+.dist-bar.inactive { 
+    opacity: 0.15; 
+    background: #64748b; 
+}
+
+/* Estado activo (con cuentas -> alta opacidad + brillo neón oficial del LoL) */
+.dist-bar.challenger { background: #f43f5e; box-shadow: 0 0 10px #f43f5e; opacity: 1; }
+.dist-bar.grandmaster { background: #ef4444; box-shadow: 0 0 10px #ef4444; opacity: 1; }
+.dist-bar.master { background: #a855f7; box-shadow: 0 0 10px #a855f7; opacity: 1; }
+.dist-bar.diamond { background: #38bdf8; box-shadow: 0 0 10px #38bdf8; opacity: 1; }
+.dist-bar.emerald { background: #10b981; box-shadow: 0 0 10px #10b981; opacity: 1; }
+.dist-bar.platinum { background: #0ea5e9; box-shadow: 0 0 10px #0ea5e9; opacity: 1; }
+.dist-bar.gold { background: #eab308; box-shadow: 0 0 10px #eab308; opacity: 1; }
+.dist-bar.silver { background: #94a3b8; box-shadow: 0 0 10px #94a3b8; opacity: 1; }
+.dist-bar.bronze { background: #b45309; box-shadow: 0 0 10px #b45309; opacity: 1; }
+.dist-bar.iron { background: #475569; box-shadow: 0 0 8px #475569; opacity: 1; }
