@@ -5,7 +5,7 @@ body {
     height: 100vh;
     background-color: #07080a;
     color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Cinzel', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
 }
 
@@ -26,6 +26,7 @@ body {
     margin-bottom: 25px;
     letter-spacing: 1.5px;
     font-weight: bold;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .btn-add {
@@ -39,6 +40,7 @@ body {
     margin-bottom: 20px;
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
     transition: all 0.3s ease;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .btn-add:hover {
@@ -83,7 +85,6 @@ body {
     animation: neonGlow 4s infinite ease-in-out;
 }
 
-/* Franja de neón lateral decorativa en las tarjetas */
 .account-card::before {
     content: '';
     position: absolute;
@@ -102,14 +103,15 @@ body {
     margin: 0 0 3px 0;
     font-size: 15px;
     font-weight: 600;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .tag {
     color: #64748b;
     font-size: 13px;
+    font-family: 'Cinzel', sans-serif;
 }
 
-/* Ajuste para evitar que los iconos de los rangos se rompan */
 .account-card img, .rank-icon {
     width: 36px;
     height: 36px;
@@ -121,6 +123,7 @@ body {
     margin: 0;
     color: #f4c87b;
     font-weight: bold;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .lp {
@@ -128,6 +131,7 @@ body {
     font-weight: normal;
     margin-left: 10px;
     font-size: 13px;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .btn-login {
@@ -141,6 +145,7 @@ body {
     font-weight: bold;
     transition: all 0.2s;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    font-family: 'Cinzel', sans-serif;
 }
 
 .btn-login:hover {
@@ -150,7 +155,6 @@ body {
     color: #fff;
 }
 
-/* Ventana Modal */
 .modal {
     display: none;
     position: fixed;
@@ -170,11 +174,13 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+    font-family: 'Cinzel', sans-serif;
 }
 
 .modal-content h3 {
     margin-top: 0;
     text-align: center;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .modal-content input {
@@ -185,6 +191,7 @@ body {
     margin-bottom: 15px;
     border-radius: 6px;
     outline: none;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .modal-content input:focus {
@@ -222,6 +229,7 @@ body {
     padding: 2px 6px;
     border-radius: 4px;
     font-weight: bold;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .note-input {
@@ -235,6 +243,7 @@ body {
     box-sizing: border-box;
     outline: none;
     transition: border-color 0.2s;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .note-input:focus {
@@ -257,6 +266,7 @@ body {
     gap: 10px;
     margin-bottom: 8px;
     transition: all 0.2s;
+    font-family: 'Cinzel', sans-serif;
 }
 
 .sidebar-btn:hover {
@@ -266,22 +276,17 @@ body {
     box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
 }
 
-/* ==========================================
-   DISTRIBUCIÓN DE RANGOS (Colores y Opacidad)
-   ========================================== */
 .dist-bar {
     height: 6px;
     border-radius: 3px;
     transition: all 0.3s ease;
 }
 
-/* Estado inactivo (sin cuentas en este rango -> baja opacidad) */
 .dist-bar.inactive { 
     opacity: 0.15; 
     background: #64748b; 
 }
 
-/* Estado activo (con cuentas -> alta opacidad + brillo neón oficial del LoL) */
 .dist-bar.challenger { background: #f43f5e; box-shadow: 0 0 10px #f43f5e; opacity: 1; }
 .dist-bar.grandmaster { background: #ef4444; box-shadow: 0 0 10px #ef4444; opacity: 1; }
 .dist-bar.master { background: #a855f7; box-shadow: 0 0 10px #a855f7; opacity: 1; }
