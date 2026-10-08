@@ -77,29 +77,18 @@
         }
 
         @keyframes neonPulse {
-            0% {
-                filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.2));
-            }
-            50% {
-                filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 14px rgba(59, 130, 246, 0.4));
-            }
-            100% {
-                filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.2));
-            }
+            0% { filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.2)); }
+            50% { filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 14px rgba(59, 130, 246, 0.4)); }
+            100% { filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.2)); }
         }
-        .neon-icon {
-            animation: neonPulse 3s infinite ease-in-out;
-        }
+        .neon-icon { animation: neonPulse 3s infinite ease-in-out; }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .rotating-spinner {
-            animation: spin 3s linear infinite;
-        }
+        .rotating-spinner { animation: spin 3s linear infinite; }
 
-        /* Notificación Neón Bonita */
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -126,9 +115,7 @@
             gap: 12px;
             animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        .neon-toast.hiding {
-            animation: fadeOut 0.4s ease forwards;
-        }
+        .neon-toast.hiding { animation: fadeOut 0.4s ease forwards; }
 
         .lang-dropdown {
             position: absolute;
@@ -140,9 +127,10 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.5);
             display: none;
             flex-direction: column;
-            width: 130px;
+            width: 140px;
+            max-height: 220px;
+            overflow-y: auto;
             z-index: 1000;
-            overflow: hidden;
         }
         .lang-option {
             padding: 8px 12px;
@@ -168,12 +156,11 @@
 <body>
     <div class="sidebar" style="display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; padding: 15px; background: #0b0c10; border-right: 1px solid #1f2029;">
         <div class="logo-area" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; box-shadow: 0 0 10px rgba(59,130,246,0.5);">LA</div>
+            <img src="icon.png" alt="Logo" style="height: 76px; width: auto; object-fit: contain; filter: drop-shadow(0 0 10px rgba(59,130,246,0.9));">
             <h2 class="title" style="font-size: 13px; color: #fff; letter-spacing: 1px; margin: 0; font-family: 'Cinzel', sans-serif;">LEAGUE ACCOUNTS</h2>
         </div>
         <button class="btn-add" data-i18n="addAccount" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: 0.2s; font-family: 'Cinzel', sans-serif;">+ Add account</button>
         
-        <!-- Widget de Auto Refresh -->
         <div style="margin-top: 15px; background: #111218; border: 1px solid #232430; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px;">
             <svg class="rotating-spinner" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 2v6h-6"></path>
@@ -239,6 +226,12 @@
                         <button class="lang-option" data-lang="en">English</button>
                         <button class="lang-option" data-lang="fr">Français</button>
                         <button class="lang-option" data-lang="de">Deutsch</button>
+                        <button class="lang-option" data-lang="pt">Português</button>
+                        <button class="lang-option" data-lang="ru">Русский</button>
+                        <button class="lang-option" data-lang="tr">Türkçe</button>
+                        <button class="lang-option" data-lang="zh">中文</button>
+                        <button class="lang-option" data-lang="ja">日本語</button>
+                        <button class="lang-option" data-lang="ko">한국어</button>
                     </div>
                 </div>
             </div>
@@ -248,7 +241,7 @@
         </div>
     </div>
 
-    <!-- Modal Añadir Cuenta -->
+    <!-- Modales -->
     <div id="add-modal" class="modal">
         <div class="modal-content">
             <h3 data-i18n="modalAddTitle">ADD ACCOUNT</h3>
@@ -269,7 +262,6 @@
         </div>
     </div>
 
-    <!-- Modal Ajustes -->
     <div id="settings-modal" class="modal">
         <div class="modal-content" style="width: 350px;">
             <h3 data-i18n="settingsTitle">SETTINGS</h3>
@@ -282,7 +274,6 @@
         </div>
     </div>
 
-    <!-- Modal Confirmación de Borrado -->
     <div id="confirm-modal" class="modal">
         <div class="modal-content" style="width: 340px; text-align: center;">
             <h3 data-i18n="deleteTitle" style="color: #ef4444; margin-bottom: 10px;">Eliminar cuenta</h3>
@@ -294,146 +285,12 @@
         </div>
     </div>
 
+    <script src="js/translations.js"></script>
     <script>
         const fs = require('fs');
         const path = require('path');
         const { exec } = require('child_process');
         const { BrowserWindow, shell, dialog } = require('@electron/remote');
-
-        const translations = {
-            en: {
-                addAccount: "+ Add account",
-                autoRefreshLabel: "AUTO REFRESH",
-                rankDistribution: "Rank Distribution",
-                importAccounts: "📥 Import Accounts",
-                exportAccounts: "📤 Export Accounts",
-                settings: "⚙️ Settings",
-                searchPlaceholder: "Search name, tag or account ID...",
-                allRegions: "All regions",
-                sortRank: "Sort: Rank",
-                sortName: "Sort: Name",
-                level: "Level",
-                flex: "Flex",
-                addNote: "Add quick note...",
-                loginBtn: "➔ Log in",
-                deleteTitle: "Delete account",
-                modalAddTitle: "ADD ACCOUNT",
-                loginUserPlaceholder: "Riot Login User",
-                riotIdPlaceholder: "Riot ID (e.g. Name#TAG)",
-                regionLabel: "Region",
-                passwordPlaceholder: "Password",
-                saveBtn: "Save",
-                cancelBtn: "Cancel",
-                acceptBtn: "Accept",
-                settingsTitle: "SETTINGS",
-                dataPathLabel: "Data path (accounts.json):",
-                savedAccountsLabel: "Saved accounts:",
-                openFolderBtn: "📂 Open data folder",
-                closeBtn: "Close",
-                syncMsg: "¡Se acaban de actualizar los datos de las cuentas!",
-                noAccounts: "No accounts found.",
-                deleteConfirm: "Are you sure you want to delete account"
-            },
-            es: {
-                addAccount: "+ Añadir cuenta",
-                autoRefreshLabel: "ACTUALIZACIÓN AUTO",
-                rankDistribution: "Distribución de Rangos",
-                importAccounts: "📥 Importar Cuentas",
-                exportAccounts: "📤 Exportar Cuentas",
-                settings: "⚙️ Ajustes",
-                searchPlaceholder: "Buscar nombre, tag o ID...",
-                allRegions: "Todas las regiones",
-                sortRank: "Ordenar: Rango",
-                sortName: "Ordenar: Nombre",
-                level: "Nivel",
-                flex: "Flex",
-                addNote: "Añadir nota rápida...",
-                loginBtn: "➔ Iniciar sesión",
-                deleteTitle: "Eliminar cuenta",
-                modalAddTitle: "AÑADIR CUENTA",
-                loginUserPlaceholder: "Usuario de Login (Riot)",
-                riotIdPlaceholder: "Riot ID (ej. Nombre#TAG)",
-                regionLabel: "Región",
-                passwordPlaceholder: "Contraseña",
-                saveBtn: "Guardar",
-                cancelBtn: "Cancelar",
-                acceptBtn: "Aceptar",
-                settingsTitle: "AJUSTES",
-                dataPathLabel: "Ruta de datos (accounts.json):",
-                savedAccountsLabel: "Cuentas guardadas:",
-                openFolderBtn: "📂 Abrir carpeta de datos",
-                closeBtn: "Cerrar",
-                syncMsg: "¡Se acaban de actualizar los datos de las cuentas!",
-                noAccounts: "No hay cuentas.",
-                deleteConfirm: "¿Seguro que quieres eliminar la cuenta"
-            },
-            fr: {
-                addAccount: "+ Ajouter un compte",
-                autoRefreshLabel: "MISE À JOUR AUTO",
-                rankDistribution: "Distribution des Rangs",
-                importAccounts: "📥 Importer Comptes",
-                exportAccounts: "📤 Exporter Comptes",
-                settings: "⚙️ Paramètres",
-                searchPlaceholder: "Rechercher nom, tag ou ID...",
-                allRegions: "Toutes les régions",
-                sortRank: "Trier: Rang",
-                sortName: "Trier: Nom",
-                level: "Niveau",
-                flex: "Flex",
-                addNote: "Ajouter une note rapide...",
-                loginBtn: "➔ Connexion",
-                deleteTitle: "Supprimer le compte",
-                modalAddTitle: "AJOUTER UN COMPTE",
-                loginUserPlaceholder: "Nom d'utilisateur Riot",
-                riotIdPlaceholder: "Riot ID (ex. Nom#TAG)",
-                regionLabel: "Région",
-                passwordPlaceholder: "Mot de passe",
-                saveBtn: "Enregistrer",
-                cancelBtn: "Annuler",
-                acceptBtn: "Accepter",
-                settingsTitle: "PARAMÈTRES",
-                dataPathLabel: "Chemin des données (accounts.json):",
-                savedAccountsLabel: "Comptes enregistrés:",
-                openFolderBtn: "📂 Ouvrir le dossier",
-                closeBtn: "Fermer",
-                syncMsg: "¡Se acaban de actualizar los datos de las cuentas!",
-                noAccounts: "Aucun compte.",
-                deleteConfirm: "Êtes-vous sûr de vouloir supprimer le compte"
-            },
-            de: {
-                addAccount: "+ Konto hinzufügen",
-                autoRefreshLabel: "AUTO-AKTUALISIERUNG",
-                rankDistribution: "Rangverteilung",
-                importAccounts: "📥 Konten importieren",
-                exportAccounts: "📤 Konten exportieren",
-                settings: "⚙️ Einstellungen",
-                searchPlaceholder: "Name, Tag oder ID suchen...",
-                allRegions: "Alle Regionen",
-                sortRank: "Sortieren: Rang",
-                sortName: "Sortieren: Name",
-                level: "Stufe",
-                flex: "Flex",
-                addNote: "Schnellnotiz hinzufügen...",
-                loginBtn: "➔ Anmelden",
-                deleteTitle: "Konto löschen",
-                modalAddTitle: "KONTO HINZUFÜGEN",
-                loginUserPlaceholder: "Riot-Login-Benutzer",
-                riotIdPlaceholder: "Riot ID (z.B. Name#TAG)",
-                regionLabel: "Region",
-                passwordPlaceholder: "Passwort",
-                saveBtn: "Speichern",
-                cancelBtn: "Abbrechen",
-                acceptBtn: "Akzeptieren",
-                settingsTitle: "EINSTELLUNGEN",
-                dataPathLabel: "Datenpfad (accounts.json):",
-                savedAccountsLabel: "Gespeicherte Konten:",
-                openFolderBtn: "📂 Ordner öffnen",
-                closeBtn: "Schließen",
-                syncMsg: "¡Se acaban de actualizar los datos de las cuentas!",
-                noAccounts: "Keine Konten.",
-                deleteConfirm: "Bist du sicher, dass du das Konto löschen möchtest"
-            }
-        };
 
         function getSystemLanguage() {
             const sysLang = (navigator.language || navigator.userLanguage || 'en').split('-')[0];
@@ -520,17 +377,31 @@
         const dataPath = path.join(__dirname, 'accounts.json');
 
         const tierIcons = {
-            'Challenger': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Challenger.png',
-            'Grandmaster': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Grandmaster.png',
-            'Master': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Master.png',
-            'Diamond': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Diamond.png',
-            'Emerald': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Emerald.png',
-            'Platinum': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Platinum.png',
-            'Gold': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Gold.png',
-            'Silver': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Silver.png',
-            'Bronze': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Bronze.png',
-            'Iron': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Iron.png',
-            'Unranked': 'https://cdn.jsdelivr.net/gh/magisteriis/lol-icons-and-emblems/ranked-emblems/Emblem_Iron.png'
+            'Challenger': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-challenger.png',
+            'Grandmaster': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-grandmaster.png',
+            'Master': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-master.png',
+            'Diamond': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-diamond.png',
+            'Emerald': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-emerald.png',
+            'Platinum': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-platinum.png',
+            'Gold': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-gold.png',
+            'Silver': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-silver.png',
+            'Bronze': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-bronze.png',
+            'Iron': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-iron.png',
+            'Unranked': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-iron.png'
+        };
+
+        const tierColors = {
+            'Challenger': '#f4c430',
+            'Grandmaster': '#cd3737',
+            'Master': '#9b59b6',
+            'Diamond': '#576574',
+            'Emerald': '#2ecc71',
+            'Platinum': '#16a085',
+            'Gold': '#f39c12',
+            'Silver': '#95a5a6',
+            'Bronze': '#d35400',
+            'Iron': '#3e4452',
+            'Unranked': '#4b5563'
         };
 
         const rankWeights = { 'Challenger': 10, 'Grandmaster': 9, 'Master': 8, 'Diamond': 7, 'Emerald': 6, 'Platinum': 5, 'Gold': 4, 'Silver': 3, 'Bronze': 2, 'Iron': 1, 'Unranked': 0 };
@@ -605,12 +476,21 @@
             tiers.forEach(t => {
                 const count = counts[t];
                 if (count === 0 && t === 'Unranked') return;
+
+                const iconUrl = tierIcons[t] || tierIcons['Unranked'];
+                const barColor = tierColors[t] || '#3b82f6';
+                const percent = allAccounts.length > 0 ? (count / allAccounts.length) * 100 : 0;
+                const iconStyle = 'width: 28px; height: 28px; object-fit: contain; transform: scale(3.0); transform-origin: center;';
+
                 const row = document.createElement('div');
-                row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-bottom: 3px;';
+                row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-bottom: 6px;';
                 row.innerHTML = `
-                    <span style="color: #94a3b8; width: 75px; font-family: 'Cinzel', sans-serif;">${t}</span>
+                    <div style="display: flex; align-items: center; gap: 8px; width: 115px;">
+                        <img src="${iconUrl}" alt="${t}" style="${iconStyle}">
+                        <span style="color: #94a3b8; font-family: 'Cinzel', sans-serif; font-size: 10px;">${t}</span>
+                    </div>
                     <div style="flex-grow: 1; margin: 0 8px; background: #161821; height: 4px; border-radius: 2px; overflow: hidden;">
-                        <div style="background: #3b82f6; width: ${allAccounts.length > 0 ? (count / allAccounts.length) * 100 : 0}%; height: 100%;"></div>
+                        <div style="background: ${barColor}; width: ${percent}%; height: 100%;"></div>
                     </div>
                     <span style="color: #fff; font-weight: bold; width: 15px; text-align: right;">${count}</span>
                 `;
@@ -631,7 +511,7 @@
 
             newCard.innerHTML = `
                 <div style="display: flex; gap: 12px; align-items: center;">
-                    <img src="${iconUrl}" alt="${soloq.tier}" class="neon-icon" style="width: 52px; height: 52px; min-width: 52px; min-height: 52px; object-fit: contain;">
+                    <img src="${iconUrl}" alt="${soloq.tier}" class="neon-icon" style="width: 52px; height: 52px; min-width: 52px; min-height: 52px; object-fit: contain; transform: scale(3.2); transform-origin: center;">
                     <div style="flex-grow: 1; overflow: hidden;">
                         <div style="display: flex; justify-content: space-between; align-items: baseline;">
                             <h3 class="name" style="margin: 0; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Cinzel', sans-serif;" title="${account.riotId}">${account.riotId}</h3>
