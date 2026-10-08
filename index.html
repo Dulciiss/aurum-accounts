@@ -143,6 +143,241 @@
             color: #38bdf8;
             font-weight: bold;
         }
+
+        /* ===================== MODAL DE AJUSTES ===================== */
+        #settings-modal .settings-panel {
+            width: 100%;
+            max-width: 840px;
+            max-height: calc(100vh - 60px);
+            background: #10131a;
+            border: 1px solid #262b36;
+            border-radius: 16px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+        .settings-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 22px 24px 8px;
+        }
+        .settings-head h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 0.5px;
+        }
+        .settings-x {
+            background: transparent;
+            border: none;
+            color: #8b93a3;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .settings-x:hover { color: #fff; background: #1b2029; }
+        .settings-body {
+            overflow-y: auto;
+            padding: 0 24px 8px;
+            scrollbar-width: thin;
+            scrollbar-color: #2a303c transparent;
+        }
+        .settings-body::-webkit-scrollbar { width: 6px; }
+        .settings-body::-webkit-scrollbar-thumb { background: #2a303c; border-radius: 3px; }
+        .settings-section {
+            padding: 18px 0 14px;
+            border-bottom: 1px solid #222733;
+        }
+        .settings-section:last-child { border-bottom: none; }
+        .settings-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: #c9a85c;
+            margin-bottom: 10px;
+            font-family: 'Cinzel', serif;
+        }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 8px 0;
+        }
+        .setting-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .setting-name { font-size: 14px; font-weight: 600; color: #f1f5f9; }
+        .setting-desc { font-size: 12px; color: #7c8494; }
+        .setting-hint { font-size: 12px; color: #7c8494; margin-top: 2px; }
+
+        /* Interruptor */
+        .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .switch .track {
+            position: absolute; inset: 0;
+            background: #2a2f3b;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .switch .track::after {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 0.2s;
+        }
+        .switch input:checked + .track { background: #c9a85c; }
+        .switch input:checked + .track::after { transform: translateX(18px); }
+        .switch input:focus-visible + .track { outline: 2px solid #e8cf8f; outline-offset: 2px; }
+        .switch input:disabled + .track { opacity: 0.4; cursor: not-allowed; }
+
+        /* Selector de idioma de ajustes */
+        .settings-select {
+            background: #0b0d12;
+            border: 1px solid #2a303c;
+            color: #f1f5f9;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            min-width: 120px;
+            cursor: pointer;
+            outline: none;
+        }
+        .settings-select:focus { border-color: #c9a85c; }
+
+        /* Intervalo de actualización */
+        .interval-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .preset-group { display: flex; gap: 6px; }
+        .preset-btn {
+            min-width: 38px;
+            padding: 6px 10px;
+            background: #171b24;
+            border: 1px solid #2a303c;
+            color: #a3abba;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .preset-btn:hover { color: #fff; border-color: #3a4150; }
+        .preset-btn.active { background: #3a3220; border-color: #c9a85c; color: #fff; font-weight: 700; }
+        .minutes-box { display: flex; align-items: center; gap: 8px; margin-left: auto; color: #8b93a3; font-size: 13px; }
+        .minutes-input {
+            width: 72px;
+            background: #0b0d12;
+            border: 1px solid #2a303c;
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 15px;
+            text-align: center;
+            font-family: inherit;
+            outline: none;
+        }
+        .minutes-input:focus { border-color: #c9a85c; }
+        .minutes-input.invalid { border-color: #ef4444; }
+        .interval-disabled { opacity: 0.4; pointer-events: none; }
+
+        /* Radios del modo de inicio de sesión */
+        .radio-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 9px 0;
+            cursor: pointer;
+        }
+        .radio-option input { position: absolute; opacity: 0; }
+        .radio-dot {
+            width: 16px; height: 16px;
+            margin-top: 2px;
+            border-radius: 50%;
+            border: 2px solid #4a5160;
+            background: #1b1f28;
+            flex-shrink: 0;
+            position: relative;
+            transition: border-color 0.15s;
+        }
+        .radio-option input:checked + .radio-dot { border-color: #c9a85c; }
+        .radio-option input:checked + .radio-dot::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: #c9a85c;
+        }
+        .radio-option input:focus-visible + .radio-dot { outline: 2px solid #e8cf8f; outline-offset: 2px; }
+
+        /* Datos */
+        .data-path {
+            font-size: 12px;
+            color: #94a3b8;
+            word-break: break-all;
+            font-family: Consolas, 'Courier New', monospace;
+        }
+        .settings-ghost-btn {
+            background: #171b24;
+            border: 1px solid #2a303c;
+            color: #e2e8f0;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .settings-ghost-btn:hover { border-color: #c9a85c; }
+
+        /* Actualizaciones */
+        .settings-ghost-btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+        .settings-ghost-btn:disabled { opacity: 0.6; cursor: default; }
+        .settings-ghost-btn svg { flex-shrink: 0; }
+        .settings-ghost-btn.checking svg { animation: spin 0.9s linear infinite; }
+        .update-status { font-size: 12px; color: #7c8494; min-height: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .update-status.ok { color: #4ade80; }
+        .update-status.error { color: #f87171; }
+        .update-status.available { color: #e8cf8f; }
+        .update-download {
+            background: #c9a85c; border: none; color: #14110a;
+            padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;
+            font-family: inherit; cursor: pointer;
+        }
+        .update-download:hover { background: #d8b86c; }
+
+        /* Pie */
+        .settings-foot {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 14px 24px 20px;
+            border-top: 1px solid #222733;
+        }
+        .settings-cancel, .settings-save {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .settings-cancel { background: #171b24; border: 1px solid #343a47; color: #fff; }
+        .settings-cancel:hover { background: #1f2430; }
+        .settings-save { background: #c9a85c; border: 1px solid #c9a85c; color: #14110a; box-shadow: 0 4px 16px rgba(201, 168, 92, 0.3); }
+        .settings-save:hover { background: #d8b86c; }
     </style>
 </head>
 <body>
@@ -255,14 +490,148 @@
     </div>
 
     <div id="settings-modal" class="modal">
-        <div class="modal-content" style="width: 350px;">
-            <h3 data-i18n="settingsTitle">AJUSTES</h3>
-            <div style="margin-bottom: 20px; font-size: 13px; color: #94a3b8;">
-                <p style="margin-bottom: 12px;"><strong data-i18n="dataPathLabel" style="font-family: 'Cinzel', sans-serif;">Ruta de datos (accounts.json):</strong><br><span id="data-path-label" style="font-size: 11px; color: #38bdf8; word-break: break-all; display: inline-block; margin-top: 4px;"></span></p>
-                <p style="margin: 0;"><strong data-i18n="savedAccountsLabel" style="font-family: 'Cinzel', sans-serif;">Cuentas guardadas:</strong> <span id="accounts-count-label" style="color: #fff; font-weight: bold;">0</span></p>
+        <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="settings-head">
+                <h3 id="settings-title" data-i18n="settingsTitle">Ajustes</h3>
+                <button class="settings-x" id="settings-x" aria-label="Cerrar">✕</button>
             </div>
-            <button id="btn-open-folder" class="btn-login" data-i18n="openFolderBtn" style="margin-bottom: 10px; width: 100%; cursor: pointer; font-family: 'Cinzel', sans-serif;">📂 Abrir carpeta de datos</button>
-            <button id="close-settings" class="btn-login" data-i18n="closeBtn" style="width: 100%; cursor: pointer; font-family: 'Cinzel', sans-serif;">Cerrar</button>
+
+            <div class="settings-body">
+                <!-- GENERAL -->
+                <div class="settings-section">
+                    <div class="settings-section-title" data-i18n="setGeneral">General</div>
+
+                    <div class="setting-row">
+                        <div class="setting-text"><span class="setting-name" data-i18n="setLanguage">Idioma</span></div>
+                        <select id="set-language" class="settings-select">
+                            <option value="es">Español</option>
+                            <option value="en">English</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="pt">Português</option>
+                            <option value="ru">Русский</option>
+                            <option value="tr">Türkçe</option>
+                            <option value="zh">中文</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <span class="setting-name" data-i18n="setLaunchAtStartup">Iniciar con Windows</span>
+                            <span class="setting-desc" data-i18n="setLaunchAtStartupDesc">Abre League Accounts automáticamente al iniciar sesión en Windows.</span>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="set-launch-startup"><span class="track"></span></label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <span class="setting-name" data-i18n="setStartMinimized">Iniciar minimizado</span>
+                            <span class="setting-desc" data-i18n="setStartMinimizedDesc">Solo se aplica cuando se abre al iniciar Windows.</span>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="set-start-minimized"><span class="track"></span></label>
+                    </div>
+                </div>
+
+                <!-- ACTUALIZACIÓN DE RANGOS -->
+                <div class="settings-section">
+                    <div class="settings-section-title" data-i18n="setRankUpdates">Actualización de rangos</div>
+
+                    <div class="setting-row">
+                        <div class="setting-text"><span class="setting-name" data-i18n="setAutoRefresh">Actualizar rangos automáticamente</span></div>
+                        <label class="switch"><input type="checkbox" id="set-auto-refresh"><span class="track"></span></label>
+                    </div>
+
+                    <div id="interval-block">
+                        <div class="setting-row interval-row">
+                            <span class="setting-name" data-i18n="setRefreshEvery">Actualizar cada</span>
+                            <div class="preset-group" id="preset-group">
+                                <button type="button" class="preset-btn" data-min="5">5</button>
+                                <button type="button" class="preset-btn" data-min="15">15</button>
+                                <button type="button" class="preset-btn" data-min="30">30</button>
+                                <button type="button" class="preset-btn" data-min="60">60</button>
+                                <button type="button" class="preset-btn" data-min="120">120</button>
+                            </div>
+                            <div class="minutes-box">
+                                <input type="number" id="set-refresh-minutes" class="minutes-input" min="5" max="1440" step="1">
+                                <span>min</span>
+                            </div>
+                        </div>
+                        <div class="setting-hint" data-i18n="setRefreshHint">Entre 5 y 1440 minutos. Cada cuenta hace 3 consultas a la API de Riot (cuenta, invocador y liga).</div>
+                    </div>
+                </div>
+
+                <!-- INICIO DE SESIÓN -->
+                <div class="settings-section">
+                    <div class="settings-section-title" data-i18n="setLogin">Inicio de sesión</div>
+
+                    <label class="radio-option">
+                        <input type="radio" name="login-mode" value="riotClient">
+                        <span class="radio-dot"></span>
+                        <span class="setting-text">
+                            <span class="setting-name" data-i18n="setLoginRiot">Abrir el Riot Client e iniciar sesión</span>
+                            <span class="setting-desc" data-i18n="setLoginRiotDesc">Inicia el Riot Client si hace falta y escribe en su pantalla de inicio de sesión.</span>
+                        </span>
+                    </label>
+
+                    <label class="radio-option">
+                        <input type="radio" name="login-mode" value="previousWindow">
+                        <span class="radio-dot"></span>
+                        <span class="setting-text">
+                            <span class="setting-name" data-i18n="setLoginPrev">Escribir en la ventana anterior</span>
+                            <span class="setting-desc" data-i18n="setLoginPrevDesc">Hace Alt+Tab a la última ventana y escribe los datos ahí.</span>
+                        </span>
+                    </label>
+
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <span class="setting-name" data-i18n="setLaunchGame">Abrir el juego tras iniciar sesión</span>
+                            <span class="setting-desc" data-i18n="setLaunchGameDesc">Lanza League of Legends desde el Riot Client.</span>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="set-launch-game"><span class="track"></span></label>
+                    </div>
+                </div>
+
+                <!-- DATOS -->
+                <div class="settings-section">
+                    <div class="settings-section-title" data-i18n="setData">Datos</div>
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <span class="setting-name"><span data-i18n="savedAccountsLabel">Cuentas guardadas:</span> <span id="accounts-count-label">0</span></span>
+                            <span class="data-path" id="data-path-label"></span>
+                        </div>
+                        <button id="btn-open-folder" class="settings-ghost-btn" data-i18n="openFolderBtn">📂 Abrir carpeta de datos</button>
+                    </div>
+                </div>
+
+                <!-- ACTUALIZACIONES -->
+                <div class="settings-section">
+                    <div class="settings-section-title" data-i18n="setUpdates">Actualizaciones</div>
+
+                    <div class="setting-row">
+                        <div class="setting-text"><span class="setting-name" data-i18n="setAutoUpdates">Buscar actualizaciones automáticamente</span></div>
+                        <label class="switch"><input type="checkbox" id="set-auto-updates"><span class="track"></span></label>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="setting-name" style="font-weight: 500;"><span data-i18n="setInstalledVersion">Versión instalada:</span> <span id="app-version-label"></span></span>
+                        <button type="button" id="btn-check-updates" class="settings-ghost-btn">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                                <path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                            </svg>
+                            <span data-i18n="setCheckNow">Comprobar ahora</span>
+                        </button>
+                    </div>
+                    <div class="update-status" id="update-status"></div>
+                </div>
+            </div>
+
+            <div class="settings-foot">
+                <button id="close-settings" class="settings-cancel" data-i18n="cancelBtn">Cancelar</button>
+                <button id="save-settings" class="settings-save" data-i18n="saveBtn">Guardar</button>
+            </div>
         </div>
     </div>
 
@@ -281,18 +650,98 @@
     <script>
         const fs = require('fs');
         const path = require('path');
-        const { exec } = require('child_process');
-        const { BrowserWindow, shell, dialog } = require('@electron/remote');
+        const { exec, spawn } = require('child_process');
+        const { BrowserWindow, shell, dialog, app: remoteApp } = require('@electron/remote');
 
         // Clave de API oficial de Riot Games
         const RIOT_API_KEY = "RGAPI-f06ce904-896b-4d93-97b3-d44577bf2f75";
+
+        // ---------- Textos del nuevo modal de ajustes ----------
+        // Se fusionan con translations.js; si allí defines la misma clave, gana la de translations.js.
+        // Los idiomas sin traducción caen al inglés gracias a t().
+        const settingsI18n = {
+            es: {
+                setGeneral: 'General', setLanguage: 'Idioma',
+                setLaunchAtStartup: 'Iniciar con Windows', setLaunchAtStartupDesc: 'Abre League Accounts automáticamente al iniciar sesión en Windows.',
+                setStartMinimized: 'Iniciar minimizado', setStartMinimizedDesc: 'Solo se aplica cuando se abre al iniciar Windows.',
+                setRankUpdates: 'Actualización de rangos', setAutoRefresh: 'Actualizar rangos automáticamente',
+                setRefreshEvery: 'Actualizar cada', setRefreshHint: 'Entre 5 y 1440 minutos. Cada cuenta hace 3 consultas a la API de Riot (cuenta, invocador y liga).',
+                setLogin: 'Inicio de sesión',
+                setLoginRiot: 'Abrir el Riot Client e iniciar sesión', setLoginRiotDesc: 'Inicia el Riot Client si hace falta y escribe en su pantalla de inicio de sesión.',
+                setLoginPrev: 'Escribir en la ventana anterior', setLoginPrevDesc: 'Hace Alt+Tab a la última ventana y escribe los datos ahí.',
+                setLaunchGame: 'Abrir el juego tras iniciar sesión', setLaunchGameDesc: 'Lanza League of Legends desde el Riot Client.',
+                setData: 'Datos',
+                setUpdates: 'Actualizaciones', setAutoUpdates: 'Buscar actualizaciones automáticamente',
+                setInstalledVersion: 'Versión instalada:', setCheckNow: 'Comprobar ahora',
+                updChecking: 'Buscando actualizaciones...', updLatest: 'Tienes la última versión.',
+                updAvailable: 'Nueva versión disponible:', updDownload: 'Descargar',
+                updError: 'No se pudo comprobar. Revisa tu conexión e inténtalo de nuevo.',
+                nextIn: 'Siguiente en', refreshing: 'Actualizando...', autoRefreshOff: 'Desactivada · pulsa para actualizar',
+                settingsSaved: 'Ajustes guardados', invalidMinutes: 'El intervalo debe estar entre 5 y 1440 minutos',
+                riotClientNotFound: 'No se encontró el Riot Client para abrir el juego',
+                loginWindowNotFound: 'No se encontró la ventana del Riot Client'
+            },
+            en: {
+                setGeneral: 'General', setLanguage: 'Language',
+                setLaunchAtStartup: 'Launch when Windows starts', setLaunchAtStartupDesc: 'Opens League Accounts automatically when you sign in to Windows.',
+                setStartMinimized: 'Start minimized', setStartMinimizedDesc: 'Applies only when launched at startup.',
+                setRankUpdates: 'Rank updates', setAutoRefresh: 'Refresh ranks automatically',
+                setRefreshEvery: 'Refresh every', setRefreshHint: 'Between 5 and 1440 minutes. Each account makes 3 Riot API requests (account, summoner and league).',
+                setLogin: 'Login',
+                setLoginRiot: 'Open the Riot Client and sign in', setLoginRiotDesc: 'Starts the Riot Client if needed and types into its login screen.',
+                setLoginPrev: 'Type into the previous window', setLoginPrevDesc: 'Alt+Tabs to the last window and types there.',
+                setLaunchGame: 'Launch the game after signing in', setLaunchGameDesc: 'Starts League of Legends through the Riot Client.',
+                setData: 'Data',
+                setUpdates: 'Updates', setAutoUpdates: 'Check for updates automatically',
+                setInstalledVersion: 'Installed version:', setCheckNow: 'Check now',
+                updChecking: 'Checking for updates...', updLatest: 'You have the latest version.',
+                updAvailable: 'New version available:', updDownload: 'Download',
+                updError: 'Could not check. Check your connection and try again.',
+                nextIn: 'Next in', refreshing: 'Refreshing...', autoRefreshOff: 'Off · click to refresh',
+                settingsSaved: 'Settings saved', invalidMinutes: 'The interval must be between 5 and 1440 minutes',
+                riotClientNotFound: 'Riot Client not found, could not launch the game',
+                loginWindowNotFound: 'Riot Client window not found'
+            }
+        };
+        Object.entries(settingsI18n).forEach(([lang, keys]) => {
+            translations[lang] = Object.assign({}, keys, translations[lang] || {});
+        });
 
         function getSystemLanguage() {
             const sysLang = (navigator.language || navigator.userLanguage || 'en').split('-')[0];
             return translations[sysLang] ? sysLang : 'es';
         }
 
-        let currentLang = getSystemLanguage();
+        // ---------- Ajustes persistentes (settings.json junto a accounts.json) ----------
+        const settingsPath = path.join(__dirname, 'settings.json');
+        const DEFAULT_SETTINGS = {
+            language: getSystemLanguage(),
+            launchAtStartup: false,
+            startMinimized: false,
+            autoRefresh: true,
+            refreshMinutes: 15,          // 900 s, como hasta ahora
+            loginMode: 'riotClient',     // 'riotClient' | 'previousWindow'
+            launchGame: false,
+            autoCheckUpdates: true
+        };
+
+        function loadSettings() {
+            try {
+                if (fs.existsSync(settingsPath)) {
+                    return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) };
+                }
+            } catch (e) {
+                console.error('Error leyendo settings.json, se usan los valores por defecto', e);
+            }
+            return { ...DEFAULT_SETTINGS };
+        }
+
+        function saveSettings() {
+            fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
+        }
+
+        let settings = loadSettings();
+        let currentLang = translations[settings.language] ? settings.language : getSystemLanguage();
 
         function t(key) {
             return translations[currentLang][key] || translations['en'][key] || key;
@@ -352,6 +801,8 @@
         document.querySelectorAll('.lang-option').forEach(opt => {
             opt.addEventListener('click', () => {
                 currentLang = opt.getAttribute('data-lang');
+                settings.language = currentLang;
+                saveSettings();
                 applyLanguage();
                 langDropdown.style.display = 'none';
             });
@@ -428,27 +879,87 @@
             }, 4000);
         }
 
+        // Escapa un texto para SendKeys (+ ^ % ~ ( ) { } [ ] tienen significado especial)
+        // y lo devuelve como cadena literal de PowerShell entre comillas simples.
+        function sendKeysLiteral(str) {
+            const escaped = String(str ?? '').replace(/[+^%~(){}\[\]]/g, c => `{${c}}`);
+            return "'" + escaped.replace(/'/g, "''") + "'";
+        }
+
+        function runPowerShell(script, callback) {
+            const encoded = Buffer.from(script, 'utf16le').toString('base64');
+            exec(`powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${encoded}`, { windowsHide: true }, callback);
+        }
+
+        function buildTypingScript(loginUser, password) {
+            return `
+                [System.Windows.Forms.SendKeys]::SendWait(${sendKeysLiteral(loginUser)})
+                Start-Sleep -Milliseconds 600
+                [System.Windows.Forms.SendKeys]::SendWait('{TAB}')
+                Start-Sleep -Milliseconds 600
+                [System.Windows.Forms.SendKeys]::SendWait(${sendKeysLiteral(password)})
+                Start-Sleep -Milliseconds 600
+                [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+            `;
+        }
+
+        // Ruta de RiotClientServices.exe leída del registro de instalaciones de Riot
+        function getRiotClientPath() {
+            try {
+                const installs = JSON.parse(fs.readFileSync('C:\\ProgramData\\Riot Games\\RiotClientInstalls.json', 'utf-8'));
+                const p = installs.rc_default || installs.rc_live;
+                if (p && fs.existsSync(p)) return p;
+            } catch (e) { /* sin archivo de instalaciones: probamos la ruta por defecto */ }
+            const fallback = 'C:\\Riot Games\\Riot Client\\RiotClientServices.exe';
+            return fs.existsSync(fallback) ? fallback : null;
+        }
+
+        function launchLeague() {
+            const rcPath = getRiotClientPath();
+            if (!rcPath) {
+                showNeonNotification(t('riotClientNotFound'));
+                return;
+            }
+            spawn(rcPath, ['--launch-product=league_of_legends', '--launch-patchline=live'], { detached: true, stdio: 'ignore' }).unref();
+        }
+
+        function afterLoginTyped(err) {
+            if (err) {
+                showNeonNotification(t('loginWindowNotFound'));
+                return;
+            }
+            // Margen para que el Riot Client complete el inicio de sesión antes de lanzar el juego
+            if (settings.launchGame) setTimeout(launchLeague, 8000);
+        }
+
         function triggerLogin(loginUser, password) {
-            exec('taskkill /f /im RiotClientServices.exe', (err) => {
-                setTimeout(() => { exec('cmd /c start riotclient://'); }, 1000);
+            if (settings.loginMode === 'previousWindow') {
+                // Comportamiento original: Alt+Tab a la última ventana y escribir
+                const psScript = `
+                    Add-Type -AssemblyName System.Windows.Forms
+                    [System.Windows.Forms.SendKeys]::SendWait('%{TAB}')
+                    Start-Sleep -Milliseconds 800
+                    ${buildTypingScript(loginUser, password)}
+                `;
+                runPowerShell(psScript, afterLoginTyped);
+                return;
+            }
+
+            // Modo Riot Client: reiniciar el cliente, esperar su ventana y escribir
+            exec('taskkill /f /im RiotClientServices.exe', { windowsHide: true }, () => {
+                setTimeout(() => { exec('cmd /c start riotclient://', { windowsHide: true }); }, 1000);
                 setTimeout(() => {
                     const psScript = `
                         Add-Type -AssemblyName System.Windows.Forms
                         $wshell = New-Object -ComObject wscript.shell
                         $found = $false
                         for ($i = 0; $i -lt 20; $i++) { if ($wshell.AppActivate("Riot Client")) { $found = $true; break }; Start-Sleep -Milliseconds 500 }
-                        if ($found) {
-                            Start-Sleep -Seconds 1
-                            [System.Windows.Forms.SendKeys]::SendWait('${loginUser}')
-                            Start-Sleep -Milliseconds 600
-                            [System.Windows.Forms.SendKeys]::SendWait('{TAB}')
-                            Start-Sleep -Milliseconds 600
-                            [System.Windows.Forms.SendKeys]::SendWait('${password}')
-                            Start-Sleep -Milliseconds 600
-                            [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
-                        }
+                        if (-not $found) { exit 1 }
+                        Start-Sleep -Seconds 1
+                        ${buildTypingScript(loginUser, password)}
+                        exit 0
                     `;
-                    exec(`powershell -EncodedCommand ${Buffer.from(psScript, 'utf16le').toString('base64')}`);
+                    runPowerShell(psScript, afterLoginTyped);
                 }, 7000);
             });
         }
@@ -793,12 +1304,131 @@
 
         btnAdd.addEventListener('click', () => modal.style.display = 'flex');
         btnClose.addEventListener('click', () => modal.style.display = 'none');
-        btnSettings.addEventListener('click', () => {
+        // ---------- Modal de ajustes ----------
+        const setLanguageSel = document.getElementById('set-language');
+        const setLaunchStartup = document.getElementById('set-launch-startup');
+        const setStartMinimized = document.getElementById('set-start-minimized');
+        const setAutoRefresh = document.getElementById('set-auto-refresh');
+        const setRefreshMinutes = document.getElementById('set-refresh-minutes');
+        const setLaunchGame = document.getElementById('set-launch-game');
+        const intervalBlock = document.getElementById('interval-block');
+        const presetButtons = document.querySelectorAll('#preset-group .preset-btn');
+        const btnSaveSettings = document.getElementById('save-settings');
+        const btnXSettings = document.getElementById('settings-x');
+        const setAutoUpdates = document.getElementById('set-auto-updates');
+
+        function highlightPreset(minutes) {
+            presetButtons.forEach(b => b.classList.toggle('active', parseInt(b.dataset.min, 10) === minutes));
+        }
+
+        function syncDependentControls() {
+            intervalBlock.classList.toggle('interval-disabled', !setAutoRefresh.checked);
+            setStartMinimized.disabled = !setLaunchStartup.checked;
+        }
+
+        function fillSettingsForm() {
+            setLanguageSel.value = currentLang;
+            setLaunchStartup.checked = settings.launchAtStartup;
+            setStartMinimized.checked = settings.startMinimized;
+            setAutoRefresh.checked = settings.autoRefresh;
+            setRefreshMinutes.value = settings.refreshMinutes;
+            setRefreshMinutes.classList.remove('invalid');
+            highlightPreset(settings.refreshMinutes);
+            document.querySelectorAll('input[name="login-mode"]').forEach(r => r.checked = (r.value === settings.loginMode));
+            setLaunchGame.checked = settings.launchGame;
+            setAutoUpdates.checked = settings.autoCheckUpdates;
+            renderUpdateStatus();
+            syncDependentControls();
+        }
+
+        function openSettings() {
             dataPathLabel.textContent = dataPath;
             accountsCountLabel.textContent = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')).length : 0;
+            document.getElementById('app-version-label').textContent = remoteApp.getVersion();
+            fillSettingsForm();   // Cancelar descarta cambios: el formulario siempre parte de lo guardado
             settingsModal.style.display = 'flex';
+        }
+
+        function closeSettings() {
+            settingsModal.style.display = 'none';
+        }
+
+        // Registra/actualiza el inicio automático con Windows
+        function applySystemSettings() {
+            try {
+                const args = ['--startup'];
+                if (settings.startMinimized) args.push('--minimized');
+                // En desarrollo (npm start) el ejecutable es electron.exe y necesita la ruta de la app
+                if (!remoteApp.isPackaged) args.unshift(remoteApp.getAppPath());
+                remoteApp.setLoginItemSettings({
+                    openAtLogin: settings.launchAtStartup,
+                    path: remoteApp.getPath('exe'),
+                    args
+                });
+            } catch (e) {
+                console.error('No se pudo configurar el inicio con Windows', e);
+            }
+        }
+
+        presetButtons.forEach(btn => btn.addEventListener('click', () => {
+            const min = parseInt(btn.dataset.min, 10);
+            setRefreshMinutes.value = min;
+            setRefreshMinutes.classList.remove('invalid');
+            highlightPreset(min);
+        }));
+        setRefreshMinutes.addEventListener('input', () => {
+            setRefreshMinutes.classList.remove('invalid');
+            highlightPreset(parseInt(setRefreshMinutes.value, 10));
         });
-        btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+        setAutoRefresh.addEventListener('change', syncDependentControls);
+        setLaunchStartup.addEventListener('change', syncDependentControls);
+
+        btnSaveSettings.addEventListener('click', () => {
+            const minutes = Number(setRefreshMinutes.value);
+            if (!Number.isInteger(minutes) || minutes < 5 || minutes > 1440) {
+                setRefreshMinutes.classList.add('invalid');
+                setRefreshMinutes.focus();
+                showNeonNotification(t('invalidMinutes'));
+                return;
+            }
+
+            const prev = { ...settings };
+            const checkedMode = document.querySelector('input[name="login-mode"]:checked');
+            settings = {
+                ...settings,
+                language: setLanguageSel.value,
+                launchAtStartup: setLaunchStartup.checked,
+                startMinimized: setStartMinimized.checked,
+                autoRefresh: setAutoRefresh.checked,
+                refreshMinutes: minutes,
+                loginMode: checkedMode ? checkedMode.value : 'riotClient',
+                launchGame: setLaunchGame.checked,
+                autoCheckUpdates: setAutoUpdates.checked
+            };
+            saveSettings();
+
+            if (prev.launchAtStartup !== settings.launchAtStartup || prev.startMinimized !== settings.startMinimized) {
+                applySystemSettings();
+            }
+            if (prev.refreshMinutes !== settings.refreshMinutes || prev.autoRefresh !== settings.autoRefresh) {
+                secondsRemaining = getRefreshSeconds();
+            }
+            if (settings.language !== currentLang) {
+                currentLang = settings.language;
+                applyLanguage();
+            }
+            updateTimerLabel();
+            closeSettings();
+            showNeonNotification(t('settingsSaved'));
+        });
+
+        btnSettings.addEventListener('click', openSettings);
+        btnCloseSettings.addEventListener('click', closeSettings);
+        btnXSettings.addEventListener('click', closeSettings);
+        settingsModal.addEventListener('mousedown', (e) => { if (e.target === settingsModal) closeSettings(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && settingsModal.style.display === 'flex') closeSettings();
+        });
         btnOpenFolder.addEventListener('click', () => shell.showItemInFolder(dataPath));
 
         btnExport.addEventListener('click', async () => {
@@ -839,49 +1469,135 @@
         
         applyLanguage();
 
-        const REFRESH_INTERVAL_SECONDS = 900;
-        let secondsRemaining = REFRESH_INTERVAL_SECONDS;
+        // ---------- Búsqueda de actualizaciones (GitHub Releases) ----------
+        // Cambia esto por tu repositorio: publica cada versión como Release con tag "v3.0.3" o "3.0.3".
+        const UPDATE_REPO = 'TU_USUARIO/league-accounts';
+        const UPDATE_CHECK_EVERY_MS = 6 * 60 * 60 * 1000; // cada 6 h mientras la app está abierta
+
+        const btnCheckUpdates = document.getElementById('btn-check-updates');
+        const updateStatusEl = document.getElementById('update-status');
+        // state: 'idle' | 'checking' | 'latest' | 'available' | 'error'
+        let updateState = { state: 'idle', version: null, url: null };
+
+        function compareVersions(a, b) {
+            const pa = String(a).replace(/^v/i, '').split(/[.-]/).map(n => parseInt(n, 10) || 0);
+            const pb = String(b).replace(/^v/i, '').split(/[.-]/).map(n => parseInt(n, 10) || 0);
+            for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+                const diff = (pa[i] || 0) - (pb[i] || 0);
+                if (diff !== 0) return diff > 0 ? 1 : -1;
+            }
+            return 0;
+        }
+
+        function renderUpdateStatus() {
+            const { state, version, url } = updateState;
+            btnCheckUpdates.disabled = state === 'checking';
+            btnCheckUpdates.classList.toggle('checking', state === 'checking');
+            updateStatusEl.className = 'update-status';
+            updateStatusEl.innerHTML = '';
+
+            if (state === 'checking') {
+                updateStatusEl.textContent = t('updChecking');
+            } else if (state === 'latest') {
+                updateStatusEl.classList.add('ok');
+                updateStatusEl.textContent = t('updLatest');
+            } else if (state === 'error') {
+                updateStatusEl.classList.add('error');
+                updateStatusEl.textContent = t('updError');
+            } else if (state === 'available') {
+                updateStatusEl.classList.add('available');
+                const label = document.createElement('span');
+                label.textContent = `${t('updAvailable')} ${version}`;
+                const btn = document.createElement('button');
+                btn.className = 'update-download';
+                btn.textContent = t('updDownload');
+                btn.addEventListener('click', () => shell.openExternal(url));
+                updateStatusEl.append(label, btn);
+            }
+        }
+
+        // silent = true: solo avisa (con un toast) si hay una versión nueva
+        async function checkForUpdates({ silent = false } = {}) {
+            if (updateState.state === 'checking') return;
+            updateState = { state: 'checking', version: null, url: null };
+            renderUpdateStatus();
+            try {
+                const res = await fetch(`https://api.github.com/repos/${UPDATE_REPO}/releases/latest`, {
+                    headers: { 'Accept': 'application/vnd.github+json' }
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const release = await res.json();
+                const latest = String(release.tag_name || '').replace(/^v/i, '');
+                if (latest && compareVersions(latest, remoteApp.getVersion()) > 0) {
+                    updateState = { state: 'available', version: latest, url: release.html_url };
+                    if (silent) showNeonNotification(`${t('updAvailable')} ${latest}`);
+                } else {
+                    updateState = { state: 'latest', version: null, url: null };
+                }
+            } catch (err) {
+                console.error('Error buscando actualizaciones:', err);
+                updateState = { state: silent ? 'idle' : 'error', version: null, url: null };
+            }
+            renderUpdateStatus();
+        }
+
+        btnCheckUpdates.addEventListener('click', () => checkForUpdates());
+
+        // Comprobación automática: al arrancar (con margen) y periódicamente
+        setTimeout(() => { if (settings.autoCheckUpdates) checkForUpdates({ silent: true }); }, 5000);
+        setInterval(() => { if (settings.autoCheckUpdates) checkForUpdates({ silent: true }); }, UPDATE_CHECK_EVERY_MS);
+
+        // ---------- Actualización automática (intervalo configurable en Ajustes) ----------
+        function getRefreshSeconds() {
+            return settings.refreshMinutes * 60;
+        }
+
+        let secondsRemaining = getRefreshSeconds();
         let isRefreshing = false;
 
-        const autoRefreshBox = document.getElementById('auto-refresh-box');
-        autoRefreshBox.addEventListener('click', async () => {
+        function updateTimerLabel() {
+            if (isRefreshing) {
+                autoRefreshTimerLabel.textContent = t('refreshing');
+            } else if (!settings.autoRefresh) {
+                autoRefreshTimerLabel.textContent = t('autoRefreshOff');
+            } else if (secondsRemaining >= 60) {
+                autoRefreshTimerLabel.textContent = `${t('nextIn')} ${Math.ceil(secondsRemaining / 60)} min`;
+            } else {
+                autoRefreshTimerLabel.textContent = `${t('nextIn')} ${secondsRemaining}s`;
+            }
+        }
+
+        async function runRefresh() {
             if (isRefreshing) return;
             isRefreshing = true;
-            autoRefreshTimerLabel.textContent = "Actualizando...";
-            await refreshRanksFromRiotApi();
-            isRefreshing = false;
-            secondsRemaining = REFRESH_INTERVAL_SECONDS;
-            autoRefreshTimerLabel.textContent = `Siguiente en ${secondsRemaining}s`;
-        });
+            updateTimerLabel();
+            try {
+                await refreshRanksFromRiotApi();
+            } catch (err) {
+                console.error("Error en la actualización de rangos:", err);
+            } finally {
+                isRefreshing = false;
+                secondsRemaining = getRefreshSeconds();
+                updateTimerLabel();
+            }
+        }
 
-        setInterval(async () => {
+        // Pulsar la caja fuerza una actualización aunque la automática esté desactivada
+        document.getElementById('auto-refresh-box').addEventListener('click', runRefresh);
+
+        setInterval(() => {
             if (isRefreshing) return;
-
-            secondsRemaining--;
-
-            if (secondsRemaining <= 0) {
-                isRefreshing = true;
-                autoRefreshTimerLabel.textContent = `Actualizando...`;
-                
-                try {
-                    await refreshRanksFromRiotApi();
-                } catch (err) {
-                    console.error("Error en la actualización automática:", err);
-                } finally {
-                    isRefreshing = false;
-                    secondsRemaining = REFRESH_INTERVAL_SECONDS;
+            if (settings.autoRefresh) {
+                secondsRemaining--;
+                if (secondsRemaining <= 0) {
+                    runRefresh();
+                    return;
                 }
             }
-            
-            if (!isRefreshing) {
-                if (secondsRemaining >= 60) {
-                    const minutesLeft = Math.ceil(secondsRemaining / 60);
-                    autoRefreshTimerLabel.textContent = `Siguiente en ${minutesLeft} min`;
-                } else {
-                    autoRefreshTimerLabel.textContent = `Siguiente en ${secondsRemaining}s`;
-                }
-            }
+            updateTimerLabel();
         }, 1000);
+
+        updateTimerLabel();
     </script>
 </body>
 </html>

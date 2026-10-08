@@ -1,0 +1,10 @@
+{
+    "language": "es",
+    "launchAtStartup": false,
+    "startMinimized": false,
+    "autoRefresh": true,
+    "refreshMinutes": 15,
+    "loginMode": "riotClient",
+    "launchGame": false,
+    "autoCheckUpdates": true
+}
