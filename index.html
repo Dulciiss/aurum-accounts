@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -151,9 +151,9 @@
             <img src="icon.png" alt="Logo" style="height: 76px; width: auto; object-fit: contain; filter: drop-shadow(0 0 10px rgba(59,130,246,0.9));">
             <h2 class="title" style="font-size: 13px; color: #fff; letter-spacing: 1px; margin: 0; font-family: 'Cinzel', sans-serif;">LEAGUE ACCOUNTS</h2>
         </div>
-        <button class="btn-add" data-i18n="addAccount" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: 0.2s; font-family: 'Cinzel', sans-serif;">+ Add account</button>
+        <button class="btn-add" data-i18n="addAccount" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: 0.2s; font-family: 'Cinzel', sans-serif;">+ Añadir cuenta</button>
         
-        <div style="margin-top: 15px; background: #111218; border: 1px solid #232430; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px;">
+        <div id="auto-refresh-box" style="margin-top: 15px; background: #111218; border: 1px solid #232430; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer;" title="Pulsa para actualizar ahora">
             <svg class="rotating-spinner" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 2v6h-6"></path>
                 <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
@@ -161,36 +161,36 @@
                 <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
             </svg>
             <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 9px; color: #6b6c75; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;" data-i18n="autoRefreshLabel">AUTO REFRESH</span>
-                <span id="auto-refresh-timer" style="font-size: 11px; color: #cbd5e1; font-weight: 600;">Next refresh 30s</span>
+                <span style="font-size: 9px; color: #6b6c75; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;" data-i18n="autoRefreshLabel">ACTUALIZACIÓN AUTOMÁTICA</span>
+                <span id="auto-refresh-timer" style="font-size: 11px; color: #cbd5e1; font-weight: 600;">Siguiente en 30s</span>
             </div>
         </div>
 
         <div class="rank-distribution-panel" style="margin-top: 15px; background: #111218; border: 1px solid #232430; border-radius: 8px; padding: 12px; font-size: 11px; color: #94a3b8;">
-            <div data-i18n="rankDistribution" style="font-weight: bold; color: #cbd5e1; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Cinzel', sans-serif;">Rank Distribution</div>
+            <div data-i18n="rankDistribution" style="font-weight: bold; color: #cbd5e1; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Cinzel', sans-serif;">Distribución de Rangos</div>
             <div id="rank-stats-container" style="display: flex; flex-direction: column; gap: 5px;"></div>
         </div>
 
         <div class="spacer" style="flex-grow: 1;"></div>
 
         <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
-            <button class="sidebar-btn" id="btn-import" data-i18n="importAccounts">📥 Import Accounts</button>
-            <button class="sidebar-btn" id="btn-export" data-i18n="exportAccounts">📤 Export Accounts</button>
+            <button class="sidebar-btn" id="btn-import" data-i18n="importAccounts">📥 Importar cuentas</button>
+            <button class="sidebar-btn" id="btn-export" data-i18n="exportAccounts">📤 Exportar cuentas</button>
         </div>
 
-        <button class="btn-menu sidebar-btn" data-i18n="settings" style="background: #161821; color: #cbd5e1;">⚙️ Settings</button>
+        <button class="btn-menu sidebar-btn" data-i18n="settings" style="background: #161821; color: #cbd5e1;">⚙️ Ajustes</button>
     </div>
     
     <div class="content-wrapper" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
         <div class="app-header" style="background-color: #111218; padding: 15px 30px; border-bottom: 1px solid #1f2029; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
             <div class="search-container" style="position: relative; flex: 1; max-width: 350px;">
-                <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Search name, tag or account ID..." style="width: 100%; background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s; font-family: 'Cinzel', sans-serif;">
+                <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Buscar nombre, tag o ID..." style="width: 100%; background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s; font-family: 'Cinzel', sans-serif;">
                 <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #6b6c75; background: #1f2029; padding: 2px 5px; border-radius: 4px;">Ctrl+F</span>
             </div>
             
             <div class="filters-container" style="display: flex; gap: 10px; align-items: center; position: relative;">
                 <select id="filter-region" style="background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; font-family: 'Cinzel', sans-serif;">
-                    <option value="all" data-i18n="allRegions">All regions</option>
+                    <option value="all" data-i18n="allRegions">Todas las regiones</option>
                     <option value="euw">EUW</option>
                     <option value="eune">EUNE</option>
                     <option value="na">NA</option>
@@ -198,12 +198,12 @@
                 </select>
 
                 <select id="sort-select" style="background: #0b0c10; border: 1px solid #232430; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; font-family: 'Cinzel', sans-serif;">
-                    <option value="rank" data-i18n="sortRank">Sort: Rank</option>
-                    <option value="name" data-i18n="sortName">Sort: Name</option>
+                    <option value="rank" data-i18n="sortRank">Ordenar: Rango</option>
+                    <option value="name" data-i18n="sortName">Ordenar: Nombre</option>
                 </select>
 
                 <div style="position: relative;">
-                    <button id="lang-btn" title="Language" style="background: #0b0c10; border: 1px solid #232430; color: white; padding: 7px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;">
+                    <button id="lang-btn" title="Idioma" style="background: #0b0c10; border: 1px solid #232430; color: white; padding: 7px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="m5 8 6 6"></path>
                             <path d="m4 14 6-6 2-3"></path>
@@ -236,7 +236,7 @@
     <!-- Modales -->
     <div id="add-modal" class="modal">
         <div class="modal-content">
-            <h3 data-i18n="modalAddTitle">ADD ACCOUNT</h3>
+            <h3 data-i18n="modalAddTitle">AÑADIR CUENTA</h3>
             <input type="text" id="login-user" data-i18n-placeholder="loginUserPlaceholder" placeholder="Usuario de Login (Riot)">
             <input type="text" id="riot-id" data-i18n-placeholder="riotIdPlaceholder" placeholder="Riot ID (ej. Nombre#TAG)">
             <div class="input-group" style="margin-bottom: 15px;">
@@ -249,14 +249,14 @@
                 </select>
             </div>
             <input type="password" id="password" data-i18n-placeholder="passwordPlaceholder" placeholder="Contraseña">
-            <button id="save-account" class="btn-add" data-i18n="saveBtn">Save</button>
-            <button id="close-modal" class="btn-login" data-i18n="cancelBtn" style="margin-top: 10px; width: 100%; font-family: 'Cinzel', sans-serif;">Cancel</button>
+            <button id="save-account" class="btn-add" data-i18n="saveBtn">Guardar</button>
+            <button id="close-modal" class="btn-login" data-i18n="cancelBtn" style="margin-top: 10px; width: 100%; font-family: 'Cinzel', sans-serif;">Cancelar</button>
         </div>
     </div>
 
     <div id="settings-modal" class="modal">
         <div class="modal-content" style="width: 350px;">
-            <h3 data-i18n="settingsTitle">SETTINGS</h3>
+            <h3 data-i18n="settingsTitle">AJUSTES</h3>
             <div style="margin-bottom: 20px; font-size: 13px; color: #94a3b8;">
                 <p style="margin-bottom: 12px;"><strong data-i18n="dataPathLabel" style="font-family: 'Cinzel', sans-serif;">Ruta de datos (accounts.json):</strong><br><span id="data-path-label" style="font-size: 11px; color: #38bdf8; word-break: break-all; display: inline-block; margin-top: 4px;"></span></p>
                 <p style="margin: 0;"><strong data-i18n="savedAccountsLabel" style="font-family: 'Cinzel', sans-serif;">Cuentas guardadas:</strong> <span id="accounts-count-label" style="color: #fff; font-weight: bold;">0</span></p>
@@ -284,9 +284,12 @@
         const { exec } = require('child_process');
         const { BrowserWindow, shell, dialog } = require('@electron/remote');
 
+        // Clave de API oficial de Riot Games
+        const RIOT_API_KEY = "RGAPI-f06ce904-896b-4d93-97b3-d44577bf2f75";
+
         function getSystemLanguage() {
             const sysLang = (navigator.language || navigator.userLanguage || 'en').split('-')[0];
-            return translations[sysLang] ? sysLang : 'en';
+            return translations[sysLang] ? sysLang : 'es';
         }
 
         let currentLang = getSystemLanguage();
@@ -389,20 +392,20 @@
         const dataPath = path.join(__dirname, 'accounts.json');
 
         const tierIcons = {
-            'Challenger': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-challenger.png',
-            'Grandmaster': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-grandmaster.png',
-            'Master': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-master.png',
-            'Diamond': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-diamond.png',
-            'Emerald': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-emerald.png',
-            'Platinum': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-platinum.png',
-            'Gold': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-gold.png',
-            'Silver': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-silver.png',
-            'Bronze': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-bronze.png',
-            'Iron': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-iron.png',
-            'Unranked': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-iron.png'
+            'CHALLENGER': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-challenger.png',
+            'GRANDMASTER': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-grandmaster.png',
+            'MASTER': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-master.png',
+            'DIAMOND': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-diamond.png',
+            'EMERALD': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-emerald.png',
+            'PLATINUM': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-platinum.png',
+            'GOLD': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-gold.png',
+            'SILVER': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-silver.png',
+            'BRONZE': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-bronze.png',
+            'IRON': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-iron.png',
+            'UNRANKED': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-iron.png'
         };
 
-        const rankWeights = { 'Challenger': 10, 'Grandmaster': 9, 'Master': 8, 'Diamond': 7, 'Emerald': 6, 'Platinum': 5, 'Gold': 4, 'Silver': 3, 'Bronze': 2, 'Iron': 1, 'Unranked': 0 };
+        const rankWeights = { 'CHALLENGER': 10, 'GRANDMASTER': 9, 'MASTER': 8, 'DIAMOND': 7, 'EMERALD': 6, 'PLATINUM': 5, 'GOLD': 4, 'SILVER': 3, 'BRONZE': 2, 'IRON': 1, 'UNRANKED': 0 };
 
         function showNeonNotification(message) {
             const existingToast = document.querySelector('.neon-toast');
@@ -460,22 +463,22 @@
         }
 
         function updateRankDistribution(allAccounts) {
-            const tiers = Object.keys(tierIcons).filter(t => t !== 'Unranked').concat(['Unranked']);
+            const tiers = ['CHALLENGER', 'GRANDMASTER', 'MASTER', 'DIAMOND', 'EMERALD', 'PLATINUM', 'GOLD', 'SILVER', 'BRONZE', 'IRON', 'UNRANKED'];
             const counts = {};
             tiers.forEach(t => counts[t] = 0);
 
             allAccounts.forEach(acc => {
-                const soloTier = acc.soloq && acc.soloq.tier ? acc.soloq.tier.split(' ')[0] : 'Unranked';
+                const soloTier = acc.soloq && acc.soloq.tier ? acc.soloq.tier.toUpperCase().split(' ')[0] : 'UNRANKED';
                 if (counts[soloTier] !== undefined) counts[soloTier]++;
-                else counts['Unranked']++;
+                else counts['UNRANKED']++;
             });
 
             rankStatsContainer.innerHTML = '';
             tiers.forEach(t => {
                 const count = counts[t];
-                if (count === 0 && t === 'Unranked') return;
+                if (count === 0 && t === 'UNRANKED') return;
 
-                const iconUrl = tierIcons[t] || tierIcons['Unranked'];
+                const iconUrl = tierIcons[t] || tierIcons['UNRANKED'];
                 const theme = getRankTheme(t);
                 const percent = allAccounts.length > 0 ? (count / allAccounts.length) * 100 : 0;
                 const iconStyle = 'width: 28px; height: 28px; object-fit: contain; transform: scale(3.0); transform-origin: center;';
@@ -500,16 +503,16 @@
             const newCard = document.createElement('div');
             newCard.className = 'account-card';
             
-            const soloq = account.soloq || { tier: 'Unranked', lp: 0, minLp: 0, maxLp: 100 };
-            const flex = account.flex || { tier: 'Unranked', lp: 0 };
+            const soloq = account.soloq || { tier: 'UNRANKED', lp: 0, minLp: 0, maxLp: 100 };
+            const flex = account.flex || { tier: 'UNRANKED', lp: 0, minLp: 0, maxLp: 100 };
             const region = (account.region || 'euw').toUpperCase();
-            const mainTierBase = soloq.tier.split(' ')[0];
-            const iconUrl = tierIcons[mainTierBase] || tierIcons['Unranked'];
             
-            // Cálculo del porcentaje de LP adaptable a rangos normales (0-100) o Apex tiers
+            const mainTierBase = soloq.tier ? soloq.tier.toUpperCase().split(' ')[0] : 'UNRANKED';
+            const iconUrl = tierIcons[mainTierBase] || tierIcons['UNRANKED'];
+            
             let lpPercent = 0;
             const apexTiers = ['MASTER', 'GRANDMASTER', 'CHALLENGER'];
-            if (apexTiers.includes(mainTierBase.toUpperCase())) {
+            if (apexTiers.includes(mainTierBase)) {
                 const min = soloq.minLp !== undefined ? soloq.minLp : 0;
                 const max = soloq.maxLp !== undefined && soloq.maxLp > min ? soloq.maxLp : (min + 500);
                 lpPercent = Math.min(Math.max(((soloq.lp - min) / (max - min)) * 100, 0), 100);
@@ -525,6 +528,8 @@
             const radarWaveHtml = `
                 <div style="position: absolute; top: 30%; left: 50%; width: 220px; height: 220px; background: radial-gradient(circle, ${rankTheme.glow} 0%, transparent 70%); border-radius: 50%; pointer-events: none; animation: cardRadarWave 6s ease-in-out infinite; z-index: 0;"></div>
             `;
+
+            const flexDisplay = (flex.tier === 'UNRANKED') ? 'UNRANKED' : `${flex.tier} (${flex.lp} LP)`;
 
             newCard.innerHTML = radarWaveHtml + `
                 <div style="position: relative; z-index: 1; display: flex; gap: 12px; align-items: center;">
@@ -546,7 +551,7 @@
                     <div style="background: #1e2029; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px; box-shadow: inset 0 0 4px rgba(0,0,0,0.6);">
                         <div class="lp-fill-animated" style="width: ${lpPercent}%; height: 100%; background: linear-gradient(90deg, ${rankTheme.primary}, ${rankTheme.neon}, #ffffff, ${rankTheme.neon}, ${rankTheme.primary}); box-shadow: 0 0 10px ${rankTheme.glow};"></div>
                     </div>
-                    <div style="font-size: 11px; color: #6b6c75;">${t('flex')}: <strong style="color: #94a3b8;">${flex.tier} (${flex.lp} LP)</strong></div>
+                    <div style="font-size: 11px; color: #6b6c75;">${t('flex')}: <strong style="color: #94a3b8;">${flexDisplay}</strong></div>
                 </div>
 
                 <div style="position: relative; z-index: 1; margin-top: 10px;">
@@ -601,182 +606,188 @@
         }
 
         function loadAccounts() {
-            if (fs.existsSync(dataPath)) {
-                try {
-                    const data = fs.readFileSync(dataPath, 'utf-8');
-                    let allAccounts = JSON.parse(data);
-                    
-                    updateRankDistribution(allAccounts);
+            if (!fs.existsSync(dataPath)) {
+                const defaultAccount = [{
+                    loginUser: "Neah001",
+                    riotId: "NEAH#001",
+                    region: "euw",
+                    password: "",
+                    level: "30",
+                    soloq: { tier: "SILVER 2", lp: 0 },
+                    flex: { tier: "UNRANKED", lp: 0 },
+                    note: ""
+                }];
+                fs.writeFileSync(dataPath, JSON.stringify(defaultAccount, null, 4));
+            }
 
-                    const searchTerm = searchInput.value.toLowerCase();
-                    const selectedRegion = filterRegion.value;
-                    const sortBy = sortSelect.value;
+            try {
+                const data = fs.readFileSync(dataPath, 'utf-8');
+                let allAccounts = JSON.parse(data);
 
-                    let filteredAccounts = allAccounts.filter(acc => {
-                        const matchesSearch = acc.riotId.toLowerCase().includes(searchTerm) || (acc.loginUser && acc.loginUser.toLowerCase().includes(searchTerm)) || (acc.note && acc.note.toLowerCase().includes(searchTerm));
-                        const matchesRegion = selectedRegion === 'all' || (acc.region || 'euw').toLowerCase() === selectedRegion;
-                        return matchesSearch && matchesRegion;
-                    });
+                updateRankDistribution(allAccounts);
 
-                    filteredAccounts.sort((a, b) => {
-                        if (sortBy === 'rank') {
-                            const tierA = a.soloq && a.soloq.tier ? a.soloq.tier.split(' ')[0] : 'Unranked';
-                            const tierB = b.soloq && b.soloq.tier ? b.soloq.tier.split(' ')[0] : 'Unranked';
-                            const weightA = rankWeights[tierA] !== undefined ? rankWeights[tierA] : 0;
-                            const weightB = rankWeights[tierB] !== undefined ? rankWeights[tierB] : 0;
-                            if (weightA !== weightB) return weightB - weightA;
-                            const lpA = a.soloq ? a.soloq.lp : 0;
-                            const lpB = b.soloq ? b.soloq.lp : 0;
-                            return lpB - lpA;
-                        } else {
-                            return a.riotId.localeCompare(b.riotId);
-                        }
-                    });
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedRegion = filterRegion.value;
+                const sortBy = sortSelect.value;
 
-                    mainContent.innerHTML = '';
-                    filteredAccounts.forEach(acc => renderCard(acc)); 
-                } catch (e) {
-                    console.error("Error leyendo accounts.json", e);
-                }
-            } else {
-                updateRankDistribution([]);
+                let filteredAccounts = allAccounts.filter(acc => {
+                    const matchesSearch = acc.riotId.toLowerCase().includes(searchTerm) || (acc.loginUser && acc.loginUser.toLowerCase().includes(searchTerm)) || (acc.note && acc.note.toLowerCase().includes(searchTerm));
+                    const matchesRegion = selectedRegion === 'all' || (acc.region || 'euw').toLowerCase() === selectedRegion;
+                    return matchesSearch && matchesRegion;
+                });
+
+                filteredAccounts.sort((a, b) => {
+                    if (sortBy === 'rank') {
+                        const tierA = a.soloq && a.soloq.tier ? a.soloq.tier.toUpperCase().split(' ')[0] : 'UNRANKED';
+                        const tierB = b.soloq && b.soloq.tier ? b.soloq.tier.toUpperCase().split(' ')[0] : 'UNRANKED';
+                        const weightA = rankWeights[tierA] !== undefined ? rankWeights[tierA] : 0;
+                        const weightB = rankWeights[tierB] !== undefined ? rankWeights[tierB] : 0;
+                        if (weightA !== weightB) return weightB - weightA;
+                        const lpA = a.soloq ? a.soloq.lp : 0;
+                        const lpB = b.soloq ? b.soloq.lp : 0;
+                        return lpB - lpA;
+                    } else {
+                        return a.riotId.localeCompare(b.riotId);
+                    }
+                });
+
+                mainContent.innerHTML = '';
+                filteredAccounts.forEach(acc => renderCard(acc)); 
+            } catch (e) {
+                console.error("Error leyendo accounts.json", e);
             }
         }
 
-        async function refreshRanksFromDeeplol() {
-            if (!fs.existsSync(dataPath)) return;
+        // Función de sincronización mediante la API Oficial de Riot Games corregida
+        async function refreshRanksFromRiotApi() {
+            console.log("Iniciando actualización de rangos...");
+            if (!fs.existsSync(dataPath)) {
+                console.log("El archivo accounts.json no existe.");
+                return;
+            }
             
             let accounts = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-            if (accounts.length === 0) return;
+            if (accounts.length === 0) {
+                console.log("No hay cuentas guardadas para actualizar.");
+                return;
+            }
 
             let updated = false;
+
+            const routingMap = {
+                'euw': { regionServer: 'euw1', continent: 'europe' },
+                'eune': { regionServer: 'eun1', continent: 'europe' },
+                'na': { regionServer: 'na1', continent: 'americas' },
+                'kr': { regionServer: 'kr', continent: 'asia' }
+            };
 
             for (let i = 0; i < accounts.length; i++) {
                 let acc = accounts[i];
                 try {
                     const parts = acc.riotId.split('#');
-                    if (parts.length < 2) continue;
-                    
-                    const nameClean = parts[0].trim().toLowerCase();
-                    const tagClean = parts[1].trim().toLowerCase();
-                    const targetUrl = `https://www.deeplol.gg/summoner/${(acc.region || 'euw').toLowerCase()}/${encodeURIComponent(nameClean)}-${encodeURIComponent(tagClean)}`;
-                    
-                    const ghostWindow = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
-                    await ghostWindow.loadURL(targetUrl);
-
-                    const scrapedData = await ghostWindow.webContents.executeJavaScript(`
-                        (async () => {
-                            for (let i = 0; i < 30; i++) {
-                                const bodyText = document.body.innerText;
-                                if (bodyText.includes("Level") || bodyText.includes("Nivel") || bodyText.includes("LP") || bodyText.includes("Unranked") || bodyText.includes("Silver") || bodyText.includes("Gold") || bodyText.includes("Platinum")) {
-                                    break;
-                                }
-                                await new Promise(r => setTimeout(r, 500));
-                            }
-                            await new Promise(r => setTimeout(r, 1500));
-
-                            // Extracción de Nivel de invocador de forma segura
-                            let level = "30";
-                            const levelEls = Array.from(document.querySelectorAll('*')).find(el => el.innerText && (el.innerText.toLowerCase().includes("level") || el.innerText.toLowerCase().includes("nivel")) && el.innerText.length < 20);
-                            if (levelEls) {
-                                const matchNum = levelEls.innerText.match(/\\d+/);
-                                if (matchNum) level = matchNum[0];
-                            }
-
-                            // Función robusta para extraer rangos y LP por bloques de cola (Solo/Duo o Flex)
-                            function parseQueue(queueKeyword) {
-                                let tier = "Unranked";
-                                let div = "";
-                                let lp = 0;
-                                let minLp = 0;
-                                let maxLp = 100;
-
-                                const elements = Array.from(document.querySelectorAll('div, section, span, p'));
-                                const queueEl = elements.find(el => el.children.length === 0 && el.innerText && el.innerText.toLowerCase().includes(queueKeyword));
-
-                                if (!queueEl) return { tier: "Unranked", lp: 0, minLp: 0, maxLp: 100 };
-
-                                // Subimos al contenedor padre que agrupa la tarjeta de esa cola específica
-                                let container = queueEl.parentElement;
-                                for (let step = 0; step < 4; step++) {
-                                    if (container && container.parentElement) container = container.parentElement;
-                                }
-
-                                const containerText = container ? container.innerText : document.body.innerText;
-
-                                const validTiers = ["Challenger", "Grandmaster", "Master", "Diamond", "Emerald", "Platinum", "Gold", "Silver", "Bronze", "Iron"];
-                                for (let vt of validTiers) {
-                                    if (new RegExp('\\\\b' + vt + '\\\\b', 'i').test(containerText)) {
-                                        tier = vt;
-                                        break;
-                                    }
-                                }
-
-                                // Buscar división (1 a 4) si aplica
-                                if (tier !== "Unranked" && !["Challenger", "Grandmaster", "Master"].includes(tier)) {
-                                    const divMatch = containerText.match(new RegExp(tier + '\\s*([1-4])', 'i'));
-                                    if (divMatch) {
-                                        div = divMatch[1];
-                                    } else {
-                                        const numMatch = containerText.match(/\\b([1-4])\\b/);
-                                        if (numMatch) div = numMatch[1];
-                                    }
-                                }
-
-                                // Buscar LP asociados a esta cola
-                                const lpMatch = containerText.match(/(\\d+)\\s*LP/i);
-                                if (lpMatch) {
-                                    lp = parseInt(lpMatch[1]);
-                                }
-
-                                const apexTiers = ["Master", "Grandmaster", "Challenger"];
-                                if (!apexTiers.includes(tier)) {
-                                    lp = lp % 100;
-                                    if (!div) div = "4"; // Por defecto división 4 si no se detecta
-                                } else {
-                                    minLp = 0;
-                                    maxLp = Math.max(lp + 200, 500);
-                                }
-
-                                const finalTier = apexTiers.includes(tier) 
-                                    ? tier 
-                                    : (div ? \`\${tier} \${div}\` : (tier !== "Unranked" ? \`\${tier} 4\` : "Unranked"));
-
-                                return { tier: finalTier, lp, minLp, maxLp };
-                            }
-
-                            return { 
-                                level, 
-                                solo: parseQueue("solo"), 
-                                flex: parseQueue("flex") 
-                            };
-                        })()
-                    `);
-                    
-                    try { ghostWindow.close(); } catch(err) {}
-                    
-                    if (scrapedData) {
-                        let currentDiskAccounts = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
-                        let targetAccount = currentDiskAccounts.find(a => a.riotId === acc.riotId);
-                        if (targetAccount) {
-                            targetAccount.level = scrapedData.level;
-                            targetAccount.soloq = scrapedData.solo;
-                            targetAccount.flex = scrapedData.flex;
-                        } else {
-                            acc.level = scrapedData.level;
-                            acc.soloq = scrapedData.solo;
-                            acc.flex = scrapedData.flex;
-                            currentDiskAccounts.push(acc);
-                        }
-                        fs.writeFileSync(dataPath, JSON.stringify(currentDiskAccounts, null, 4));
-                        updated = true;
+                    if (parts.length < 2) {
+                        console.log(`Riot ID mal formado para: ${acc.riotId}`);
+                        continue;
                     }
-                } catch (e) {}
+                    
+                    const gameName = encodeURIComponent(parts[0].trim());
+                    const tagLine = encodeURIComponent(parts[1].trim());
+                    const userRegionKey = (acc.region || 'euw').toLowerCase();
+                    const routing = routingMap[userRegionKey] || routingMap['euw'];
+                    
+                    // 1. Obtener PUUID por Riot ID
+                    const accountUrl = `https://${routing.continent}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${gameName}/${tagLine}?api_key=${RIOT_API_KEY}`;
+                    console.log(`Consultando Riot ID para: ${acc.riotId}`);
+                    
+                    const accRes = await fetch(accountUrl);
+                    if (!accRes.ok) {
+                        console.error(`Error HTTP ${accRes.status} al buscar ${acc.riotId}. ¿Es válida tu API Key?`);
+                        continue;
+                    }
+                    const accData = await accRes.json();
+                    const puuid = accData.puuid;
+
+                    if (!puuid) {
+                        console.error(`No se encontró PUUID para ${acc.riotId}`);
+                        continue;
+                    }
+
+                    // 2. Obtener el nivel del invocador usando el PUUID
+                    const summonerUrl = `https://${routing.regionServer}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}?api_key=${RIOT_API_KEY}`;
+                    const sumRes = await fetch(summonerUrl);
+                    if (!sumRes.ok) {
+                        const errText = await sumRes.text();
+                        console.error(`Error HTTP ${sumRes.status} en Summoner API para ${acc.riotId}:`, errText);
+                        continue;
+                    }
+                    const sumData = await sumRes.json();
+                    const level = sumData.summonerLevel ? sumData.summonerLevel.toString() : "30";
+
+                    // 3. Obtener Rangos (League V4) usando directamente el PUUID (corregido)
+                    const leagueUrl = `https://${routing.regionServer}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}?api_key=${RIOT_API_KEY}`;
+                    const leagueRes = await fetch(leagueUrl);
+                    if (!leagueRes.ok) {
+                        console.error(`Error HTTP ${leagueRes.status} en League V4 API para ${acc.riotId}`);
+                        continue;
+                    }
+                    const leagueData = await leagueRes.json();
+
+                    let soloq = { tier: "UNRANKED", lp: 0, minLp: 0, maxLp: 100 };
+                    let flex = { tier: "UNRANKED", lp: 0, minLp: 0, maxLp: 100 };
+
+                    leagueData.forEach(queue => {
+                        const tierName = queue.tier; 
+                        const rankDiv = queue.rank;   
+                        const lpVal = queue.leaguePoints;
+                        const apexTiers = ["MASTER", "GRANDMASTER", "CHALLENGER"];
+
+                        let formattedTier = "UNRANKED";
+                        let minLp = 0;
+                        let maxLp = 100;
+
+                        if (apexTiers.includes(tierName)) {
+                            formattedTier = tierName;
+                            minLp = (tierName === "MASTER") ? 0 : ((tierName === "GRANDMASTER") ? 400 : 700);
+                            maxLp = Math.max(lpVal + 300, minLp + 500);
+                        } else {
+                            formattedTier = `${tierName} ${rankDiv}`;
+                        }
+
+                        const queueInfo = { tier: formattedTier, lp: lpVal, minLp, maxLp };
+
+                        if (queue.queueType === "RANKED_SOLO_5x5") {
+                            soloq = queueInfo;
+                        } else if (queue.queueType === "RANKED_FLEX_SR") {
+                            flex = queueInfo;
+                        }
+                    });
+
+                    let currentDiskAccounts = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
+                    let targetAccount = currentDiskAccounts.find(a => a.riotId === acc.riotId);
+                    if (targetAccount) {
+                        targetAccount.level = level;
+                        targetAccount.soloq = soloq;
+                        targetAccount.flex = flex;
+                    } else {
+                        acc.level = level;
+                        acc.soloq = soloq;
+                        acc.flex = flex;
+                        currentDiskAccounts.push(acc);
+                    }
+                    fs.writeFileSync(dataPath, JSON.stringify(currentDiskAccounts, null, 4));
+                    updated = true;
+                    console.log(`Cuenta actualizada con éxito: ${acc.riotId}`);
+
+                } catch (e) {
+                    console.error("Excepción en bucle de actualización para", acc.riotId, e);
+                }
             }
 
             if (updated) {
                 loadAccounts();
                 showNeonNotification(t('syncMsg'));
+            } else {
+                console.log("No se actualizó ninguna cuenta (revisa la consola por posibles errores de red o API Key).");
             }
         }
 
@@ -813,12 +824,12 @@
             if (loginUser && riotId && password) {
                 let accounts = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : [];
                 accounts = accounts.filter(a => a.riotId !== riotId);
-                accounts.push({ loginUser, riotId, region, password, soloq: {tier:"Unranked", lp:0, minLp:0, maxLp:100}, flex:{tier:"Unranked", lp:0}, level: "30", note: "" });
+                accounts.push({ loginUser, riotId, region, password, soloq: {tier:"UNRANKED", lp:0, minLp:0, maxLp:100}, flex:{tier:"UNRANKED", lp:0, minLp:0, maxLp:100}, level: "30", note: "" });
                 fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
                 loadAccounts();
                 modal.style.display = 'none';
                 inputLoginUser.value = ''; inputRiotId.value = ''; inputPassword.value = '';
-                refreshRanksFromDeeplol();
+                refreshRanksFromRiotApi();
             }
         });
 
@@ -828,9 +839,20 @@
         
         applyLanguage();
 
-        const REFRESH_INTERVAL_SECONDS = 15;
+        const REFRESH_INTERVAL_SECONDS = 900;
         let secondsRemaining = REFRESH_INTERVAL_SECONDS;
         let isRefreshing = false;
+
+        const autoRefreshBox = document.getElementById('auto-refresh-box');
+        autoRefreshBox.addEventListener('click', async () => {
+            if (isRefreshing) return;
+            isRefreshing = true;
+            autoRefreshTimerLabel.textContent = "Actualizando...";
+            await refreshRanksFromRiotApi();
+            isRefreshing = false;
+            secondsRemaining = REFRESH_INTERVAL_SECONDS;
+            autoRefreshTimerLabel.textContent = `Siguiente en ${secondsRemaining}s`;
+        });
 
         setInterval(async () => {
             if (isRefreshing) return;
@@ -839,12 +861,12 @@
 
             if (secondsRemaining <= 0) {
                 isRefreshing = true;
-                autoRefreshTimerLabel.textContent = `Updating...`;
+                autoRefreshTimerLabel.textContent = `Actualizando...`;
                 
                 try {
-                    await refreshRanksFromDeeplol();
+                    await refreshRanksFromRiotApi();
                 } catch (err) {
-                    console.error("Error en auto-refresh:", err);
+                    console.error("Error en la actualización automática:", err);
                 } finally {
                     isRefreshing = false;
                     secondsRemaining = REFRESH_INTERVAL_SECONDS;
@@ -854,9 +876,9 @@
             if (!isRefreshing) {
                 if (secondsRemaining >= 60) {
                     const minutesLeft = Math.ceil(secondsRemaining / 60);
-                    autoRefreshTimerLabel.textContent = `Next refresh ${minutesLeft} min`;
+                    autoRefreshTimerLabel.textContent = `Siguiente en ${minutesLeft} min`;
                 } else {
-                    autoRefreshTimerLabel.textContent = `Next refresh ${secondsRemaining}s`;
+                    autoRefreshTimerLabel.textContent = `Siguiente en ${secondsRemaining}s`;
                 }
             }
         }, 1000);
