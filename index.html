@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League Accounts</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-area">
+            <h2 class="title">LEAGUE ACCOUNTS</h2>
+        </div>
+        <button class="btn-add">+ Add account</button>
+        <div class="spacer"></div>
+        <button class="btn-menu">Settings</button>
+    </div>
+    
+    <div class="main-content">
+        <!-- Las tarjetas se cargarán aquí -->
+    </div>
+
+    <!-- Ventana modal actualizada -->
+    <div id="add-modal" class="modal">
+        <div class="modal-content">
+            <h3>ADD ACCOUNT</h3>
+            <input type="text" id="login-user" placeholder="Usuario de Login (Riot)">
+            <input type="text" id="riot-id" placeholder="Riot ID (ej. Nombre#TAG)">
+            <input type="password" id="password" placeholder="Contraseña">
+            <button id="save-account" class="btn-add">Save</button>
+            <button id="close-modal" class="btn-login" style="margin-top: 10px; width: 100%;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const fs = require('fs');
+        const path = require('path');
+        const { exec } = require('child_process');
+
+        const btnAdd = document.querySelector('.btn-add');
+        const modal = document.getElementById('add-modal');
+        const btnClose = document.getElementById('close-modal');
+        const btnSave = document.getElementById('save-account');
+        const inputLoginUser = document.getElementById('login-user');
+        const inputRiotId = document.getElementById('riot-id');
+        const inputPassword = document.getElementById('password');
+        const mainContent = document.querySelector('.main-content');
+
+        const dataPath = path.join(__dirname, 'accounts.json');
+
+        function triggerLogin(loginUser, password) {
+            exec('taskkill /f /im RiotClientServices.exe', (err) => {
+                setTimeout(() => {
+                    exec('cmd /c start riotclient://');
+                }, 1000);
+
+                setTimeout(() => {
+                    const psScript = `
+                        Add-Type -AssemblyName System.Windows.Forms
+                        $wshell = New-Object -ComObject wscript.shell
+                        
+                        $found = $false
+                        for ($i = 0; $i -lt 20; $i++) {
+                            if ($wshell.AppActivate("Riot Client")) {
+                                $found = $true
+                                break
+                            }
+                            Start-Sleep -Milliseconds 500
+                        }
+                        
+                        if ($found) {
+                            Start-Sleep -Seconds 1
+                            [System.Windows.Forms.SendKeys]::SendWait('${loginUser}')
+                            Start-Sleep -Milliseconds 600
+                            [System.Windows.Forms.SendKeys]::SendWait('{TAB}')
+                            Start-Sleep -Milliseconds 600
+                            [System.Windows.Forms.SendKeys]::SendWait('${password}')
+                            Start-Sleep -Milliseconds 600
+                            [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+                        }
+                    `;
+                    const encodedCommand = Buffer.from(psScript, 'utf16le').toString('base64');
+                    exec(`powershell -EncodedCommand ${encodedCommand}`);
+                }, 7000);
+            });
+        }
+
+        function renderCard(loginUser, riotId, password) {
+            const newCard = document.createElement('div');
+            newCard.className = 'account-card';
+            newCard.innerHTML = `
+                <div class="account-info">
+                    <h3 class="name">${riotId}</h3>
+                    <p class="rank">Unranked <span class="lp">0 LP</span></p>
+                </div>
+                <button class="btn-login">➔ Log in</button>
+            `;
+
+            const btnLogin = newCard.querySelector('.btn-login');
+            btnLogin.addEventListener('click', () => {
+                triggerLogin(loginUser, password);
+            });
+
+            mainContent.appendChild(newCard);
+        }
+
+        function loadAccounts() {
+            if (fs.existsSync(dataPath)) {
+                const data = fs.readFileSync(dataPath, 'utf-8');
+                const accounts = JSON.parse(data);
+                mainContent.innerHTML = '';
+                accounts.forEach(acc => {
+                    // Soporte por si alguna cuenta antigua no tiene loginUser guardado
+                    const user = acc.loginUser || acc.riotId; 
+                    renderCard(user, acc.riotId, acc.password);
+                }); 
+            }
+        }
+
+        function saveAccountToFile(loginUser, riotId, password) {
+            let accounts = [];
+            if (fs.existsSync(dataPath)) {
+                const data = fs.readFileSync(dataPath, 'utf-8');
+                accounts = JSON.parse(data);
+            }
+            accounts.push({ loginUser, riotId, password }); 
+            fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
+        }
+
+        btnAdd.addEventListener('click', () => modal.style.display = 'flex');
+        btnClose.addEventListener('click', () => modal.style.display = 'none');
+
+        btnSave.addEventListener('click', () => {
+            const loginUser = inputLoginUser.value.trim();
+            const riotId = inputRiotId.value.trim();
+            const password = inputPassword.value.trim();
+
+            if (loginUser !== "" && riotId !== "" && password !== "") {
+                saveAccountToFile(loginUser, riotId, password);
+                renderCard(loginUser, riotId, password);
+
+                modal.style.display = 'none';
+                inputLoginUser.value = '';
+                inputRiotId.value = '';
+                inputPassword.value = '';
+            } else {
+                alert("Por favor, rellena todos los campos.");
+            }
+        });
+
+        loadAccounts();
+    </script>
+</body>
+</html>
