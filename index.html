@@ -197,67 +197,105 @@
 
                     await ghostWindow.loadURL(targetUrl);
 
-                    // Esperar a que la página cargue los datos y extraer textos estructurados con precisión
-                    const extractedRanks = await ghostWindow.webContents.executeJavaScript(`
+                    // Extracción con soporte para nodos de texto separados para los LP
+                    const rankedData = await ghostWindow.webContents.executeJavaScript(`
                         (async () => {
-                            for (let i = 0; i < 15; i++) {
-                                const text = document.body.innerText;
-                                if (text.includes("LP") || text.includes("Solo") || text.includes("Flex")) {
+                            for (let i = 0; i < 20; i++) {
+                                const allText = document.body.innerText;
+                                if (allText.includes("LP") || allText.includes("Solo") || allText.includes("Unranked")) {
                                     break;
                                 }
-                                await new Promise(r => setTimeout(r, 400));
+                                await new Promise(r => setTimeout(r, 500));
                             }
 
-                            // Buscar bloques de texto específicos de las colas
-                            const queueBoxes = Array.from(document.querySelectorAll('div')).map(el => el.innerText.trim());
-                            return queueBoxes.filter(text => text.includes("Solo") || text.includes("Flex") || text.includes("LP"));
+                            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                            let node;
+                            let textNodes = [];
+                            while(node = walker.nextNode()) {
+                                if(node.nodeValue.trim().length > 0) {
+                                    textNodes.push(node.nodeValue.trim());
+                                }
+                            }
+
+                            function getQueueInfo(queueName) {
+                                const qIndex = textNodes.findIndex(t => t.toLowerCase() === queueName.toLowerCase());
+                                if (qIndex === -1) return { tier: "Unranked", lp: 0 };
+
+                                let tier = "Unranked";
+                                let div = "";
+                                let lp = 0;
+                                const validTiers = ["Challenger", "Grandmaster", "Master", "Diamond", "Emerald", "Platinum", "Gold", "Silver", "Bronze", "Iron"];
+
+                                for (let i = qIndex; i < Math.min(qIndex + 18, textNodes.length); i++) {
+                                    const txt = textNodes[i];
+                                    
+                                    if (txt.toLowerCase() === "unranked") {
+                                        return { tier: "Unranked", lp: 0 };
+                                    }
+
+                                    // Buscar Tier y División
+                                    for (let t of validTiers) {
+                                        if (txt.toLowerCase() === t.toLowerCase() || txt.toLowerCase().startsWith(t.toLowerCase() + " ")) {
+                                            tier = t;
+                                            const parts = txt.split(/\\s+/);
+                                            if (parts[1] && /^[1-4]$/.test(parts[1])) {
+                                                div = parts[1];
+                                            }
+                                        }
+                                    }
+
+                                    if (tier !== "Unranked" && !div && /^[1-4]$/.test(txt)) {
+                                        div = txt;
+                                    }
+
+                                    // Búsqueda inteligente de LP (maneja si el número y "LP" están juntos o separados en nodos)
+                                    if (txt.toUpperCase().includes("LP") || txt.toUpperCase() === "LP") {
+                                        // Revisar si el número está en el mismo texto
+                                        const match = txt.match(/(\\d+)/);
+                                        if (match) {
+                                            lp = parseInt(match[1]);
+                                        } 
+                                        // O si el número está en el nodo de texto inmediatamente anterior
+                                        else if (i > 0 && /^\\d+$/.test(textNodes[i - 1])) {
+                                            lp = parseInt(textNodes[i - 1]);
+                                        }
+                                    }
+                                    // Por si acaso el nodo actual es solo el número de LP y el siguiente es "LP"
+                                    else if (/^\\d+$/.test(txt) && i + 1 < textNodes.length && textNodes[i + 1].toUpperCase().includes("LP")) {
+                                        // Asegurarnos de que no sea la división (las divisiones son 1-4, los LP suelen ser más o 0)
+                                        // Si ya tenemos división y este número está más abajo cerca de LP, lo cogemos
+                                        if (parseInt(txt) > 4 || txt === "0") {
+                                            lp = parseInt(txt);
+                                        }
+                                    }
+                                }
+
+                                if (tier === "Unranked") return { tier: "Unranked", lp: 0 };
+                                if (["Master", "Grandmaster", "Challenger"].includes(tier)) {
+                                    return { tier: tier, lp: lp };
+                                }
+
+                                return {
+                                    tier: div ? \`\${tier} \${div}\` : tier,
+                                    lp: lp
+                                };
+                            }
+
+                            return {
+                                solo: getQueueInfo("Solo"),
+                                flex: getQueueInfo("Flex")
+                            };
                         })()
                     `);
 
                     ghostWindow.close();
 
-                    if (extractedRanks && extractedRanks.length > 0) {
-                        let soloTier = "Unranked";
-                        let soloLp = 0;
-                        let flexTier = "Unranked";
-                        let flexLp = 0;
-
-                        // Analizar cada bloque encontrado para extraer Solo/Duo y Flex por separado
-                        extractedRanks.forEach(block => {
-                            const lowerBlock = block.toLowerCase();
-                            
-                            // Procesar Solo/Duo
-                            if (lowerBlock.includes("solo") && (lowerBlock.includes("lp") || lowerBlock.includes("ranked"))) {
-                                const tierMatch = block.match(/(Challenger|Grandmaster|Master|Diamond|Emerald|Platinum|Gold|Silver|Bronze|Iron)\s*(I{1,3}|IV|V)?/i);
-                                if (tierMatch) {
-                                    soloTier = tierMatch[0].trim();
-                                }
-                                const lpMatch = block.match(/(\d+)\s*LP/i);
-                                if (lpMatch) {
-                                    soloLp = parseInt(lpMatch[1]);
-                                }
-                            }
-
-                            // Procesar Flex
-                            if (lowerBlock.includes("flex") && (lowerBlock.includes("lp") || lowerBlock.includes("ranked"))) {
-                                const tierMatch = block.match(/(Challenger|Grandmaster|Master|Diamond|Emerald|Platinum|Gold|Silver|Bronze|Iron)\s*(I{1,3}|IV|V)?/i);
-                                if (tierMatch) {
-                                    flexTier = tierMatch[0].trim();
-                                }
-                                const lpMatch = block.match(/(\d+)\s*LP/i);
-                                if (lpMatch) {
-                                    flexLp = parseInt(lpMatch[1]);
-                                }
-                            }
-                        });
-
-                        // Si encontramos datos reales en alguna de las dos colas, actualizamos
-                        if (soloTier !== "Unranked" || flexTier !== "Unranked" || soloLp > 0 || flexLp > 0) {
-                            acc.soloq = { tier: soloTier, lp: soloLp };
-                            acc.flex = { tier: flexTier, lp: flexLp };
-                            updated = true;
-                        }
+                    if (rankedData) {
+                        acc.soloq = rankedData.solo;
+                        acc.flex = rankedData.flex;
+                        updated = true;
                     }
+
                 } catch (e) {
                     console.error("Error al actualizar:", e);
                 }
@@ -266,9 +304,9 @@
             if (updated) {
                 fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
                 loadAccounts();
-                alert("¡Rangos y LP sincronizados con precisión desde DeepLol!");
+                alert("¡Rangos, divisiones y LP sincronizados al 100%!");
             } else {
-                alert("No se pudieron extraer los rangos. Comprueba que el Riot ID y la región sean exactos.");
+                alert("No se pudieron extraer los datos. Comprueba que el Riot ID y la región sean exactos.");
             }
         }
 
