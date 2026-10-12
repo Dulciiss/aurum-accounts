@@ -1438,6 +1438,22 @@
         const https = require('https');
         const { BrowserWindow, shell, dialog, app: remoteApp } = require('@electron/remote');
 
+        // ---------- Definición segura de la ruta en AppData ----------
+        let userDataPath;
+        try {
+            const currentApp = remoteApp || require('@electron/remote').app || require('electron').app;
+            userDataPath = currentApp.getPath('userData');
+        } catch (e) {
+            userDataPath = path.join(process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME + "/.local/share"), 'league-accounts');
+        }
+
+        if (!fs.existsSync(userDataPath)) {
+            fs.mkdirSync(userDataPath, { recursive: true });
+        }
+
+        const dataPath = path.join(userDataPath, 'accounts.json');
+        const settingsPath = path.join(userDataPath, 'settings.json');
+
         // Todos los textos de la interfaz viven en js/translations.js (t() los lee según el idioma activo).
 
         function getSystemLanguage() {
@@ -1445,8 +1461,6 @@
             return translations[sysLang] ? sysLang : 'es';
         }
 
-        // ---------- Ajustes persistentes (settings.json junto a accounts.json) ----------
-        const settingsPath = path.join(userDataPath, 'settings.json');
         const DEFAULT_SETTINGS = {
             language: getSystemLanguage(),
             launchAtStartup: false,
@@ -1573,9 +1587,6 @@
         const sortSelect = document.getElementById('sort-select');
         const rankStatsContainer = document.getElementById('rank-stats-container');
         const autoRefreshTimerLabel = document.getElementById('auto-refresh-timer');
-
-        const userDataPath = (remoteApp || require('electron').app).getPath('userData');
-        const dataPath = path.join(userDataPath, 'accounts.json');
 
         // ---------- Barra de título propia (ventana sin marco) ----------
         function applyWindowState(state) {

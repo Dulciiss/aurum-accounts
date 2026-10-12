@@ -2,14 +2,18 @@
   "name": "league-accounts",
   "version": "1.0.0",
   "description": "League of Legends Account Manager",
-  "author": "Tu Nombre",
+  "author": "Dulcinea",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win portable"
+    "build": "electron-builder --win portable",
+    "build:all": "electron-builder -w -m -l"
   },
   "dependencies": {
-    "@electron/remote": "^2.1.2"
+    "@electron/remote": "^2.1.2",
+    "axios": "^1.6.8",
+    "better-sqlite3": "^9.4.3",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "electron": "^28.2.0",
@@ -22,11 +26,34 @@
       "output": "dist"
     },
     "win": {
-      "target": "portable",
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        },
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
       "icon": "icon.png"
     },
     "portable": {
       "artifactName": "${productName}-${version}-Portable.exe"
-    }
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-${version}-Setup.exe"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "renderer.js",
+      "package.json",
+      "js/**/*",
+      "node_modules/**/*"
+    ]
   }
 }
