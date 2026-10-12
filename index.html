@@ -1058,14 +1058,14 @@
     <header class="titlebar" id="titlebar">
         <div class="titlebar-brand"></div>
         <div class="titlebar-controls">
-            <button class="tb-btn" id="tb-min" aria-label="Minimizar" title="Minimizar">
+            <button class="tb-btn" id="tb-min" data-i18n-aria-label="winMinimize" data-i18n-title="winMinimize">
                 <svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 5h10" stroke="currentColor" stroke-width="1"/></svg>
             </button>
-            <button class="tb-btn" id="tb-max" aria-label="Maximizar" title="Maximizar">
+            <button class="tb-btn" id="tb-max">
                 <svg class="icon-maximize" width="10" height="10" viewBox="0 0 10 10"><rect x="0.5" y="0.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1"/></svg>
                 <svg class="icon-restore" width="10" height="10" viewBox="0 0 10 10"><rect x="0.5" y="2.5" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1"/><path d="M2.5 2.5V0.5h7v7h-2" fill="none" stroke="currentColor" stroke-width="1"/></svg>
             </button>
-            <button class="tb-btn close" id="tb-close" aria-label="Cerrar" title="Cerrar">
+            <button class="tb-btn close" id="tb-close" data-i18n-aria-label="winClose" data-i18n-title="winClose">
                 <svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" stroke-width="1"/></svg>
             </button>
         </div>
@@ -1080,19 +1080,19 @@
 
         <button class="btn-add sb-add">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-            <span data-i18n="addAccountBtn">Añadir cuenta</span>
+            <span data-i18n="addAccountBtn"></span>
             <kbd>Ctrl N</kbd>
         </button>
 
         <div class="sb-panel">
-            <div class="sb-label" data-i18n="rankDistribution">Distribución de rangos</div>
+            <div class="sb-label" data-i18n="rankDistribution"></div>
             <div id="rank-stats-container"></div>
         </div>
 
-        <div id="auto-refresh-box" class="sb-refresh" data-i18n-title="refreshNowTip" title="Pulsa para actualizar ahora">
+        <div id="auto-refresh-box" class="sb-refresh" data-i18n-title="refreshNowTip">
             <div class="sb-refresh-ring"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg></div>
             <div class="sb-refresh-text">
-                <span class="sb-refresh-label" data-i18n="autoRefreshLabel">Actualización automática</span>
+                <span class="sb-refresh-label" data-i18n="autoRefreshLabel"></span>
                 <span id="auto-refresh-timer"></span>
             </div>
         </div>
@@ -1100,10 +1100,10 @@
         <div class="spacer" style="flex-grow: 1;"></div>
 
         <nav class="sb-nav">
-            <button class="sb-nav-item" id="btn-import"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg><span data-i18n="navImport">Importar</span></button>
-            <button class="sb-nav-item" id="btn-export"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg><span data-i18n="navExport">Exportar</span></button>
-            <button class="sb-nav-item" id="btn-data-folder"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span data-i18n="navDataFolder">Carpeta de datos</span></button>
-            <button class="sb-nav-item btn-menu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span data-i18n="navSettings">Ajustes</span></button>
+            <button class="sb-nav-item" id="btn-import"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg><span data-i18n="navImport"></span></button>
+            <button class="sb-nav-item" id="btn-export"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg><span data-i18n="navExport"></span></button>
+            <button class="sb-nav-item" id="btn-data-folder"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span data-i18n="navDataFolder"></span></button>
+            <button class="sb-nav-item btn-menu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span data-i18n="navSettings"></span></button>
         </nav>
         <div class="sb-version" id="sb-version"></div>
     </div>
@@ -1112,28 +1112,28 @@
         <div class="app-header topbar">
             <div class="tb-search">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Buscar nombre, tag o ID..." spellcheck="false">
+                <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" spellcheck="false">
                 <kbd>Ctrl F</kbd>
             </div>
 
             <div class="tb-controls">
                 <label class="tb-pill">
-                    <span class="tb-pill-label" data-i18n="selRegionLabel">Región</span>
+                    <span class="tb-pill-label" data-i18n="selRegionLabel"></span>
                     <select id="filter-region"></select>
                     <svg class="tb-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                 </label>
 
                 <label class="tb-pill">
-                    <span class="tb-pill-label" data-i18n="selSortLabel">Ordenar</span>
+                    <span class="tb-pill-label" data-i18n="selSortLabel"></span>
                     <select id="sort-select">
-                        <option value="rank" data-i18n="selRank">Rango</option>
-                        <option value="name" data-i18n="selName">Nombre</option>
+                        <option value="rank" data-i18n="selRank"></option>
+                        <option value="name" data-i18n="selName"></option>
                     </select>
                     <svg class="tb-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                 </label>
 
                 <div style="position: relative;">
-                    <button id="lang-btn" class="tb-icon-btn" data-i18n-title="langTip" title="Idioma">
+                    <button id="lang-btn" class="tb-icon-btn" data-i18n-title="langTip">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
                     </button>
                     <div id="lang-dropdown" class="lang-dropdown">
@@ -1162,66 +1162,66 @@
     <div id="drawer-overlay" class="drawer-overlay"></div>
     <aside id="account-drawer" class="account-drawer" aria-hidden="true" role="dialog" aria-labelledby="drawer-title">
         <div class="drawer-head">
-            <h3 id="drawer-title" data-i18n="drawerAddTitle">Añadir cuenta</h3>
-            <p class="drawer-sub" data-i18n="drawerSub">Las contraseñas se guardan cifradas con la protección de datos de Windows.</p>
-            <button class="settings-x" id="drawer-close" aria-label="Cerrar">✕</button>
+            <h3 id="drawer-title" data-i18n="drawerAddTitle"></h3>
+            <p class="drawer-sub" data-i18n="drawerSub"></p>
+            <button class="settings-x" id="drawer-close" data-i18n-aria-label="closeBtn">✕</button>
         </div>
 
         <div class="drawer-body">
             <div class="drawer-tabs" id="drawer-tabs">
-                <button type="button" class="drawer-tab active" data-tab="single" data-i18n="tabSingle">Una cuenta</button>
-                <button type="button" class="drawer-tab" data-tab="bulk" data-i18n="tabBulk">Carga masiva</button>
+                <button type="button" class="drawer-tab active" data-tab="single" data-i18n="tabSingle"></button>
+                <button type="button" class="drawer-tab" data-tab="bulk" data-i18n="tabBulk"></button>
             </div>
 
             <!-- Una cuenta -->
             <div id="tab-single">
                 <div class="field">
-                    <label for="acc-login-user" data-i18n="fieldLoginUser">ID de cuenta (usuario)</label>
-                    <input type="text" id="acc-login-user" placeholder="usuario_login" autocomplete="off" spellcheck="false">
+                    <label for="acc-login-user" data-i18n="fieldLoginUser"></label>
+                    <input type="text" id="acc-login-user" data-i18n-placeholder="loginUserPh" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="field">
-                    <label for="acc-riot-id"><span data-i18n="fieldRiotId">Riot ID</span> <em data-i18n="optional">(opcional)</em></label>
-                    <input type="text" id="acc-riot-id" data-i18n-placeholder="riotIdPh" placeholder="NombreJuego#TAG" autocomplete="off" spellcheck="false">
+                    <label for="acc-riot-id"><span data-i18n="fieldRiotId"></span> <em data-i18n="optional"></em></label>
+                    <input type="text" id="acc-riot-id" data-i18n-placeholder="riotIdPh" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="field">
-                    <label for="acc-region" data-i18n="regionLabel">Región</label>
+                    <label for="acc-region" data-i18n="regionLabel"></label>
                     <select id="acc-region"></select>
                 </div>
                 <div class="field">
-                    <label for="acc-password" data-i18n="fieldPassword">Contraseña</label>
+                    <label for="acc-password" data-i18n="fieldPassword"></label>
                     <div class="password-wrap">
                         <input type="password" id="acc-password" autocomplete="new-password">
-                        <button type="button" class="eye-btn" id="toggle-password" aria-label="Mostrar contraseña">
+                        <button type="button" class="eye-btn" id="toggle-password" data-i18n-aria-label="showPassword">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
                     </div>
                 </div>
                 <div class="field">
-                    <label for="acc-description"><span data-i18n="fieldDescription">Descripción</span> <em data-i18n="optional">(opcional)</em></label>
-                    <input type="text" id="acc-description" data-i18n-placeholder="descriptionPh" placeholder="p. ej. main, smurf, ARAM..." maxlength="80">
+                    <label for="acc-description"><span data-i18n="fieldDescription"></span> <em data-i18n="optional"></em></label>
+                    <input type="text" id="acc-description" data-i18n-placeholder="descriptionPh" maxlength="80">
                 </div>
                 <div class="field-error" id="single-error"></div>
                 <button type="button" class="btn-gold" id="drawer-submit">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
-                    <span id="drawer-submit-label" data-i18n="addAccountBtn">Añadir cuenta</span>
+                    <span id="drawer-submit-label" data-i18n="addAccountBtn"></span>
                 </button>
             </div>
 
             <!-- Carga masiva -->
             <div id="tab-bulk" style="display: none;">
                 <div class="field">
-                    <label for="bulk-text" data-i18n="bulkLabel">Una cuenta por línea</label>
-                    <textarea id="bulk-text" spellcheck="false" placeholder="usuario:contraseña&#10;usuario:contraseña:euw&#10;usuario:contraseña:kr:Nombre#KR1"></textarea>
-                    <div class="field-hint" data-i18n="bulkHint">Formato: usuario:contraseña:región:RiotID#TAG. Región y Riot ID son opcionales. Las cuentas que ya existan se omiten.</div>
+                    <label for="bulk-text" data-i18n="bulkLabel"></label>
+                    <textarea id="bulk-text" spellcheck="false" data-i18n-placeholder="bulkPh"></textarea>
+                    <div class="field-hint" data-i18n="bulkHint"></div>
                 </div>
                 <div class="field">
-                    <label for="bulk-region" data-i18n="bulkDefaultRegion">Región por defecto</label>
+                    <label for="bulk-region" data-i18n="bulkDefaultRegion"></label>
                     <select id="bulk-region"></select>
                 </div>
                 <div class="field-error" id="bulk-error"></div>
                 <button type="button" class="btn-gold" id="bulk-submit">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
-                    <span data-i18n="bulkSubmit">Añadir cuentas</span>
+                    <span data-i18n="bulkSubmit"></span>
                 </button>
             </div>
         </div>
@@ -1258,16 +1258,16 @@
     <div id="card-menu" class="ctx-menu" role="menu">
         <button class="ctx-item" data-action="opgg" role="menuitem">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
-            <span data-i18n="ctxOpgg">Perfil de OP.GG</span>
+            <span data-i18n="ctxOpgg"></span>
         </button>
         <button class="ctx-item" data-action="edit" role="menuitem">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
-            <span data-i18n="ctxEdit">Editar</span>
+            <span data-i18n="ctxEdit"></span>
         </button>
         <div class="ctx-sep"></div>
         <button class="ctx-item danger" data-action="delete" role="menuitem">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            <span data-i18n="ctxDelete">Eliminar</span>
+            <span data-i18n="ctxDelete"></span>
             <span class="ctx-kbd">Del</span>
         </button>
     </div>
@@ -1275,17 +1275,17 @@
     <div id="settings-modal" class="modal">
         <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
             <div class="settings-head">
-                <h3 id="settings-title" data-i18n="settingsTitle">Ajustes</h3>
-                <button class="settings-x" id="settings-x" aria-label="Cerrar">✕</button>
+                <h3 id="settings-title" data-i18n="settingsTitle"></h3>
+                <button class="settings-x" id="settings-x" data-i18n-aria-label="closeBtn">✕</button>
             </div>
 
             <div class="settings-body">
                 <!-- GENERAL -->
                 <div class="settings-section">
-                    <div class="settings-section-title" data-i18n="setGeneral">General</div>
+                    <div class="settings-section-title" data-i18n="setGeneral"></div>
 
                     <div class="setting-row">
-                        <div class="setting-text"><span class="setting-name" data-i18n="setLanguage">Idioma</span></div>
+                        <div class="setting-text"><span class="setting-name" data-i18n="setLanguage"></span></div>
                         <select id="set-language" class="settings-select">
                             <option value="es">Español</option>
                             <option value="en">English</option>
@@ -1302,16 +1302,16 @@
 
                     <div class="setting-row">
                         <div class="setting-text">
-                            <span class="setting-name" data-i18n="setLaunchAtStartup">Iniciar con Windows</span>
-                            <span class="setting-desc" data-i18n="setLaunchAtStartupDesc">Abre League Accounts automáticamente al iniciar sesión en Windows.</span>
+                            <span class="setting-name" data-i18n="setLaunchAtStartup"></span>
+                            <span class="setting-desc" data-i18n="setLaunchAtStartupDesc"></span>
                         </div>
                         <label class="switch"><input type="checkbox" id="set-launch-startup"><span class="track"></span></label>
                     </div>
 
                     <div class="setting-row">
                         <div class="setting-text">
-                            <span class="setting-name" data-i18n="setStartMinimized">Iniciar minimizado</span>
-                            <span class="setting-desc" data-i18n="setStartMinimizedDesc">Solo se aplica cuando se abre al iniciar Windows.</span>
+                            <span class="setting-name" data-i18n="setStartMinimized"></span>
+                            <span class="setting-desc" data-i18n="setStartMinimizedDesc"></span>
                         </div>
                         <label class="switch"><input type="checkbox" id="set-start-minimized"><span class="track"></span></label>
                     </div>
@@ -1319,16 +1319,16 @@
 
                 <!-- ACTUALIZACIÓN DE RANGOS -->
                 <div class="settings-section">
-                    <div class="settings-section-title" data-i18n="setRankUpdates">Actualización de rangos</div>
+                    <div class="settings-section-title" data-i18n="setRankUpdates"></div>
 
                     <div class="setting-row">
-                        <div class="setting-text"><span class="setting-name" data-i18n="setAutoRefresh">Actualizar rangos automáticamente</span></div>
+                        <div class="setting-text"><span class="setting-name" data-i18n="setAutoRefresh"></span></div>
                         <label class="switch"><input type="checkbox" id="set-auto-refresh"><span class="track"></span></label>
                     </div>
 
                     <div id="interval-block">
                         <div class="setting-row interval-row">
-                            <span class="setting-name" data-i18n="setRefreshEvery">Actualizar cada</span>
+                            <span class="setting-name" data-i18n="setRefreshEvery"></span>
                             <div class="preset-group" id="preset-group">
                                 <button type="button" class="preset-btn" data-min="5">5</button>
                                 <button type="button" class="preset-btn" data-min="15">15</button>
@@ -1338,23 +1338,23 @@
                             </div>
                             <div class="minutes-box">
                                 <input type="number" id="set-refresh-minutes" class="minutes-input" min="5" max="1440" step="1">
-                                <span>min</span>
+                                <span data-i18n="unitMin"></span>
                             </div>
                         </div>
-                        <div class="setting-hint" data-i18n="setRefreshHint">Entre 5 y 1440 minutos. Cada cuenta hace 3 consultas a la API de Riot (cuenta, invocador y liga).</div>
+                        <div class="setting-hint" data-i18n="setRefreshHint"></div>
                     </div>
                 </div>
 
                 <!-- INICIO DE SESIÓN -->
                 <div class="settings-section">
-                    <div class="settings-section-title" data-i18n="setLogin">Inicio de sesión</div>
+                    <div class="settings-section-title" data-i18n="setLogin"></div>
 
                     <label class="radio-option">
                         <input type="radio" name="login-mode" value="riotClient">
                         <span class="radio-dot"></span>
                         <span class="setting-text">
-                            <span class="setting-name" data-i18n="setLoginRiot">Abrir el Riot Client e iniciar sesión</span>
-                            <span class="setting-desc" data-i18n="setLoginRiotDesc">Inicia el Riot Client si hace falta y escribe en su pantalla de inicio de sesión.</span>
+                            <span class="setting-name" data-i18n="setLoginRiot"></span>
+                            <span class="setting-desc" data-i18n="setLoginRiotDesc"></span>
                         </span>
                     </label>
 
@@ -1362,15 +1362,15 @@
                         <input type="radio" name="login-mode" value="previousWindow">
                         <span class="radio-dot"></span>
                         <span class="setting-text">
-                            <span class="setting-name" data-i18n="setLoginPrev">Escribir en la ventana anterior</span>
-                            <span class="setting-desc" data-i18n="setLoginPrevDesc">Hace Alt+Tab a la última ventana y escribe los datos ahí.</span>
+                            <span class="setting-name" data-i18n="setLoginPrev"></span>
+                            <span class="setting-desc" data-i18n="setLoginPrevDesc"></span>
                         </span>
                     </label>
 
                     <div class="setting-row">
                         <div class="setting-text">
-                            <span class="setting-name" data-i18n="setLaunchGame">Abrir el juego tras iniciar sesión</span>
-                            <span class="setting-desc" data-i18n="setLaunchGameDesc">Lanza League of Legends desde el Riot Client.</span>
+                            <span class="setting-name" data-i18n="setLaunchGame"></span>
+                            <span class="setting-desc" data-i18n="setLaunchGameDesc"></span>
                         </div>
                         <label class="switch"><input type="checkbox" id="set-launch-game"><span class="track"></span></label>
                     </div>
@@ -1378,33 +1378,33 @@
 
                 <!-- DATOS -->
                 <div class="settings-section">
-                    <div class="settings-section-title" data-i18n="setData">Datos</div>
+                    <div class="settings-section-title" data-i18n="setData"></div>
                     <div class="setting-row">
                         <div class="setting-text">
-                            <span class="setting-name"><span data-i18n="savedAccountsLabel">Cuentas guardadas:</span> <span id="accounts-count-label">0</span></span>
+                            <span class="setting-name"><span data-i18n="savedAccountsLabel"></span> <span id="accounts-count-label">0</span></span>
                             <span class="data-path" id="data-path-label"></span>
                         </div>
-                        <button id="btn-open-folder" class="settings-ghost-btn" data-i18n="openFolderBtn">📂 Abrir carpeta de datos</button>
+                        <button id="btn-open-folder" class="settings-ghost-btn" data-i18n="openFolderBtn"></button>
                     </div>
                 </div>
 
                 <!-- ACTUALIZACIONES -->
                 <div class="settings-section">
-                    <div class="settings-section-title" data-i18n="setUpdates">Actualizaciones</div>
+                    <div class="settings-section-title" data-i18n="setUpdates"></div>
 
                     <div class="setting-row">
-                        <div class="setting-text"><span class="setting-name" data-i18n="setAutoUpdates">Buscar actualizaciones automáticamente</span></div>
+                        <div class="setting-text"><span class="setting-name" data-i18n="setAutoUpdates"></span></div>
                         <label class="switch"><input type="checkbox" id="set-auto-updates"><span class="track"></span></label>
                     </div>
 
                     <div class="setting-row">
-                        <span class="setting-name" style="font-weight: 500;"><span data-i18n="setInstalledVersion">Versión instalada:</span> <span id="app-version-label"></span></span>
+                        <span class="setting-name" style="font-weight: 500;"><span data-i18n="setInstalledVersion"></span> <span id="app-version-label"></span></span>
                         <button type="button" id="btn-check-updates" class="settings-ghost-btn">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
                                 <path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                             </svg>
-                            <span data-i18n="setCheckNow">Comprobar ahora</span>
+                            <span data-i18n="setCheckNow"></span>
                         </button>
                     </div>
                     <div class="update-status" id="update-status"></div>
@@ -1412,19 +1412,19 @@
             </div>
 
             <div class="settings-foot">
-                <button id="close-settings" class="settings-cancel" data-i18n="cancelBtn">Cancelar</button>
-                <button id="save-settings" class="settings-save" data-i18n="saveBtn">Guardar</button>
+                <button id="close-settings" class="settings-cancel" data-i18n="cancelBtn"></button>
+                <button id="save-settings" class="settings-save" data-i18n="saveBtn"></button>
             </div>
         </div>
     </div>
 
     <div id="confirm-modal" class="modal">
         <div class="modal-content" style="width: 340px; text-align: center;">
-            <h3 data-i18n="deleteTitle" style="color: #ef4444; margin-bottom: 10px;">Eliminar cuenta</h3>
+            <h3 data-i18n="deleteTitle" style="color: #ef4444; margin-bottom: 10px;"></h3>
             <p id="confirm-text" style="font-size: 13px; color: #94a3b8; margin-bottom: 20px; line-height: 1.4; font-family: 'Cinzel', sans-serif;"></p>
             <div style="display: flex; gap: 10px;">
-                <button id="confirm-yes" style="flex: 1; padding: 10px; background: #ef4444; border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: 'Cinzel', sans-serif;" data-i18n="acceptBtn">Aceptar</button>
-                <button id="confirm-no" style="flex: 1; padding: 10px; background: #1e2029; border: 1px solid #334155; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: 'Cinzel', sans-serif;" data-i18n="cancelBtn">Cancelar</button>
+                <button id="confirm-yes" style="flex: 1; padding: 10px; background: #ef4444; border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: 'Cinzel', sans-serif;" data-i18n="acceptBtn"></button>
+                <button id="confirm-no" style="flex: 1; padding: 10px; background: #1e2029; border: 1px solid #334155; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: 'Cinzel', sans-serif;" data-i18n="cancelBtn"></button>
             </div>
         </div>
     </div>
@@ -1438,142 +1438,7 @@
         const https = require('https');
         const { BrowserWindow, shell, dialog, app: remoteApp } = require('@electron/remote');
 
-        // ---------- Textos del nuevo modal de ajustes ----------
-        // Se fusionan con translations.js; si allí defines la misma clave, gana la de translations.js.
-        // Los idiomas sin traducción caen al inglés gracias a t().
-        const settingsI18n = {
-            es: {
-                setGeneral: 'General', setLanguage: 'Idioma',
-                setLaunchAtStartup: 'Iniciar con Windows', setLaunchAtStartupDesc: 'Abre League Accounts automáticamente al iniciar sesión en Windows.',
-                setStartMinimized: 'Iniciar minimizado', setStartMinimizedDesc: 'Solo se aplica cuando se abre al iniciar Windows.',
-                setRankUpdates: 'Actualización de rangos', setAutoRefresh: 'Actualizar rangos automáticamente',
-                setRefreshEvery: 'Actualizar cada', setRefreshHint: 'Entre 5 y 1440 minutos. Cada cuenta se consulta una vez en OP.GG.',
-                setLogin: 'Inicio de sesión',
-                setLoginRiot: 'Abrir el Riot Client e iniciar sesión', setLoginRiotDesc: 'Inicia el Riot Client si hace falta y escribe en su pantalla de inicio de sesión.',
-                setLoginPrev: 'Escribir en la ventana anterior', setLoginPrevDesc: 'Hace Alt+Tab a la última ventana y escribe los datos ahí.',
-                setLaunchGame: 'Abrir el juego tras iniciar sesión', setLaunchGameDesc: 'Lanza League of Legends desde el Riot Client.',
-                setData: 'Datos',
-                setUpdates: 'Actualizaciones', setAutoUpdates: 'Buscar actualizaciones automáticamente',
-                setInstalledVersion: 'Versión instalada:', setCheckNow: 'Comprobar ahora',
-                updChecking: 'Buscando actualizaciones...', updLatest: 'Tienes la última versión.',
-                updAvailable: 'Nueva versión disponible:', updDownload: 'Descargar',
-                updError: 'No se pudo comprobar. Revisa tu conexión e inténtalo de nuevo.',
-                nextIn: 'Siguiente en', refreshing: 'Actualizando...', autoRefreshOff: 'Desactivada · pulsa para actualizar',
-                settingsSaved: 'Ajustes guardados', invalidMinutes: 'El intervalo debe estar entre 5 y 1440 minutos',
-                riotClientNotFound: 'No se encontró el Riot Client para abrir el juego',
-                loginWindowNotFound: 'No se encontró la ventana del Riot Client',
-                drawerAddTitle: 'Añadir cuenta', drawerEditTitle: 'Editar cuenta',
-                drawerSub: 'Las contraseñas se guardan cifradas con la protección de datos de Windows.',
-                tabSingle: 'Una cuenta', tabBulk: 'Carga masiva',
-                fieldLoginUser: 'ID de cuenta (usuario)', fieldRiotId: 'Riot ID', optional: '(opcional)',
-                riotIdPh: 'NombreJuego#TAG', fieldPassword: 'Contraseña', passwordKeepPh: 'Déjala vacía para no cambiarla',
-                fieldDescription: 'Descripción', descriptionPh: 'p. ej. main, smurf, ARAM...',
-                addAccountBtn: 'Añadir cuenta', saveChangesBtn: 'Guardar cambios',
-                bulkLabel: 'Una cuenta por línea',
-                bulkHint: 'Formato: usuario:contraseña:región:RiotID#TAG. Región (EUW, NA, KR, LAS, SEA...) y Riot ID son opcionales. Las cuentas que ya existan se omiten.',
-                bulkDefaultRegion: 'Región por defecto', bulkSubmit: 'Añadir cuentas',
-                errLoginUser: 'Escribe el ID de cuenta.', errPassword: 'Escribe la contraseña.',
-                errRiotId: 'El Riot ID debe tener el formato Nombre#TAG.', errDuplicate: 'Ya tienes una cuenta con ese usuario.',
-                errBulkEmpty: 'Pega al menos una línea con usuario:contraseña.', bulkInvalidLines: 'Líneas no válidas',
-                bulkAdded: 'Cuentas añadidas', bulkSkipped: 'ya existían',
-                accountAdded: 'Cuenta añadida', accountSaved: 'Cambios guardados',
-                emptyTitle: 'Aún no hay cuentas', emptyText: 'Añade tu primera cuenta y sus rangos se obtendrán automáticamente de OP.GG.',
-                noResultsTitle: 'Ninguna cuenta coincide', noResultsText: 'Prueba con otro nombre o cambia el filtro de región.',
-                lastSeason: 'Temporada pasada', unranked: 'Sin clasificar',
-                ctxOpgg: 'Perfil de OP.GG', ctxEdit: 'Editar', ctxDelete: 'Eliminar',
-                importError: 'El archivo no es una copia válida de cuentas.',
-                loginTitle: 'Iniciando sesión', loginSuccess: '¡Dentro!', loginFailed: 'No se pudo iniciar sesión',
-                stepOpenClient: 'Abriendo el Riot Client', stepWaitClient: 'Esperando al Riot Client',
-                stepFindLogin: 'Buscando la pantalla de inicio de sesión', stepBringFront: 'Trayéndola al frente',
-                stepSwitchWindow: 'Cambiando a la ventana anterior', stepTypeCreds: 'Introduciendo credenciales',
-                stepConfirm: 'Confirmando inicio de sesión', stepLaunchGame: 'Abriendo el juego',
-                loginLaunching: 'Abriendo el juego...', loginDoneNoGame: 'Sesión iniciada en el Riot Client.',
-                errClientNotStarted: 'El Riot Client no llegó a abrirse. Comprueba que está instalado.',
-                errLoginWindow: 'No apareció la ventana de inicio de sesión del Riot Client.',
-                errLoginGeneric: 'Algo falló al escribir las credenciales.',
-                errNoPassword: 'Esta cuenta no tiene contraseña guardada. Usa Editar para añadirla.',
-                loginRetry: 'Reintentar', loginCancel: 'Cancelar', loginClose: 'Cerrar',
-                opggNotFound: 'Riot ID no encontrado en OP.GG', opggFixRiotId: 'Actualizar Riot ID',
-                secTopChamps: 'Campeones más jugados', secRecent: 'Últimas 10 partidas',
-                winShort: 'V', lossShort: 'D', gamesShort: 'P',
-                gameWin: 'Victoria', gameLoss: 'Derrota', gameRemake: 'Remake',
-                ladderTitle: 'Posición en la clasificación del servidor',
-                navImport: 'Importar', navExport: 'Exportar', navDataFolder: 'Carpeta de datos', navSettings: 'Ajustes',
-                selRegionLabel: 'Región', selAll: 'Todas', selSortLabel: 'Ordenar', selRank: 'Rango', selName: 'Nombre',
-                langTip: 'Idioma', refreshNowTip: 'Pulsa para actualizar ahora',
-                loginAction: 'Iniciar sesión', copyRiotId: 'Copiar Riot ID', copyPassword: 'Copiar contraseña',
-                copiedRiotId: 'Riot ID copiado', copiedPassword: 'Contraseña copiada (se borrará del portapapeles en 30 s)',
-                copyNoRiotId: 'Esta cuenta no tiene Riot ID. Usa Editar para añadirlo.',
-                regionsWithAccounts: 'Con cuentas', regionsOther: 'Otras regiones'
-            },
-            en: {
-                setGeneral: 'General', setLanguage: 'Language',
-                setLaunchAtStartup: 'Launch when Windows starts', setLaunchAtStartupDesc: 'Opens League Accounts automatically when you sign in to Windows.',
-                setStartMinimized: 'Start minimized', setStartMinimizedDesc: 'Applies only when launched at startup.',
-                setRankUpdates: 'Rank updates', setAutoRefresh: 'Refresh ranks automatically',
-                setRefreshEvery: 'Refresh every', setRefreshHint: 'Between 5 and 1440 minutes. Each account is looked up once on OP.GG.',
-                setLogin: 'Login',
-                setLoginRiot: 'Open the Riot Client and sign in', setLoginRiotDesc: 'Starts the Riot Client if needed and types into its login screen.',
-                setLoginPrev: 'Type into the previous window', setLoginPrevDesc: 'Alt+Tabs to the last window and types there.',
-                setLaunchGame: 'Launch the game after signing in', setLaunchGameDesc: 'Starts League of Legends through the Riot Client.',
-                setData: 'Data',
-                setUpdates: 'Updates', setAutoUpdates: 'Check for updates automatically',
-                setInstalledVersion: 'Installed version:', setCheckNow: 'Check now',
-                updChecking: 'Checking for updates...', updLatest: 'You have the latest version.',
-                updAvailable: 'New version available:', updDownload: 'Download',
-                updError: 'Could not check. Check your connection and try again.',
-                nextIn: 'Next in', refreshing: 'Refreshing...', autoRefreshOff: 'Off · click to refresh',
-                settingsSaved: 'Settings saved', invalidMinutes: 'The interval must be between 5 and 1440 minutes',
-                riotClientNotFound: 'Riot Client not found, could not launch the game',
-                loginWindowNotFound: 'Riot Client window not found',
-                drawerAddTitle: 'Add account', drawerEditTitle: 'Edit account',
-                drawerSub: 'Passwords are stored encrypted with Windows data protection.',
-                tabSingle: 'Single account', tabBulk: 'Bulk import',
-                fieldLoginUser: 'Account ID (username)', fieldRiotId: 'Riot ID', optional: '(optional)',
-                riotIdPh: 'GameName#TAG', fieldPassword: 'Password', passwordKeepPh: 'Leave empty to keep it',
-                fieldDescription: 'Description', descriptionPh: 'e.g. main, smurf, ARAM...',
-                addAccountBtn: 'Add account', saveChangesBtn: 'Save changes',
-                bulkLabel: 'One account per line',
-                bulkHint: 'Format: username:password:region:RiotID#TAG. Region (EUW, NA, KR, LAS, SEA...) and Riot ID are optional. Existing accounts are skipped.',
-                bulkDefaultRegion: 'Default region', bulkSubmit: 'Add accounts',
-                errLoginUser: 'Enter the account ID.', errPassword: 'Enter the password.',
-                errRiotId: 'The Riot ID must look like Name#TAG.', errDuplicate: 'You already have an account with that username.',
-                errBulkEmpty: 'Paste at least one username:password line.', bulkInvalidLines: 'Invalid lines',
-                bulkAdded: 'Accounts added', bulkSkipped: 'already existed',
-                accountAdded: 'Account added', accountSaved: 'Changes saved',
-                emptyTitle: 'No accounts yet', emptyText: 'Add your first account and its ranks will be fetched automatically from OP.GG.',
-                noResultsTitle: 'No accounts match', noResultsText: 'Try another name or change the region filter.',
-                lastSeason: 'Last season', unranked: 'Unranked',
-                ctxOpgg: 'OP.GG profile', ctxEdit: 'Edit', ctxDelete: 'Delete',
-                importError: 'That file is not a valid accounts backup.',
-                loginTitle: 'Logging in', loginSuccess: "You're in!", loginFailed: 'Could not log in',
-                stepOpenClient: 'Opening the Riot Client', stepWaitClient: 'Waiting for the Riot Client',
-                stepFindLogin: 'Finding the login screen', stepBringFront: 'Bringing it to the front',
-                stepSwitchWindow: 'Switching to the previous window', stepTypeCreds: 'Entering credentials',
-                stepConfirm: 'Confirming sign-in', stepLaunchGame: 'Launching the game',
-                loginLaunching: 'Launching the game...', loginDoneNoGame: 'Signed in to the Riot Client.',
-                errClientNotStarted: 'The Riot Client did not open. Check that it is installed.',
-                errLoginWindow: 'The Riot Client login window did not appear.',
-                errLoginGeneric: 'Something went wrong while typing the credentials.',
-                errNoPassword: 'This account has no saved password. Use Edit to add it.',
-                loginRetry: 'Retry', loginCancel: 'Cancel', loginClose: 'Close',
-                opggNotFound: 'Riot ID not found on OP.GG', opggFixRiotId: 'Update Riot ID',
-                secTopChamps: 'Most played champions', secRecent: 'Last 10 games',
-                winShort: 'W', lossShort: 'L', gamesShort: 'G',
-                gameWin: 'Victory', gameLoss: 'Defeat', gameRemake: 'Remake',
-                ladderTitle: 'Server ladder position',
-                navImport: 'Import', navExport: 'Export', navDataFolder: 'Data folder', navSettings: 'Settings',
-                selRegionLabel: 'Region', selAll: 'All', selSortLabel: 'Sort', selRank: 'Rank', selName: 'Name',
-                langTip: 'Language', refreshNowTip: 'Click to refresh now',
-                loginAction: 'Log in', copyRiotId: 'Copy Riot ID', copyPassword: 'Copy password',
-                copiedRiotId: 'Riot ID copied', copiedPassword: 'Password copied (cleared from the clipboard in 30 s)',
-                copyNoRiotId: 'This account has no Riot ID. Use Edit to add one.',
-                regionsWithAccounts: 'With accounts', regionsOther: 'Other regions'
-            }
-        };
-        Object.entries(settingsI18n).forEach(([lang, keys]) => {
-            translations[lang] = Object.assign({}, keys, translations[lang] || {});
-        });
+        // Todos los textos de la interfaz viven en js/translations.js (t() los lee según el idioma activo).
 
         function getSystemLanguage() {
             const sysLang = (navigator.language || navigator.userLanguage || 'en').split('-')[0];
@@ -1581,7 +1446,7 @@
         }
 
         // ---------- Ajustes persistentes (settings.json junto a accounts.json) ----------
-        const settingsPath = path.join(__dirname, 'settings.json');
+        const settingsPath = path.join(userDataPath, 'settings.json');
         const DEFAULT_SETTINGS = {
             language: getSystemLanguage(),
             launchAtStartup: false,
@@ -1647,6 +1512,11 @@
                 const key = el.getAttribute('data-i18n-placeholder');
                 el.placeholder = t(key);
             });
+            document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+                el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
+            });
+            document.documentElement.lang = currentLang;
+            refreshWindowLabels();
             document.querySelectorAll('.lang-option').forEach(btn => {
                 if (btn.getAttribute('data-lang') === currentLang) {
                     btn.classList.add('active');
@@ -1704,15 +1574,19 @@
         const rankStatsContainer = document.getElementById('rank-stats-container');
         const autoRefreshTimerLabel = document.getElementById('auto-refresh-timer');
 
-        const dataPath = path.join(__dirname, 'accounts.json');
+        const userDataPath = (remoteApp || require('electron').app).getPath('userData');
+        const dataPath = path.join(userDataPath, 'accounts.json');
 
         // ---------- Barra de título propia (ventana sin marco) ----------
         function applyWindowState(state) {
             if (!state) return;
             document.body.classList.toggle('maximized', !!state.maximized);
             document.body.classList.toggle('fullscreen', !!state.fullscreen);
+            refreshWindowLabels();
+        }
+        function refreshWindowLabels() {
             const maxBtn = document.getElementById('tb-max');
-            const label = state.maximized ? 'Restaurar' : 'Maximizar';
+            const label = t(document.body.classList.contains('maximized') ? 'winRestore' : 'winMaximize');
             maxBtn.title = label;
             maxBtn.setAttribute('aria-label', label);
         }
@@ -1726,21 +1600,21 @@
         // ---------- Regiones (lista única para toda la app) ----------
         // code = código de OP.GG; label = lo que se muestra; platform = identificador de Riot (para alias)
         const REGION_LIST = [
-            { code: 'euw',  label: 'EUW',  platform: 'euw1', es: 'Europa Oeste',               en: 'Europe West' },
-            { code: 'eune', label: 'EUNE', platform: 'eun1', es: 'Europa Nórdica y Este',      en: 'Europe Nordic & East' },
-            { code: 'na',   label: 'NA',   platform: 'na1',  es: 'Norteamérica',               en: 'North America' },
-            { code: 'kr',   label: 'KR',   platform: 'kr',   es: 'Corea',                      en: 'Korea' },
-            { code: 'br',   label: 'BR',   platform: 'br1',  es: 'Brasil',                     en: 'Brazil' },
-            { code: 'lan',  label: 'LAN',  platform: 'la1',  es: 'Latinoamérica Norte',        en: 'Latin America North' },
-            { code: 'las',  label: 'LAS',  platform: 'la2',  es: 'Latinoamérica Sur',          en: 'Latin America South' },
-            { code: 'oce',  label: 'OCE',  platform: 'oc1',  es: 'Oceanía',                    en: 'Oceania' },
-            { code: 'tr',   label: 'TR',   platform: 'tr1',  es: 'Turquía',                    en: 'Turkey' },
-            { code: 'ru',   label: 'RU',   platform: 'ru',   es: 'Rusia',                      en: 'Russia' },
-            { code: 'me',   label: 'ME',   platform: 'me1',  es: 'Oriente Medio',              en: 'Middle East' },
-            { code: 'jp',   label: 'JP',   platform: 'jp1',  es: 'Japón',                      en: 'Japan' },
-            { code: 'sg',   label: 'SEA',  platform: 'sg2',  es: 'Sudeste asiático',           en: 'Southeast Asia' },
-            { code: 'tw',   label: 'TW',   platform: 'tw2',  es: 'Taiwán, Hong Kong y Macao',  en: 'Taiwan, Hong Kong & Macao' },
-            { code: 'vn',   label: 'VN',   platform: 'vn2',  es: 'Vietnam',                    en: 'Vietnam' }
+            { code: 'euw',  label: 'EUW',  platform: 'euw1' },
+            { code: 'eune', label: 'EUNE', platform: 'eun1' },
+            { code: 'na',   label: 'NA',   platform: 'na1' },
+            { code: 'kr',   label: 'KR',   platform: 'kr' },
+            { code: 'br',   label: 'BR',   platform: 'br1' },
+            { code: 'lan',  label: 'LAN',  platform: 'la1' },
+            { code: 'las',  label: 'LAS',  platform: 'la2' },
+            { code: 'oce',  label: 'OCE',  platform: 'oc1' },
+            { code: 'tr',   label: 'TR',   platform: 'tr1' },
+            { code: 'ru',   label: 'RU',   platform: 'ru' },
+            { code: 'me',   label: 'ME',   platform: 'me1' },
+            { code: 'jp',   label: 'JP',   platform: 'jp1' },
+            { code: 'sg',   label: 'SEA',  platform: 'sg2' },
+            { code: 'tw',   label: 'TW',   platform: 'tw2' },
+            { code: 'vn',   label: 'VN',   platform: 'vn2' }
         ];
         const REGIONS = REGION_LIST.map(r => r.code);
 
@@ -1759,7 +1633,8 @@
         }
 
         function regionName(r) {
-            return r[currentLang] || r.en;
+            const name = t('region_' + r.code);
+            return name === 'region_' + r.code ? r.label : name;
         }
 
         // Rellena los selectores de región; el del filtro muestra cuántas cuentas hay en cada una
@@ -2473,7 +2348,7 @@
                 const cls = pct <= 1 ? 'lad-elite' : pct <= 5 ? 'lad-high' : pct <= 15 ? 'lad-good' : pct <= 40 ? 'lad-mid' : '';
                 const pctText = pct < 0.01 ? '<' + (0.01).toLocaleString(currentLang)
                     : pct.toLocaleString(currentLang, { maximumFractionDigits: pct < 1 ? 2 : 1 });
-                ladderHtml = `<span class="acc-badge ladder ${cls}" title="${escapeHtml(t('ladderTitle'))}">${TROPHY_ICON}#${account.ladder.rank.toLocaleString(currentLang)} · Top ${pctText}%</span>`;
+                ladderHtml = `<span class="acc-badge ladder ${cls}" title="${escapeHtml(t('ladderTitle'))}">${TROPHY_ICON}#${account.ladder.rank.toLocaleString(currentLang)} · ${escapeHtml(t('topLabel'))} ${pctText}%</span>`;
             }
 
             // Campeones más jugados
@@ -2533,7 +2408,7 @@
                         </div>
                         <div class="acc-badges">
                             <span class="acc-badge region">${escapeHtml(region)}</span>
-                            ${showLevel ? `<span class="acc-badge">Lv ${escapeHtml(account.level)}</span>` : ''}
+                            ${showLevel ? `<span class="acc-badge">${escapeHtml(t('levelShort'))} ${escapeHtml(account.level)}</span>` : ''}
                             <span class="acc-badge user" title="${escapeHtml(t('fieldLoginUser'))}">${USER_ICON}${escapeHtml(account.loginUser)}</span>
                             ${ladderHtml}
                         </div>
@@ -3501,7 +3376,7 @@
 
         // ---------- Búsqueda de actualizaciones (GitHub Releases) ----------
         // Cambia esto por tu repositorio: publica cada versión como Release con tag "v3.0.3" o "3.0.3".
-        const UPDATE_REPO = 'TU_USUARIO/league-accounts';
+        const UPDATE_REPO = 'Dulciiss/league-accounts';
         const UPDATE_CHECK_EVERY_MS = 6 * 60 * 60 * 1000; // cada 6 h mientras la app está abierta
 
         const btnCheckUpdates = document.getElementById('btn-check-updates');
@@ -3592,9 +3467,9 @@
             } else if (!settings.autoRefresh) {
                 autoRefreshTimerLabel.textContent = t('autoRefreshOff');
             } else if (secondsRemaining >= 60) {
-                autoRefreshTimerLabel.textContent = `${t('nextIn')} ${Math.ceil(secondsRemaining / 60)} min`;
+                autoRefreshTimerLabel.textContent = `${t('nextIn')} ${Math.ceil(secondsRemaining / 60)} ${t('unitMin')}`;
             } else {
-                autoRefreshTimerLabel.textContent = `${t('nextIn')} ${secondsRemaining}s`;
+                autoRefreshTimerLabel.textContent = `${t('nextIn')} ${secondsRemaining}${t('unitSec')}`;
             }
         }
 

@@ -6,7 +6,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder --win portable"
   },
   "dependencies": {
     "@electron/remote": "^2.1.2"
@@ -22,8 +22,11 @@
       "output": "dist"
     },
     "win": {
-      "target": "nsis",
+      "target": "portable",
       "icon": "icon.png"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.exe"
     }
   }
 }
