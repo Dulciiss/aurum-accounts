@@ -5,6 +5,6 @@
     "autoRefresh": true,
     "refreshMinutes": 15,
     "loginMode": "riotClient",
-    "launchGame": false,
+    "launchGame": true,
     "autoCheckUpdates": true
 }
