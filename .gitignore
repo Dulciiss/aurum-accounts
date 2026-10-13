@@ -134,3 +134,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# --- Datos de usuario de League Accounts (NUNCA subir al repositorio) ---
+accounts.json
+accounts-backup*.json
+settings.json
