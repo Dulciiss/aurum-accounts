@@ -50,6 +50,7 @@
       "logo.svg",
       "icon.ico",
       "package.json",
+      "css/**/*",
       "js/**/*"
     ]
   }
