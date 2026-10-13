@@ -10,10 +10,7 @@
     "build:all": "electron-builder -w -m -l"
   },
   "dependencies": {
-    "@electron/remote": "^2.1.2",
-    "axios": "^1.6.8",
-    "better-sqlite3": "^9.4.3",
-    "dotenv": "^16.4.5"
+    "@electron/remote": "^2.1.2"
   },
   "devDependencies": {
     "electron": "^28.2.0",
@@ -36,7 +33,7 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "icon.png"
+      "icon": "icon.ico"
     },
     "portable": {
       "artifactName": "${productName}-${version}-Portable.exe"
@@ -48,12 +45,12 @@
     },
     "files": [
       "main.js",
-      "preload.js",
       "index.html",
-      "renderer.js",
+      "style.css",
+      "logo.svg",
+      "icon.ico",
       "package.json",
-      "js/**/*",
-      "node_modules/**/*"
+      "js/**/*"
     ]
   }
 }
