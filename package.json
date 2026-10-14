@@ -2,7 +2,7 @@
   "name": "league-accounts",
   "version": "1.0.0",
   "description": "League of Legends Account Manager",
-  "author": "Dulcinea",
+  "author": "Dulciiss",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
