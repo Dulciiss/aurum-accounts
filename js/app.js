@@ -130,6 +130,122 @@
             });
         });
 
+        // ---------- Desplegables propios (región / ordenar) ----------
+        // El <select> nativo sigue siendo la fuente de verdad (value + evento 'change'),
+        // pero queda oculto: su panel nativo no se puede estilizar y se veía mal.
+        const ddInstances = [];
+        function closeAllDropdowns(except) {
+            ddInstances.forEach(dd => { if (dd !== except) dd.close(); });
+        }
+
+        function enhanceSelect(select) {
+            const pill = select.closest('.tb-pill');
+            if (!pill) return;
+            pill.classList.add('tb-dd');
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'tb-dd-btn';
+            button.setAttribute('aria-haspopup', 'listbox');
+            button.setAttribute('aria-expanded', 'false');
+            const menu = document.createElement('div');
+            menu.className = 'tb-dd-menu';
+            menu.setAttribute('role', 'listbox');
+            select.insertAdjacentElement('afterend', button);
+            pill.appendChild(menu);
+
+            function items() { return Array.from(menu.querySelectorAll('.tb-dd-opt')); }
+
+            function rebuild() {
+                const current = select.value;
+                menu.textContent = '';
+                const addOption = (opt) => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'tb-dd-opt' + (opt.value === current ? ' active' : '');
+                    b.setAttribute('role', 'option');
+                    b.setAttribute('aria-selected', opt.value === current ? 'true' : 'false');
+                    b.dataset.value = opt.value;
+                    b.textContent = opt.textContent;
+                    menu.appendChild(b);
+                };
+                Array.from(select.children).forEach(child => {
+                    if (child.tagName === 'OPTGROUP') {
+                        const h = document.createElement('div');
+                        h.className = 'tb-dd-group';
+                        h.textContent = child.label;
+                        menu.appendChild(h);
+                        Array.from(child.children).forEach(addOption);
+                    } else if (child.tagName === 'OPTION') {
+                        addOption(child);
+                    }
+                });
+                const sel = select.selectedOptions[0];
+                button.textContent = sel ? sel.textContent : '';
+            }
+
+            function open() {
+                closeAllDropdowns(api);
+                langDropdown.style.display = 'none';
+                pill.classList.add('open');
+                button.setAttribute('aria-expanded', 'true');
+                const active = menu.querySelector('.tb-dd-opt.active');
+                if (active) active.scrollIntoView({ block: 'nearest' });
+            }
+            function close() {
+                pill.classList.remove('open');
+                button.setAttribute('aria-expanded', 'false');
+            }
+            const api = { close, pill };
+            ddInstances.push(api);
+
+            // La etiqueta <label> intentaría activar el <select> oculto: el clic lo gestionamos nosotros
+            pill.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const opt = e.target.closest('.tb-dd-opt');
+                if (opt) {
+                    close();
+                    button.focus();
+                    if (select.value !== opt.dataset.value) {
+                        select.value = opt.dataset.value;
+                        rebuild();
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    return;
+                }
+                if (e.target.closest('.tb-dd-group')) return;
+                if (pill.classList.contains('open')) close(); else open();
+            });
+
+            // Teclado: flechas / Intro / Espacio / Esc
+            pill.addEventListener('keydown', (e) => {
+                const isOpen = pill.classList.contains('open');
+                if (e.key === 'Escape' && isOpen) { e.preventDefault(); close(); button.focus(); return; }
+                if (e.key === 'Tab' && isOpen) { close(); return; }
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (!isOpen) { open(); }
+                    const list = items();
+                    if (!list.length) return;
+                    const idx = list.indexOf(document.activeElement);
+                    const next = idx < 0
+                        ? list.findIndex(i => i.classList.contains('active'))
+                        : (idx + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length;
+                    list[Math.max(0, next)].focus();
+                }
+            });
+
+            new MutationObserver(rebuild).observe(select, { childList: true, subtree: true, characterData: true });
+            select.addEventListener('change', rebuild);
+            rebuild();
+        }
+
+        enhanceSelect(document.getElementById('filter-region'));
+        enhanceSelect(document.getElementById('sort-select'));
+        window.addEventListener('click', () => closeAllDropdowns());
+        langBtn.addEventListener('click', () => closeAllDropdowns());
+
         const btnAdd = document.querySelector('.btn-add');
         const btnSettings = document.querySelector('.btn-menu');
         const btnImport = document.getElementById('btn-import');
@@ -320,11 +436,18 @@
             return splitRiotId(acc.riotId).name || acc.loginUser || '?';
         }
 
-        // "GOLD III" -> "Gold III"
+        // "GOLD" -> "Oro" / "Gold" / "골드"... según el idioma; si falta, el nombre en inglés
+        function tierName(base) {
+            const up = String(base).toUpperCase();
+            const name = t('tier_' + up);
+            return name === 'tier_' + up ? up.charAt(0) + up.slice(1).toLowerCase() : name;
+        }
+
+        // "GOLD III" -> "Oro III"
         function prettyTier(tierStr) {
             if (!tierStr || tierStr.toUpperCase() === 'UNRANKED') return t('unranked');
             const [base, div] = tierStr.split(' ');
-            return base.charAt(0) + base.slice(1).toLowerCase() + (div ? ' ' + div : '');
+            return tierName(base) + (div ? ' ' + div : '');
         }
 
         // ---------- OP.GG (perfil y temporada pasada de SoloQ) ----------
@@ -537,12 +660,34 @@
             return fs.existsSync(fallback) ? fallback : null;
         }
 
+        const LEAGUE_LAUNCH_ARGS = ['--launch-product=league_of_legends', '--launch-patchline=live'];
+
         // Devuelve true si se pudo lanzar
         function launchLeague() {
             const rcPath = getRiotClientPath();
             if (!rcPath) return false;
-            spawn(rcPath, ['--launch-product=league_of_legends', '--launch-patchline=live'], { detached: true, stdio: 'ignore' }).unref();
+            const child = spawn(rcPath, LEAGUE_LAUNCH_ARGS, { detached: true, stdio: 'ignore' });
+            child.on('error', () => { /* si no arranca, waitForLeagueClient acabará avisando */ });
+            child.unref();
             return true;
+        }
+
+        // PIDs de los procesos con ese nombre de imagen (siempre resuelve, aunque tasklist falle)
+        function listProcessPids(imageName) {
+            return new Promise(resolve => {
+                exec(`tasklist /fi "imagename eq ${imageName}" /fo csv /nh`, { windowsHide: true }, (err, stdout) => {
+                    const pids = new Set();
+                    String(stdout || '').split(/\r?\n/).forEach(line => {
+                        const m = /^"[^"]*","(\d+)"/.exec(line.trim());
+                        if (m) pids.add(Number(m[1]));
+                    });
+                    resolve(pids);
+                });
+            });
+        }
+        const LEAGUE_IMAGES = ['LeagueClient.exe', 'LeagueClientUx.exe'];
+        function listLeaguePids() {
+            return Promise.all(LEAGUE_IMAGES.map(listProcessPids)).then(sets => new Set(sets.flatMap(set => [...set])));
         }
 
         // ---------- Scripts de PowerShell que informan de cada paso ("STEP:clave") ----------
@@ -568,24 +713,51 @@
         }
 
         // Códigos de salida: 0 ok, 2 el cliente no arrancó, 3 no apareció la ventana
+        // Margen para arranques en frío: hasta 60 s para el proceso y 90 s para la ventana.
         function psRiotClientScript(loginUser, password) {
             return PS_PRELUDE + `
                 Step 'waitClient'
                 $ok = $false
-                for ($i = 0; $i -lt 60; $i++) {
+                for ($i = 0; $i -lt 120; $i++) {
                     if (Get-Process -Name 'Riot Client', 'RiotClientUx' -ErrorAction SilentlyContinue) { $ok = $true; break }
                     Start-Sleep -Milliseconds 500
                 }
                 if (-not $ok) { exit 2 }
+                $t0 = Get-Date
 
                 Step 'findLogin'
                 $found = $false
-                for ($i = 0; $i -lt 40; $i++) {
+                for ($i = 0; $i -lt 180; $i++) {
                     if ($wshell.AppActivate('Riot Client')) { $found = $true; break }
                     Start-Sleep -Milliseconds 500
                 }
                 if (-not $found) { exit 3 }
-                Start-Sleep -Seconds 3   # la pantalla de login tarda un poco en pintarse
+
+                # Que exista la ventana no significa que el formulario ya esté pintado (sobre todo si
+                # el launcher estaba cerrado). Se espera un margen proporcional a lo que tardó en abrirse
+                # y, además, a que el cliente deje de estar ocupado cargando.
+                Step 'waitReady'
+                $elapsed = ((Get-Date) - $t0).TotalSeconds
+                $minSettle = [math]::Min(15, [math]::Max(4, $elapsed * 0.5))
+                function Get-RiotCpu {
+                    $sum = 0.0
+                    Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like 'Riot*Client*' } | ForEach-Object {
+                        try { $sum += $_.TotalProcessorTime.TotalSeconds } catch { }
+                    }
+                    return $sum
+                }
+                $prev = Get-RiotCpu
+                $calm = 0
+                $waited = 0.0
+                while ($waited -lt 45) {
+                    Start-Sleep -Milliseconds 500
+                    $waited += 0.5
+                    $cur = Get-RiotCpu
+                    $delta = $cur - $prev
+                    $prev = $cur
+                    if ($delta -ge 0.15) { $calm = 0 } elseif ($delta -ge 0) { $calm++ }
+                    if ($waited -ge $minSettle -and $calm -ge 4) { break }
+                }
 
                 Step 'bringFront'
                 $null = $wshell.AppActivate('Riot Client')
@@ -629,7 +801,7 @@
         // ---------- Pantalla de inicio de sesión ----------
         const STEP_I18N = {
             openClient: 'stepOpenClient', waitClient: 'stepWaitClient', findLogin: 'stepFindLogin',
-            bringFront: 'stepBringFront', switchWindow: 'stepSwitchWindow', typeCreds: 'stepTypeCreds',
+            waitReady: 'stepWaitReady', bringFront: 'stepBringFront', switchWindow: 'stepSwitchWindow', typeCreds: 'stepTypeCreds',
             confirm: 'stepConfirm', launchGame: 'stepLaunchGame'
         };
         const CHECK_ICON = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06200f" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
@@ -649,7 +821,7 @@
         function buildLoginSteps() {
             const steps = settings.loginMode === 'previousWindow'
                 ? ['switchWindow', 'typeCreds', 'confirm']
-                : ['openClient', 'waitClient', 'findLogin', 'bringFront', 'typeCreds', 'confirm'];
+                : ['openClient', 'waitClient', 'findLogin', 'waitReady', 'bringFront', 'typeCreds', 'confirm'];
             if (settings.launchGame) steps.push('launchGame');
             return steps;
         }
@@ -730,6 +902,10 @@
             };
             loginSession = session;
 
+            // Procesos del juego que ya estaban abiertos: así solo damos por bueno uno nuevo
+            session.leagueBaseline = new Set();
+            if (settings.launchGame) listLeaguePids().then(pids => { session.leagueBaseline = pids; });
+
             const tierBase = account.soloq && account.soloq.tier ? account.soloq.tier.toUpperCase().split(' ')[0] : 'UNRANKED';
             document.getElementById('login-emblem-img').src = tierIcons[tierBase] || tierIcons['UNRANKED'];
             loginAccountEl.textContent = account.riotId || account.loginUser;
@@ -758,7 +934,16 @@
             advanceLoginTo('openClient');
             exec('taskkill /f /im RiotClientServices.exe /im "Riot Client.exe" /im RiotClientUx.exe', { windowsHide: true }, () => {
                 loginLater(session, 1500, () => {
-                    exec('cmd /c start riotclient://', { windowsHide: true });
+                    // Con "abrir el juego" activo, el cliente se arranca ya con el juego pedido:
+                    // en cuanto inicia sesión lo lanza él mismo, sin depender de ningún temporizador.
+                    const rcPath = settings.launchGame ? getRiotClientPath() : null;
+                    if (rcPath) {
+                        const child = spawn(rcPath, LEAGUE_LAUNCH_ARGS, { detached: true, stdio: 'ignore' });
+                        child.on('error', () => exec('cmd /c start riotclient://', { windowsHide: true }));
+                        child.unref();
+                    } else {
+                        exec('cmd /c start riotclient://', { windowsHide: true });
+                    }
                     session.child = runPowerShellStream(psRiotClientScript(account.loginUser, password), onLine, onExit);
                 });
             });
@@ -770,11 +955,36 @@
                 return;
             }
             advanceLoginTo('launchGame');
-            // Margen para que el Riot Client termine de iniciar sesión antes de pedirle el juego
-            loginLater(session, 6000, () => {
-                if (launchLeague()) loginLater(session, 1500, () => finishLogin(true));
-                else failLogin('riotClientNotFound');
-            });
+            waitForLeagueClient(session);
+        }
+
+        const GAME_NUDGE_MS = 20000;    // si el juego no ha arrancado solo, se lo pedimos al Riot Client
+        const GAME_TIMEOUT_MS = 75000;  // máximo esperando a que aparezca el cliente del juego
+
+        // Solo se da el inicio por bueno cuando el cliente del juego aparece de verdad
+        function waitForLeagueClient(session) {
+            // El juego ya estaba abierto antes de empezar: no hay forma de distinguir uno nuevo
+            if (session.leagueBaseline.size > 0) {
+                launchLeague();
+                loginLater(session, 1500, () => finishLogin(true));
+                return;
+            }
+            const startedAt = Date.now();
+            let nudged = false;
+            const poll = () => {
+                listLeaguePids().then(pids => {
+                    if (loginSession !== session || session.state !== 'running') return;
+                    if ([...pids].some(pid => !session.leagueBaseline.has(pid))) { finishLogin(true); return; }
+                    const waited = Date.now() - startedAt;
+                    if (!nudged && waited >= GAME_NUDGE_MS) {
+                        nudged = true;
+                        if (!launchLeague()) { failLogin('riotClientNotFound'); return; }
+                    }
+                    if (waited >= GAME_TIMEOUT_MS) { failLogin('errGameNotStarted'); return; }
+                    loginLater(session, 2000, poll);
+                });
+            };
+            poll();
         }
 
         function closeLoginOverlay() {
@@ -825,7 +1035,7 @@
                 const theme = getRankTheme(tier);
                 const pct = (count / total) * 100;
                 pending.push([tier, pct]);
-                const label = tier === 'UNRANKED' ? t('unranked') : tier.charAt(0) + tier.slice(1).toLowerCase();
+                const label = tier === 'UNRANKED' ? t('unranked') : tierName(tier);
                 return `<div class="rd-row ${count ? '' : 'empty'}" style="--c: ${theme.primary}; --g: ${theme.glow};">
                     <span class="rd-icon"><img src="${tierIcons[tier] || tierIcons.UNRANKED}" alt=""></span>
                     <span class="rd-name">${escapeHtml(label)}</span>
@@ -1066,7 +1276,7 @@
 
         function askDelete(acc) {
             accountToDelete = acc.id;
-            confirmText.textContent = `${t('deleteConfirm')} ${acc.riotId || acc.loginUser}?`;
+            confirmText.textContent = t('deleteConfirm').replace('{name}', () => acc.riotId || acc.loginUser);
             confirmModal.style.display = 'flex';
         }
 

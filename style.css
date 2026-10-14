@@ -182,11 +182,11 @@ body {
     padding-top: 10px;
 }
 
-/* Ocultar barra de desplazamiento manteniendo la funcionalidad de scroll en el desplegable de idiomas */
-.language-dropdown-menu, select[id*="language"] {
+/* Ocultar la barra de desplazamiento del desplegable de idiomas (mantiene el scroll) */
+.lang-dropdown {
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE / Edge */
 }
-.language-dropdown-menu::-webkit-scrollbar, select::-webkit-scrollbar {
+.lang-dropdown::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Electron */
 }

@@ -18,7 +18,7 @@ const translations = {
         openFolderBtn: "📂 Open data folder",
         closeBtn: "Close",
         syncMsg: "The account data has just been updated!",
-        deleteConfirm: "Are you sure you want to delete account",
+        deleteConfirm: "Are you sure you want to delete account {name}?",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "General",
         setLanguage: "Language",
@@ -169,7 +169,20 @@ const translations = {
         region_jp: "Japan",
         region_sg: "Southeast Asia",
         region_tw: "Taiwan, Hong Kong & Macao",
-        region_vn: "Vietnam"
+        region_vn: "Vietnam",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "Waiting for the client to finish loading",
+        errGameNotStarted: "The game didn't open. Check that the Riot Client has signed in (or is updating the game) and press Retry.",
+        tier_IRON: "Iron",
+        tier_BRONZE: "Bronze",
+        tier_SILVER: "Silver",
+        tier_GOLD: "Gold",
+        tier_PLATINUM: "Platinum",
+        tier_EMERALD: "Emerald",
+        tier_DIAMOND: "Diamond",
+        tier_MASTER: "Master",
+        tier_GRANDMASTER: "Grandmaster",
+        tier_CHALLENGER: "Challenger"
     },
     es: {
         // --- Interfaz principal ---
@@ -187,7 +200,7 @@ const translations = {
         openFolderBtn: "📂 Abrir carpeta de datos",
         closeBtn: "Cerrar",
         syncMsg: "¡Se acaban de actualizar los datos de las cuentas!",
-        deleteConfirm: "¿Seguro que quieres eliminar la cuenta",
+        deleteConfirm: "¿Seguro que quieres eliminar la cuenta {name}?",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "General",
         setLanguage: "Idioma",
@@ -338,7 +351,20 @@ const translations = {
         region_jp: "Japón",
         region_sg: "Sudeste asiático",
         region_tw: "Taiwán, Hong Kong y Macao",
-        region_vn: "Vietnam"
+        region_vn: "Vietnam",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "Esperando a que el cliente termine de cargar",
+        errGameNotStarted: "El juego no se abrió. Comprueba que el Riot Client haya iniciado sesión (o esté actualizando el juego) y pulsa Reintentar.",
+        tier_IRON: "Hierro",
+        tier_BRONZE: "Bronce",
+        tier_SILVER: "Plata",
+        tier_GOLD: "Oro",
+        tier_PLATINUM: "Platino",
+        tier_EMERALD: "Esmeralda",
+        tier_DIAMOND: "Diamante",
+        tier_MASTER: "Maestro",
+        tier_GRANDMASTER: "Gran Maestro",
+        tier_CHALLENGER: "Aspirante"
     },
     fr: {
         // --- Interfaz principal ---
@@ -356,7 +382,7 @@ const translations = {
         openFolderBtn: "📂 Ouvrir le dossier",
         closeBtn: "Fermer",
         syncMsg: "Les données des comptes viennent d'être mises à jour !",
-        deleteConfirm: "Êtes-vous sûr de vouloir supprimer le compte",
+        deleteConfirm: "Êtes-vous sûr de vouloir supprimer le compte {name} ?",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "Général",
         setLanguage: "Langue",
@@ -507,7 +533,20 @@ const translations = {
         region_jp: "Japon",
         region_sg: "Asie du Sud-Est",
         region_tw: "Taïwan, Hong Kong et Macao",
-        region_vn: "Viêt Nam"
+        region_vn: "Viêt Nam",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "Attente de la fin du chargement du client",
+        errGameNotStarted: "Le jeu ne s'est pas ouvert. Vérifiez que le Riot Client est connecté (ou met le jeu à jour) et appuyez sur Réessayer.",
+        tier_IRON: "Fer",
+        tier_BRONZE: "Bronze",
+        tier_SILVER: "Argent",
+        tier_GOLD: "Or",
+        tier_PLATINUM: "Platine",
+        tier_EMERALD: "Émeraude",
+        tier_DIAMOND: "Diamant",
+        tier_MASTER: "Maître",
+        tier_GRANDMASTER: "Grand Maître",
+        tier_CHALLENGER: "Challenger"
     },
     de: {
         // --- Interfaz principal ---
@@ -525,7 +564,7 @@ const translations = {
         openFolderBtn: "📂 Ordner öffnen",
         closeBtn: "Schließen",
         syncMsg: "Die Kontodaten wurden gerade aktualisiert!",
-        deleteConfirm: "Bist du sicher, dass du das Konto löschen möchtest",
+        deleteConfirm: "Bist du sicher, dass du das Konto {name} löschen möchtest?",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "Allgemein",
         setLanguage: "Sprache",
@@ -676,7 +715,20 @@ const translations = {
         region_jp: "Japan",
         region_sg: "Südostasien",
         region_tw: "Taiwan, Hongkong & Macau",
-        region_vn: "Vietnam"
+        region_vn: "Vietnam",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "Warten, bis der Client fertig geladen ist",
+        errGameNotStarted: "Das Spiel wurde nicht geöffnet. Prüfe, ob der Riot Client angemeldet ist (oder das Spiel aktualisiert), und drücke Erneut versuchen.",
+        tier_IRON: "Eisen",
+        tier_BRONZE: "Bronze",
+        tier_SILVER: "Silber",
+        tier_GOLD: "Gold",
+        tier_PLATINUM: "Platin",
+        tier_EMERALD: "Smaragd",
+        tier_DIAMOND: "Diamant",
+        tier_MASTER: "Meister",
+        tier_GRANDMASTER: "Großmeister",
+        tier_CHALLENGER: "Herausforderer"
     },
     pt: {
         // --- Interfaz principal ---
@@ -694,7 +746,7 @@ const translations = {
         openFolderBtn: "📂 Abrir pasta de dados",
         closeBtn: "Fechar",
         syncMsg: "Os dados das contas foram atualizados!",
-        deleteConfirm: "Tem certeza de que deseja excluir a conta",
+        deleteConfirm: "Tem certeza de que deseja excluir a conta {name}?",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "Geral",
         setLanguage: "Idioma",
@@ -845,7 +897,20 @@ const translations = {
         region_jp: "Japão",
         region_sg: "Sudeste Asiático",
         region_tw: "Taiwan, Hong Kong e Macau",
-        region_vn: "Vietnã"
+        region_vn: "Vietnã",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "Aguardando o cliente terminar de carregar",
+        errGameNotStarted: "O jogo não abriu. Verifique se o Riot Client entrou na conta (ou está atualizando o jogo) e clique em Tentar novamente.",
+        tier_IRON: "Ferro",
+        tier_BRONZE: "Bronze",
+        tier_SILVER: "Prata",
+        tier_GOLD: "Ouro",
+        tier_PLATINUM: "Platina",
+        tier_EMERALD: "Esmeralda",
+        tier_DIAMOND: "Diamante",
+        tier_MASTER: "Mestre",
+        tier_GRANDMASTER: "Grão-Mestre",
+        tier_CHALLENGER: "Desafiante"
     },
     ru: {
         // --- Interfaz principal ---
@@ -863,7 +928,7 @@ const translations = {
         openFolderBtn: "📂 Открыть папку",
         closeBtn: "Закрыть",
         syncMsg: "Данные аккаунтов обновлены!",
-        deleteConfirm: "Вы уверены, что хотите удалить аккаунт",
+        deleteConfirm: "Вы уверены, что хотите удалить аккаунт {name}?",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "Общие",
         setLanguage: "Язык",
@@ -1014,7 +1079,20 @@ const translations = {
         region_jp: "Япония",
         region_sg: "Юго-Восточная Азия",
         region_tw: "Тайвань, Гонконг и Макао",
-        region_vn: "Вьетнам"
+        region_vn: "Вьетнам",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "Ждём окончания загрузки клиента",
+        errGameNotStarted: "Игра не запустилась. Проверьте, что Riot Client вошёл в аккаунт (или обновляет игру), и нажмите «Повторить».",
+        tier_IRON: "Железо",
+        tier_BRONZE: "Бронза",
+        tier_SILVER: "Серебро",
+        tier_GOLD: "Золото",
+        tier_PLATINUM: "Платина",
+        tier_EMERALD: "Изумруд",
+        tier_DIAMOND: "Алмаз",
+        tier_MASTER: "Мастер",
+        tier_GRANDMASTER: "Грандмастер",
+        tier_CHALLENGER: "Претендент"
     },
     tr: {
         // --- Interfaz principal ---
@@ -1032,7 +1110,7 @@ const translations = {
         openFolderBtn: "📂 Veri klasörünü aç",
         closeBtn: "Kapat",
         syncMsg: "Hesap verileri güncellendi!",
-        deleteConfirm: "Hesabını silmek istediğinden emin misin",
+        deleteConfirm: "{name} hesabını silmek istediğinden emin misin?",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "Genel",
         setLanguage: "Dil",
@@ -1183,7 +1261,20 @@ const translations = {
         region_jp: "Japonya",
         region_sg: "Güneydoğu Asya",
         region_tw: "Tayvan, Hong Kong ve Makao",
-        region_vn: "Vietnam"
+        region_vn: "Vietnam",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "İstemcinin yüklenmesi bekleniyor",
+        errGameNotStarted: "Oyun açılmadı. Riot Client'ın giriş yaptığından (ya da oyunu güncellediğinden) emin ol ve Tekrar dene'ye bas.",
+        tier_IRON: "Demir",
+        tier_BRONZE: "Bronz",
+        tier_SILVER: "Gümüş",
+        tier_GOLD: "Altın",
+        tier_PLATINUM: "Platin",
+        tier_EMERALD: "Zümrüt",
+        tier_DIAMOND: "Elmas",
+        tier_MASTER: "Master",
+        tier_GRANDMASTER: "Grandmaster",
+        tier_CHALLENGER: "Challenger"
     },
     zh: {
         // --- Interfaz principal ---
@@ -1201,7 +1292,7 @@ const translations = {
         openFolderBtn: "📂 打开数据文件夹",
         closeBtn: "关闭",
         syncMsg: "账号数据已更新！",
-        deleteConfirm: "确定要删除账号",
+        deleteConfirm: "确定要删除账号 {name} 吗？",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "常规",
         setLanguage: "语言",
@@ -1352,7 +1443,20 @@ const translations = {
         region_jp: "日本",
         region_sg: "东南亚",
         region_tw: "台湾、香港和澳门",
-        region_vn: "越南"
+        region_vn: "越南",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "正在等待客户端加载完成",
+        errGameNotStarted: "游戏未能启动。请确认 Riot 客户端已登录（或正在更新游戏），然后点击“重试”。",
+        tier_IRON: "坚韧黑铁",
+        tier_BRONZE: "英勇黄铜",
+        tier_SILVER: "不屈白银",
+        tier_GOLD: "荣耀黄金",
+        tier_PLATINUM: "华贵铂金",
+        tier_EMERALD: "流光翡翠",
+        tier_DIAMOND: "璀璨钻石",
+        tier_MASTER: "超凡大师",
+        tier_GRANDMASTER: "傲世宗师",
+        tier_CHALLENGER: "最强王者"
     },
     ja: {
         // --- Interfaz principal ---
@@ -1370,7 +1474,7 @@ const translations = {
         openFolderBtn: "📂 データフォルダを開く",
         closeBtn: "閉じる",
         syncMsg: "アカウントデータが更新されました！",
-        deleteConfirm: "アカウントを削除してもよろしいですか",
+        deleteConfirm: "アカウント {name} を削除してもよろしいですか？",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "一般",
         setLanguage: "言語",
@@ -1521,7 +1625,20 @@ const translations = {
         region_jp: "日本",
         region_sg: "東南アジア",
         region_tw: "台湾・香港・マカオ",
-        region_vn: "ベトナム"
+        region_vn: "ベトナム",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "クライアントの読み込み完了を待っています",
+        errGameNotStarted: "ゲームが起動しませんでした。Riot Client がログイン済み（またはゲームを更新中）か確認して、「再試行」を押してください。",
+        tier_IRON: "アイアン",
+        tier_BRONZE: "ブロンズ",
+        tier_SILVER: "シルバー",
+        tier_GOLD: "ゴールド",
+        tier_PLATINUM: "プラチナ",
+        tier_EMERALD: "エメラルド",
+        tier_DIAMOND: "ダイヤモンド",
+        tier_MASTER: "マスター",
+        tier_GRANDMASTER: "グランドマスター",
+        tier_CHALLENGER: "チャレンジャー"
     },
     ko: {
         // --- Interfaz principal ---
@@ -1539,7 +1656,7 @@ const translations = {
         openFolderBtn: "📂 데이터 폴더 열기",
         closeBtn: "닫기",
         syncMsg: "계정 데이터가 업데이트되었습니다!",
-        deleteConfirm: "계정을 삭제하시겠습니까",
+        deleteConfirm: "{name} 계정을 삭제하시겠습니까?",
         // --- Ajustes y panel de cuentas ---
         setGeneral: "일반",
         setLanguage: "언어",
@@ -1690,6 +1807,19 @@ const translations = {
         region_jp: "일본",
         region_sg: "동남아시아",
         region_tw: "대만, 홍콩 및 마카오",
-        region_vn: "베트남"
+        region_vn: "베트남",
+        // --- Login con el juego y nombres de rango ---,
+        stepWaitReady: "클라이언트 로딩 완료 대기 중",
+        errGameNotStarted: "게임이 실행되지 않았습니다. Riot Client가 로그인되었는지(또는 게임을 업데이트 중인지) 확인한 후 '다시 시도'를 누르세요.",
+        tier_IRON: "아이언",
+        tier_BRONZE: "브론즈",
+        tier_SILVER: "실버",
+        tier_GOLD: "골드",
+        tier_PLATINUM: "플래티넘",
+        tier_EMERALD: "에메랄드",
+        tier_DIAMOND: "다이아몬드",
+        tier_MASTER: "마스터",
+        tier_GRANDMASTER: "그랜드마스터",
+        tier_CHALLENGER: "챌린저"
     }
 };

@@ -1042,3 +1042,49 @@ button.sb-add kbd { margin-left: auto; background: rgba(0, 0, 0, 0.14); border-c
 @media (prefers-reduced-motion: reduce) {
     button.sb-add, button.sb-add::after, .rd-fill, .sb-refresh-ring::before, .app-header.topbar::after { animation: none !important; }
 }
+
+/* ===================== DESPLEGABLES PROPIOS (región / ordenar) ===================== */
+.tb-pill.tb-dd select { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+.tb-dd-btn {
+    background: transparent; border: none; outline: none; padding: 0;
+    color: #f1f5f9; font: 700 14px 'Segoe UI', Tahoma, sans-serif;
+    cursor: pointer; white-space: nowrap;
+}
+.tb-dd.open { border-color: rgba(201, 168, 92, 0.7); box-shadow: 0 0 14px rgba(201, 168, 92, 0.22); }
+.tb-dd.open .tb-chev { color: var(--gold); transform: rotate(180deg); }
+.tb-dd-menu {
+    position: absolute; top: calc(100% + 8px); left: 0; min-width: 100%;
+    display: none; flex-direction: column; gap: 1px;
+    padding: 6px;
+    background: #10131a; border: 1px solid #262b36; border-radius: 12px;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.6);
+    max-height: min(380px, calc(100vh - 130px)); overflow-y: auto;
+    z-index: 1000; cursor: default;
+    scrollbar-width: thin; scrollbar-color: #2a303c transparent;
+}
+.tb-dd.open .tb-dd-menu { display: flex; }
+.tb-dd-menu::-webkit-scrollbar { width: 6px; }
+.tb-dd-menu::-webkit-scrollbar-track { background: transparent; }
+.tb-dd-menu::-webkit-scrollbar-thumb { background: #2a303c; border-radius: 3px; }
+.tb-dd-menu::-webkit-scrollbar-button { display: none; }
+.tb-dd-group {
+    padding: 10px 10px 4px;
+    font: 700 10.5px 'Segoe UI', Tahoma, sans-serif; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(201, 168, 92, 0.75);
+}
+.tb-dd-opt {
+    text-align: left; white-space: nowrap;
+    background: transparent; border: none; border-radius: 8px;
+    padding: 8px 12px;
+    color: #cbd5e1; font: 500 13px 'Segoe UI', Tahoma, sans-serif;
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.tb-dd-opt:hover, .tb-dd-opt:focus-visible { background: #1b2030; color: #fff; outline: none; }
+.tb-dd-opt.active { color: var(--gold); font-weight: 700; background: rgba(201, 168, 92, 0.1); }
+
+/* Menú de idiomas: cabe entero (sin barra de desplazamiento); si la ventana es muy baja, se desplaza sin barra visible */
+.lang-dropdown {
+    max-height: min(440px, calc(100vh - 100px));
+    scrollbar-width: none; -ms-overflow-style: none;
+}
+.lang-dropdown::-webkit-scrollbar { display: none; }
