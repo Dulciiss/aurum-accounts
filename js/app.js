@@ -690,6 +690,46 @@
             return Promise.all(LEAGUE_IMAGES.map(listProcessPids)).then(sets => new Set(sets.flatMap(set => [...set])));
         }
 
+        // ---------- API local del Riot Client ----------
+        // El cliente publica su puerto y contraseña en un "lockfile"; con eso se le puede pedir
+        // abrir el juego directamente, sin depender de la ventana ni de pulsar "Jugar".
+        function readRiotLockfile() {
+            const lockPath = path.join(process.env.LOCALAPPDATA || '', 'Riot Games', 'Riot Client', 'Config', 'lockfile');
+            try {
+                const [, , port, password] = fs.readFileSync(lockPath, 'utf8').trim().split(':');
+                return port && password ? { port: Number(port), password } : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Siempre resuelve: { ok, status, note, body }
+        function riotClientRequest(method, apiPath) {
+            return new Promise(resolve => {
+                const lock = readRiotLockfile();
+                if (!lock) { resolve({ ok: false, status: 0, note: 'sin lockfile' }); return; }
+                let finished = false;
+                const finish = result => { if (!finished) { finished = true; resolve(result); } };
+                const req = https.request({
+                    host: '127.0.0.1', port: lock.port, path: apiPath, method,
+                    headers: { Authorization: 'Basic ' + Buffer.from('riot:' + lock.password).toString('base64') },
+                    rejectUnauthorized: false, // certificado local autofirmado
+                    timeout: 5000
+                }, res => {
+                    let body = '';
+                    res.on('data', chunk => { if (body.length < 300) body += chunk; });
+                    res.on('end', () => finish({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, body }));
+                });
+                req.on('timeout', () => { req.destroy(); finish({ ok: false, status: 0, note: 'timeout' }); });
+                req.on('error', e => finish({ ok: false, status: 0, note: e.code || 'error' }));
+                req.end();
+            });
+        }
+
+        function launchLeagueViaApi() {
+            return riotClientRequest('POST', '/product-launcher/v1/products/league_of_legends/patchlines/live');
+        }
+
         // ---------- Scripts de PowerShell que informan de cada paso ("STEP:clave") ----------
         const PS_PRELUDE = `
             Add-Type -AssemblyName System.Windows.Forms
@@ -839,7 +879,8 @@
             }).join('');
             const doneCount = session.status.filter(x => x === 'done').length;
             loginBarFill.style.width = `${(doneCount / session.steps.length) * 100}%`;
-            loginFooterEl.textContent = session.footer ? t(session.footer) : '';
+            loginFooterEl.textContent = (session.footer ? t(session.footer) : '') +
+                (session.state === 'error' && session.debug && session.debug.length ? ` [${session.debug.join(' · ')}]` : '');
             loginFooterEl.classList.toggle('error', session.state === 'error');
             loginBtnCancel.classList.toggle('show', session.state === 'running');
             loginBtnRetry.classList.toggle('show', session.state === 'error');
@@ -958,11 +999,17 @@
             waitForLeagueClient(session);
         }
 
-        const GAME_NUDGE_MS = 20000;    // si el juego no ha arrancado solo, se lo pedimos al Riot Client
-        const GAME_TIMEOUT_MS = 75000;  // máximo esperando a que aparezca el cliente del juego
+        // Intentos de abrir el juego una vez iniciada la sesión (ms desde que se escribieron las credenciales).
+        // 'api' = se lo pedimos al Riot Client por su API local; 'args' = relanzamos RiotClientServices con el juego.
+        const GAME_ATTEMPTS = [
+            { at: 4000, how: 'api' }, { at: 14000, how: 'api' }, { at: 24000, how: 'args' },
+            { at: 40000, how: 'api' }, { at: 56000, how: 'args' }
+        ];
+        const GAME_TIMEOUT_MS = 90000;  // máximo esperando a que aparezca el cliente del juego
 
         // Solo se da el inicio por bueno cuando el cliente del juego aparece de verdad
         function waitForLeagueClient(session) {
+            session.debug = [];
             // El juego ya estaba abierto antes de empezar: no hay forma de distinguir uno nuevo
             if (session.leagueBaseline.size > 0) {
                 launchLeague();
@@ -970,17 +1017,30 @@
                 return;
             }
             const startedAt = Date.now();
-            let nudged = false;
+            let next = 0;
+            const alive = () => loginSession === session && session.state === 'running';
             const poll = () => {
-                listLeaguePids().then(pids => {
-                    if (loginSession !== session || session.state !== 'running') return;
+                listLeaguePids().then(async pids => {
+                    if (!alive()) return;
                     if ([...pids].some(pid => !session.leagueBaseline.has(pid))) { finishLogin(true); return; }
                     const waited = Date.now() - startedAt;
-                    if (!nudged && waited >= GAME_NUDGE_MS) {
-                        nudged = true;
-                        if (!launchLeague()) { failLogin('riotClientNotFound'); return; }
+                    if (next < GAME_ATTEMPTS.length && waited >= GAME_ATTEMPTS[next].at) {
+                        const attempt = GAME_ATTEMPTS[next++];
+                        if (attempt.how === 'api') {
+                            const r = await launchLeagueViaApi();
+                            session.debug.push('API ' + (r.status || r.note));
+                            console.info('[login] lanzar juego por API:', r.status, r.note || '', r.body || '');
+                        } else {
+                            if (!launchLeague()) { failLogin('riotClientNotFound'); return; }
+                            session.debug.push('args');
+                        }
+                        if (!alive()) return;
                     }
-                    if (waited >= GAME_TIMEOUT_MS) { failLogin('errGameNotStarted'); return; }
+                    if (waited >= GAME_TIMEOUT_MS) {
+                        console.info('[login] el juego no se abrió. Intentos:', session.debug.join(', '));
+                        failLogin('errGameNotStarted');
+                        return;
+                    }
                     loginLater(session, 2000, poll);
                 });
             };
