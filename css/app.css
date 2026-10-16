@@ -1088,3 +1088,67 @@ button.sb-add kbd { margin-left: auto; background: rgba(0, 0, 0, 0.14); border-c
     scrollbar-width: none; -ms-overflow-style: none;
 }
 .lang-dropdown::-webkit-scrollbar { display: none; }
+
+/* ===================== ADAPTACIÓN AL TAMAÑO DE LA VENTANA ===================== */
+/* La barra lateral nunca se encoge ni se aplasta (antes el contenido de las tarjetas la apretaba
+   en horizontal y la falta de altura aplastaba sus botones en vertical). La zona principal
+   ocupa solo el espacio que sobra. */
+.sidebar { flex: 0 0 auto; }
+.sidebar > * { flex-shrink: 0; }
+.content-wrapper { flex: 1 1 0; min-width: 0; }
+
+/* Textos que no deben romper la maquetación en ningún idioma */
+button.sb-add span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-label, .sb-refresh-label, #auto-refresh-timer { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rd-row { grid-template-columns: 20px minmax(0, 1fr) 36px 18px; gap: 7px; }
+.rd-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-search { min-width: 170px; }
+.tb-controls { flex-shrink: 0; }
+
+#auto-refresh-box.sb-refresh { gap: 10px; padding-right: 10px !important; }
+
+/* Ventanas poco anchas: menos margen para que sigan cabiendo 2 columnas de tarjetas */
+@media (max-width: 1180px) {
+    .main-content { padding: 22px !important; gap: 16px; }
+}
+
+/* Ventanas poco altas: la barra lateral se compacta para que se vea entera */
+@media (max-height: 860px) {
+    .sidebar { gap: 10px; padding-top: 12px !important; padding-bottom: 8px !important; }
+    .sidebar-brand { padding-bottom: 0 !important; gap: 4px; }
+    .sidebar-brand img { width: 58px; height: 58px; }
+    .sidebar-brand-name { font-size: 16px; }
+    button.sb-add { padding-top: 9px !important; padding-bottom: 9px !important; }
+    .sb-panel { padding: 10px 10px 6px; }
+    .sb-label { margin-bottom: 6px; }
+    .rd-row { padding: 2px 4px; }
+    #auto-refresh-box.sb-refresh { padding: 8px 12px !important; }
+    .sb-nav-item { padding: 7px 10px; }
+}
+@media (max-height: 740px) {
+    .sidebar { gap: 8px; }
+    .sidebar-brand img { width: 46px; height: 46px; }
+    .sidebar-brand-name { font-size: 15px; }
+    .rd-row { padding: 1px 4px; }
+    .rd-name, .rd-count { font-size: 12.5px; }
+    .sb-nav-item { padding: 6px 10px; }
+}
+@media (max-height: 690px) {
+    .sidebar { gap: 6px; }
+    .sidebar-brand img { width: 40px; height: 40px; }
+    .sidebar-brand-name { display: none; }
+    .sb-version { display: none; }
+}
+
+/* Panel de añadir/editar cuenta en ventanas poco altas: que el botón de guardar se vea sin desplazarse */
+@media (max-height: 720px) {
+    .drawer-head { padding-top: 18px; }
+    .drawer-head .settings-x { top: 16px; }
+    .drawer-head h3 { font-size: 20px; }
+    .drawer-body { padding: 12px 26px 18px; }
+    .drawer-tabs { margin-bottom: 12px; }
+    .field { margin-bottom: 11px; }
+    .field label { margin-bottom: 5px; }
+    .field input, .field select { padding: 10px 14px; }
+    .field textarea { min-height: 120px; }
+}

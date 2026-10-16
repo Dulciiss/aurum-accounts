@@ -36,8 +36,8 @@ function createWindow () {
     const win = new BrowserWindow({
         width: 1100,
         height: 720,
-        minWidth: 860,
-        minHeight: 560,
+        minWidth: 1000,   // por debajo de esto la interfaz deja de verse bien
+        minHeight: 660,
         frame: false,   // sin marco de Windows: la barra de título la dibuja index.html
         icon: path.join(__dirname, 'icon.ico'),   // icono de la barra de tareas
         show: false, // se muestra en 'ready-to-show' para evitar parpadeos
