@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, safeStorage } = require('electron');
 const path = require('path');
+const { createUpdater } = require('./updater');
 
 // Identificador propio: Windows agrupa y muestra el icono de la app en la barra de tareas
 // (sin esto, en desarrollo aparece agrupada con el icono de Electron)
@@ -105,7 +106,39 @@ ipcMain.on('win:get-state', (event) => {
     event.returnValue = win ? { maximized: win.isMaximized(), fullscreen: win.isFullScreen() } : null;
 });
 
-app.whenReady().then(createWindow);
+// ---------- Actualizaciones automáticas (ver updater.js) ----------
+// Solo el instalador se actualiza solo; el Portable y el modo desarrollo avisan desde la interfaz.
+let autoUpdater = null;
+if (app.isPackaged && !process.env.PORTABLE_EXECUTABLE_DIR) {
+    try {
+        autoUpdater = require('electron-updater').autoUpdater;
+    } catch (e) {
+        console.error('electron-updater no está disponible:', e);
+    }
+}
+createUpdater({
+    ipcMain,
+    autoUpdater,
+    send: (payload) => BrowserWindow.getAllWindows().forEach(w => {
+        if (!w.isDestroyed()) w.webContents.send('update:state', payload);
+    })
+});
+
+// ---------- Una sola instancia ----------
+// Si se abre la app otra vez (p. ej. a mano después de arrancar con Windows), se enfoca la
+// ventana que ya existe: dos instancias a la vez podrían pisarse accounts.json.
+if (!app.requestSingleInstanceLock()) {
+    app.quit();
+} else {
+    app.on('second-instance', () => {
+        const win = BrowserWindow.getAllWindows()[0];
+        if (!win) return;
+        if (win.isMinimized()) win.restore();
+        win.show();
+        win.focus();
+    });
+    app.whenReady().then(createWindow);
+}
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {

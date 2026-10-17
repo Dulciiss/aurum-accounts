@@ -182,7 +182,13 @@ const translations = {
         tier_DIAMOND: "Diamond",
         tier_MASTER: "Master",
         tier_GRANDMASTER: "Grandmaster",
-        tier_CHALLENGER: "Challenger"
+        tier_CHALLENGER: "Challenger",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "Download and install",
+        updDownloading: "Downloading update...",
+        updReady: "Update ready",
+        updRestart: "Restart and install",
+        accountsRecovered: "A problem was detected in accounts.json and the last backup was restored."
     },
     es: {
         // --- Interfaz principal ---
@@ -364,7 +370,13 @@ const translations = {
         tier_DIAMOND: "Diamante",
         tier_MASTER: "Maestro",
         tier_GRANDMASTER: "Gran Maestro",
-        tier_CHALLENGER: "Aspirante"
+        tier_CHALLENGER: "Aspirante",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "Descargar e instalar",
+        updDownloading: "Descargando actualización...",
+        updReady: "Actualización lista",
+        updRestart: "Reiniciar e instalar",
+        accountsRecovered: "Se detectó un error en accounts.json y se restauró la última copia de seguridad."
     },
     fr: {
         // --- Interfaz principal ---
@@ -546,7 +558,13 @@ const translations = {
         tier_DIAMOND: "Diamant",
         tier_MASTER: "Maître",
         tier_GRANDMASTER: "Grand Maître",
-        tier_CHALLENGER: "Challenger"
+        tier_CHALLENGER: "Challenger",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "Télécharger et installer",
+        updDownloading: "Téléchargement de la mise à jour...",
+        updReady: "Mise à jour prête",
+        updRestart: "Redémarrer et installer",
+        accountsRecovered: "Un problème a été détecté dans accounts.json et la dernière sauvegarde a été restaurée."
     },
     de: {
         // --- Interfaz principal ---
@@ -728,7 +746,13 @@ const translations = {
         tier_DIAMOND: "Diamant",
         tier_MASTER: "Meister",
         tier_GRANDMASTER: "Großmeister",
-        tier_CHALLENGER: "Herausforderer"
+        tier_CHALLENGER: "Herausforderer",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "Herunterladen und installieren",
+        updDownloading: "Update wird heruntergeladen...",
+        updReady: "Update bereit",
+        updRestart: "Neu starten und installieren",
+        accountsRecovered: "In accounts.json wurde ein Fehler erkannt und die letzte Sicherung wurde wiederhergestellt."
     },
     pt: {
         // --- Interfaz principal ---
@@ -910,7 +934,13 @@ const translations = {
         tier_DIAMOND: "Diamante",
         tier_MASTER: "Mestre",
         tier_GRANDMASTER: "Grão-Mestre",
-        tier_CHALLENGER: "Desafiante"
+        tier_CHALLENGER: "Desafiante",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "Baixar e instalar",
+        updDownloading: "Baixando atualização...",
+        updReady: "Atualização pronta",
+        updRestart: "Reiniciar e instalar",
+        accountsRecovered: "Foi detectado um problema em accounts.json e o último backup foi restaurado."
     },
     ru: {
         // --- Interfaz principal ---
@@ -1092,7 +1122,13 @@ const translations = {
         tier_DIAMOND: "Алмаз",
         tier_MASTER: "Мастер",
         tier_GRANDMASTER: "Грандмастер",
-        tier_CHALLENGER: "Претендент"
+        tier_CHALLENGER: "Претендент",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "Скачать и установить",
+        updDownloading: "Загрузка обновления...",
+        updReady: "Обновление готово",
+        updRestart: "Перезапустить и установить",
+        accountsRecovered: "В accounts.json обнаружена ошибка, восстановлена последняя резервная копия."
     },
     tr: {
         // --- Interfaz principal ---
@@ -1274,7 +1310,13 @@ const translations = {
         tier_DIAMOND: "Elmas",
         tier_MASTER: "Master",
         tier_GRANDMASTER: "Grandmaster",
-        tier_CHALLENGER: "Challenger"
+        tier_CHALLENGER: "Challenger",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "İndir ve yükle",
+        updDownloading: "Güncelleme indiriliyor...",
+        updReady: "Güncelleme hazır",
+        updRestart: "Yeniden başlat ve yükle",
+        accountsRecovered: "accounts.json dosyasında bir sorun tespit edildi ve son yedek geri yüklendi."
     },
     zh: {
         // --- Interfaz principal ---
@@ -1456,7 +1498,13 @@ const translations = {
         tier_DIAMOND: "璀璨钻石",
         tier_MASTER: "超凡大师",
         tier_GRANDMASTER: "傲世宗师",
-        tier_CHALLENGER: "最强王者"
+        tier_CHALLENGER: "最强王者",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "下载并安装",
+        updDownloading: "正在下载更新...",
+        updReady: "更新已就绪",
+        updRestart: "重启并安装",
+        accountsRecovered: "检测到 accounts.json 存在问题，已恢复最近一次备份。"
     },
     ja: {
         // --- Interfaz principal ---
@@ -1638,7 +1686,13 @@ const translations = {
         tier_DIAMOND: "ダイヤモンド",
         tier_MASTER: "マスター",
         tier_GRANDMASTER: "グランドマスター",
-        tier_CHALLENGER: "チャレンジャー"
+        tier_CHALLENGER: "チャレンジャー",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "ダウンロードしてインストール",
+        updDownloading: "アップデートをダウンロード中...",
+        updReady: "アップデートの準備ができました",
+        updRestart: "再起動してインストール",
+        accountsRecovered: "accounts.json に問題が検出されたため、最新のバックアップを復元しました。"
     },
     ko: {
         // --- Interfaz principal ---
@@ -1820,6 +1874,12 @@ const translations = {
         tier_DIAMOND: "다이아몬드",
         tier_MASTER: "마스터",
         tier_GRANDMASTER: "그랜드마스터",
-        tier_CHALLENGER: "챌린저"
+        tier_CHALLENGER: "챌린저",
+        // --- Actualizaciones automáticas y recuperación de datos ---,
+        updDownloadInstall: "다운로드 및 설치",
+        updDownloading: "업데이트 다운로드 중...",
+        updReady: "업데이트 준비 완료",
+        updRestart: "다시 시작하고 설치",
+        accountsRecovered: "accounts.json에서 문제가 감지되어 최신 백업을 복원했습니다."
     }
 };

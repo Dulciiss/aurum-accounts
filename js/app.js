@@ -389,8 +389,49 @@
             return acc.password || '';
         }
 
+        // Escritura segura de accounts.json: se escribe en un archivo temporal y se renombra (reemplazo
+        // atómico), y antes se guarda una copia de la última versión válida en accounts.json.bak.
+        // Así un corte de luz o un cierre a mitad de escritura no puede dejarte sin cuentas.
+        const backupPath = dataPath + '.bak';
+        let accountsRecovered = false;
+
+        function parseAccountsFile(filePath) {
+            try {
+                const parsed = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+                return Array.isArray(parsed) ? parsed : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
         function writeAccounts(accounts) {
-            fs.writeFileSync(dataPath, JSON.stringify(accounts, null, 4));
+            try {
+                const current = fs.existsSync(dataPath) ? parseAccountsFile(dataPath) : null;
+                // No se sustituye una copia buena por una lista vacía
+                if (current && (current.length > 0 || !fs.existsSync(backupPath))) fs.copyFileSync(dataPath, backupPath);
+            } catch (e) {
+                console.error('No se pudo crear la copia de seguridad de accounts.json', e);
+            }
+            const tmpPath = dataPath + '.tmp';
+            fs.writeFileSync(tmpPath, JSON.stringify(accounts, null, 4));
+            fs.renameSync(tmpPath, dataPath);
+        }
+
+        // Aparta un accounts.json dañado (no se borra: así se puede intentar rescatar a mano)
+        function setAsideCorruptAccounts() {
+            try {
+                fs.renameSync(dataPath, path.join(userDataPath, `accounts.corrupt-${Date.now()}.json`));
+            } catch (e) { /* si no se puede apartar, se deja donde está */ }
+        }
+
+        // Si accounts.json está dañado, recupera la última copia buena; devuelve null si no hay
+        function restoreAccountsBackup() {
+            const backup = fs.existsSync(backupPath) ? parseAccountsFile(backupPath) : null;
+            if (!backup) return null;
+            setAsideCorruptAccounts();
+            fs.copyFileSync(backupPath, dataPath);
+            accountsRecovered = true;
+            return backup;
         }
 
         // Lee accounts.json y migra el formato antiguo (sin id, notas, contraseñas en claro)
@@ -401,7 +442,8 @@
                 accounts = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
             } catch (e) {
                 console.error('accounts.json no es un JSON válido', e);
-                return [];
+                accounts = restoreAccountsBackup();
+                if (!accounts) { setAsideCorruptAccounts(); return []; }
             }
             if (!Array.isArray(accounts)) return [];
 
@@ -2221,6 +2263,7 @@
         loadChampionData();
         
         applyLanguage();
+        if (accountsRecovered) showNeonNotification(t('accountsRecovered'));
 
         // ---------- Búsqueda de actualizaciones (GitHub Releases) ----------
         // Cambia esto por tu repositorio: publica cada versión como Release con tag "v3.0.3" o "3.0.3".
@@ -2229,7 +2272,7 @@
 
         const btnCheckUpdates = document.getElementById('btn-check-updates');
         const updateStatusEl = document.getElementById('update-status');
-        // state: 'idle' | 'checking' | 'latest' | 'available' | 'error'
+        // state: 'idle' | 'checking' | 'latest' | 'available' | 'downloading' | 'ready' | 'error'
         let updateState = { state: 'idle', version: null, url: null };
 
         function compareVersions(a, b) {
@@ -2242,9 +2285,21 @@
             return 0;
         }
 
+        // Instalador: la actualización se descarga e instala desde la propia app (ver updater.js).
+        // Portable / modo desarrollo: se avisa y se abre la página de la release.
+        let selfUpdate = false;
+        let silentCheck = false;
+        ipcRenderer.invoke('update:capabilities')
+            .then(c => { selfUpdate = !!(c && c.selfUpdate); })
+            .catch(() => { /* sin actualización automática */ });
+
+        function updateBusy() {
+            return ['checking', 'downloading', 'ready'].includes(updateState.state);
+        }
+
         function renderUpdateStatus() {
-            const { state, version, url } = updateState;
-            btnCheckUpdates.disabled = state === 'checking';
+            const { state, version, url, percent } = updateState;
+            btnCheckUpdates.disabled = state === 'checking' || state === 'downloading';
             btnCheckUpdates.classList.toggle('checking', state === 'checking');
             updateStatusEl.className = 'update-status';
             updateStatusEl.innerHTML = '';
@@ -2263,15 +2318,58 @@
                 label.textContent = `${t('updAvailable')} ${version}`;
                 const btn = document.createElement('button');
                 btn.className = 'update-download';
-                btn.textContent = t('updDownload');
-                btn.addEventListener('click', () => shell.openExternal(url));
+                if (selfUpdate) {
+                    btn.textContent = t('updDownloadInstall');
+                    btn.addEventListener('click', () => { silentCheck = false; ipcRenderer.send('update:download'); });
+                } else {
+                    btn.textContent = t('updDownload');
+                    btn.addEventListener('click', () => shell.openExternal(url));
+                }
+                updateStatusEl.append(label, btn);
+            } else if (state === 'downloading') {
+                updateStatusEl.classList.add('available');
+                updateStatusEl.textContent = `${t('updDownloading')} ${percent || 0}%`;
+            } else if (state === 'ready') {
+                updateStatusEl.classList.add('available');
+                const label = document.createElement('span');
+                label.textContent = `${t('updReady')} (${version})`;
+                const btn = document.createElement('button');
+                btn.className = 'update-download';
+                btn.textContent = t('updRestart');
+                btn.addEventListener('click', () => ipcRenderer.send('update:install'));
                 updateStatusEl.append(label, btn);
             }
         }
 
+        // Estados que llegan del proceso principal (solo instalador)
+        ipcRenderer.on('update:state', (event, s) => {
+            if (s.state === 'checking') {
+                updateState = { state: 'checking', version: null, url: null };
+            } else if (s.state === 'available') {
+                updateState = { state: 'available', version: s.version, url: null };
+                if (silentCheck) showNeonNotification(`${t('updAvailable')} ${s.version}`);
+            } else if (s.state === 'latest') {
+                updateState = { state: 'latest', version: null, url: null };
+            } else if (s.state === 'downloading') {
+                updateState = { state: 'downloading', version: updateState.version, url: null, percent: s.percent };
+            } else if (s.state === 'ready') {
+                updateState = { state: 'ready', version: s.version, url: null };
+                showNeonNotification(`${t('updReady')} (${s.version})`);
+            } else if (s.state === 'error') {
+                console.error('Error de actualización:', s.message);
+                updateState = { state: silentCheck ? 'idle' : 'error', version: null, url: null };
+            }
+            renderUpdateStatus();
+        });
+
         // silent = true: solo avisa (con un toast) si hay una versión nueva
         async function checkForUpdates({ silent = false } = {}) {
-            if (updateState.state === 'checking') return;
+            if (updateBusy()) return;
+            silentCheck = silent;
+            if (selfUpdate) {
+                ipcRenderer.send('update:check');
+                return;
+            }
             updateState = { state: 'checking', version: null, url: null };
             renderUpdateStatus();
             try {

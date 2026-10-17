@@ -1,0 +1,41 @@
+name: Release
+
+# Se ejecuta al subir una etiqueta de versión (v1.0.1, v1.1.0...). Compila en Windows y publica la release
+# con el instalador, el Portable y los archivos que usa la actualización automática (latest.yml...).
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # necesario para crear la release y subir los archivos
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Comprobar que la etiqueta coincide con la versión de package.json
+        shell: bash
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$PKG" ]; then
+            echo "::error::La etiqueta ($GITHUB_REF_NAME) no coincide con la versión de package.json ($PKG). Cambia 'version' en package.json y vuelve a etiquetar."
+            exit 1
+          fi
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar y publicar la release
+        run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

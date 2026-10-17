@@ -27,7 +27,7 @@ Aplicación de escritorio (Electron) para guardar todas tus cuentas de League of
 - **Importar y exportar** tu lista de cuentas.
 - **10 idiomas**: español, inglés, francés, alemán, portugués, ruso, turco, chino, japonés y coreano.
 - Opciones de **iniciar con Windows** y **empezar minimizado**.
-- **Aviso de nuevas versiones** a partir de las releases de GitHub.
+- **Actualizaciones automáticas**: con el instalador, la app descarga e instala las nuevas versiones desde las releases de GitHub; el Portable avisa y abre la descarga.
 - Atajos: `Ctrl + N` añade una cuenta, `Ctrl + F` busca, `F11` pantalla completa.
 
 ### Instalación
@@ -35,6 +35,8 @@ Aplicación de escritorio (Electron) para guardar todas tus cuentas de League of
 1. Ve a [**Releases**](https://github.com/Dulciiss/league-accounts-clone/releases/latest).
 2. Descarga el **Portable** (`.exe` que se ejecuta sin instalar) o el **Setup** (instalador).
 3. Ejecútalo.
+
+**¿Cuál elegir?** El **Setup** (recomendado) se actualiza solo cuando sale una versión nueva. El **Portable** no necesita instalación, pero las actualizaciones hay que descargarlas a mano (la app te avisa).
 
 Requiere **Windows 10/11 de 64 bits** y el **Riot Client** instalado.
 
@@ -47,6 +49,7 @@ Requiere **Windows 10/11 de 64 bits** y el **Riot Client** instalado.
 - La app **no envía tus credenciales a ningún servidor**: solo las escribe en el Riot Client de tu propio PC, simulando el teclado mediante PowerShell.
 - La aplicación se conecta únicamente a: **OP.GG** (rangos y estadísticas), **Riot Data Dragon** y **Community Dragon** (imágenes de campeones y emblemas de rango), **GitHub** (comprobar actualizaciones) y la API local del propio Riot Client (`127.0.0.1`) para abrir el juego.
 - **Copias de seguridad:** al exportar se copia `accounts.json`, con las contraseñas cifradas para tu usuario de Windows. Si lo importas en otro equipo o usuario, tendrás que volver a introducirlas. **Importar reemplaza la lista actual de cuentas.**
+- **Protección de datos:** `accounts.json` se escribe de forma segura y la app guarda una copia automática (`accounts.json.bak`). Si el archivo se daña, la app restaura la última copia buena y te avisa.
 - **No subas nunca tu `accounts.json` a ningún sitio público.** Está incluido en el `.gitignore` de este proyecto.
 
 ### Desarrollo
@@ -74,7 +77,13 @@ Estructura del proyecto:
 
 **Añadir un idioma:** copia un bloque de `js/translations.js`, cambia el código y traduce los valores; después añade el idioma a los desplegables de `index.html`.
 
-**Publicar una versión:** sube `version` en `package.json`, ejecuta `npm run build` y crea una release en GitHub con la etiqueta `vX.Y.Z` subiendo los archivos de `dist/`. La app compara esa etiqueta con su versión para avisar de actualizaciones.
+**Publicar una versión (automático):**
+
+1. Cambia `version` en `package.json` (por ejemplo `1.0.1`) y haz commit.
+2. Crea y sube la etiqueta: `git tag v1.0.1` y `git push origin v1.0.1`. La etiqueta debe coincidir con `version`.
+3. GitHub Actions compila en Windows y publica la release con el instalador, el Portable y `latest.yml` (el archivo que usa la actualización automática).
+
+Los usuarios con el instalador reciben la actualización la próxima vez que la app comprueba (al arrancar y cada 6 h) o al pulsar **Ajustes → Comprobar ahora**.
 
 ### Aviso legal
 
@@ -101,7 +110,7 @@ A desktop app (Electron) to keep all your League of Legends accounts in one plac
 - **Import and export** your account list.
 - **10 languages**: Spanish, English, French, German, Portuguese, Russian, Turkish, Chinese, Japanese and Korean.
 - **Start with Windows** and **start minimized** options.
-- **New version notices** based on GitHub releases.
+- **Automatic updates**: with the installer, the app downloads and installs new versions from GitHub releases; the Portable build notifies you and opens the download.
 - Shortcuts: `Ctrl + N` adds an account, `Ctrl + F` searches, `F11` toggles full screen.
 
 ### Installation
@@ -109,6 +118,8 @@ A desktop app (Electron) to keep all your League of Legends accounts in one plac
 1. Go to [**Releases**](https://github.com/Dulciiss/league-accounts-clone/releases/latest).
 2. Download the **Portable** build (a `.exe` that runs without installing) or the **Setup** installer.
 3. Run it.
+
+**Which one?** The **Setup** (recommended) updates itself whenever a new version is out. The **Portable** build needs no installation, but updates must be downloaded by hand (the app notifies you).
 
 Requires **64-bit Windows 10/11** and the **Riot Client** installed.
 
@@ -121,6 +132,7 @@ Requires **64-bit Windows 10/11** and the **Riot Client** installed.
 - The app **does not send your credentials to any server**: it only types them into the Riot Client on your own PC, simulating the keyboard through PowerShell.
 - The app only connects to: **OP.GG** (ranks and stats), **Riot Data Dragon** and **Community Dragon** (champion images and rank emblems), **GitHub** (update checks) and the Riot Client's own local API (`127.0.0.1`) to launch the game.
 - **Backups:** exporting copies `accounts.json`, with passwords encrypted for your Windows user. If you import it on another computer or user, you will need to enter them again. **Importing replaces the current account list.**
+- **Data protection:** `accounts.json` is written safely and the app keeps an automatic backup (`accounts.json.bak`). If the file gets corrupted, the app restores the last good copy and lets you know.
 - **Never upload your `accounts.json` anywhere public.** It is already listed in this project's `.gitignore`.
 
 ### Development
@@ -148,7 +160,13 @@ Project structure:
 
 **Adding a language:** copy a block in `js/translations.js`, change the code and translate the values; then add the language to the dropdowns in `index.html`.
 
-**Publishing a version:** bump `version` in `package.json`, run `npm run build` and create a GitHub release tagged `vX.Y.Z`, uploading the files from `dist/`. The app compares that tag with its own version to notify about updates.
+**Publishing a version (automatic):**
+
+1. Change `version` in `package.json` (for example `1.0.1`) and commit.
+2. Create and push the tag: `git tag v1.0.1` and `git push origin v1.0.1`. The tag must match `version`.
+3. GitHub Actions builds on Windows and publishes the release with the installer, the Portable build and `latest.yml` (the file the automatic update relies on).
+
+Users with the installer get the update the next time the app checks (on startup and every 6 h) or when they press **Settings → Check now**.
 
 ### Disclaimer
 

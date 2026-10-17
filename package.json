@@ -3,48 +3,68 @@
   "version": "1.0.0",
   "description": "League of Legends Account Manager",
   "author": "Dulciiss",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dulciiss/league-accounts-clone.git"
+  },
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win portable",
+    "build": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always",
     "build:all": "electron-builder -w -m -l"
   },
   "dependencies": {
-    "@electron/remote": "^2.1.2"
+    "@electron/remote": "^2.1.2",
+    "electron-updater": "^6.3.0"
   },
   "devDependencies": {
-    "electron": "^28.2.0",
-    "electron-builder": "^24.13.3"
+    "electron": "^44.8.0",
+    "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "com.league.accounts",
+    "appId": "com.leagueaccounts.app",
     "productName": "League Accounts",
     "directories": {
       "output": "dist"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Dulciiss",
+        "repo": "league-accounts-clone",
+        "releaseType": "release"
+      }
+    ],
     "win": {
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "icon.ico"
     },
     "portable": {
-      "artifactName": "${productName}-${version}-Portable.exe"
+      "artifactName": "League-Accounts-${version}-Portable.exe"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "${productName}-${version}-Setup.exe"
+      "artifactName": "League-Accounts-${version}-Setup.exe"
     },
     "files": [
       "main.js",
+      "updater.js",
       "index.html",
       "style.css",
       "logo.svg",
