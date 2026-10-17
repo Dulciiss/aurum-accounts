@@ -4,7 +4,7 @@
 
 **Gestor de cuentas de League of Legends para Windows · League of Legends account manager for Windows**
 
-[Español](#español) · [English](#english) · [Descargar / Download](https://github.com/Dulciiss/league-accounts-clone/releases/latest)
+[Español](#español) · [English](#english) · [Descargar / Download](https://github.com/Dulciiss/aurum-accounts/releases/latest)
 
 </div>
 
@@ -32,7 +32,7 @@ Aplicación de escritorio (Electron) para guardar todas tus cuentas de League of
 
 ### Instalación
 
-1. Ve a [**Releases**](https://github.com/Dulciiss/league-accounts-clone/releases/latest).
+1. Ve a [**Releases**](https://github.com/Dulciiss/aurum-accounts/releases/latest).
 2. Descarga el **Portable** (`.exe` que se ejecuta sin instalar) o el **Setup** (instalador).
 3. Ejecútalo.
 
@@ -115,7 +115,7 @@ A desktop app (Electron) to keep all your League of Legends accounts in one plac
 
 ### Installation
 
-1. Go to [**Releases**](https://github.com/Dulciiss/league-accounts-clone/releases/latest).
+1. Go to [**Releases**](https://github.com/Dulciiss/aurum-accounts/releases/latest).
 2. Download the **Portable** build (a `.exe` that runs without installing) or the **Setup** installer.
 3. Run it.
 

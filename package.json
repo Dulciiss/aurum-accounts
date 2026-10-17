@@ -1,12 +1,12 @@
 {
   "name": "league-accounts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "League of Legends Account Manager",
   "author": "Dulciiss",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Dulciiss/league-accounts-clone.git"
+    "url": "https://github.com/Dulciiss/aurum-accounts.git"
   },
   "main": "main.js",
   "scripts": {
@@ -25,7 +25,7 @@
   },
   "build": {
     "appId": "com.leagueaccounts.app",
-    "productName": "League Accounts",
+    "productName": "Aurum Accounts",
     "directories": {
       "output": "dist"
     },
@@ -33,7 +33,7 @@
       {
         "provider": "github",
         "owner": "Dulciiss",
-        "repo": "league-accounts-clone",
+        "repo": "aurum-accounts",
         "releaseType": "release"
       }
     ],
@@ -55,12 +55,12 @@
       "icon": "icon.ico"
     },
     "portable": {
-      "artifactName": "League-Accounts-${version}-Portable.exe"
+      "artifactName": "Aurum-Accounts-${version}-Portable.exe"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "League-Accounts-${version}-Setup.exe"
+      "artifactName": "Aurum-Accounts-${version}-Setup.exe"
     },
     "files": [
       "main.js",
