@@ -1,6 +1,29 @@
 const { app, BrowserWindow, ipcMain, safeStorage } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { createUpdater } = require('./updater');
+
+// ---------- Carpeta de datos fija ----------
+// La carpeta de datos (cuentas, ajustes y la clave con la que se cifran las contraseñas) no debe depender
+// del nombre del programa: así renombrarlo no hace "desaparecer" las cuentas. Se reutiliza la carpeta que
+// ya exista (la más reciente si hay varias) y, en instalaciones nuevas, se crea 'league-accounts'.
+function pickDataFolder() {
+    const base = app.getPath('appData');
+    const candidates = ['league-accounts', 'League Accounts'];
+    let best = null;
+    for (const name of candidates) {
+        const dir = path.join(base, name);
+        let stamp = -1;
+        try {
+            stamp = fs.statSync(path.join(dir, 'accounts.json')).mtimeMs;
+        } catch (e) {
+            try { fs.statSync(path.join(dir, 'Local State')); stamp = 0; } catch (e2) { /* no existe */ }
+        }
+        if (stamp >= 0 && (!best || stamp > best.stamp)) best = { dir, stamp };
+    }
+    return best ? best.dir : path.join(base, candidates[0]);
+}
+app.setPath('userData', pickDataFolder());
 
 // Identificador propio: Windows agrupa y muestra el icono de la app en la barra de tareas
 // (sin esto, en desarrollo aparece agrupada con el icono de Electron)

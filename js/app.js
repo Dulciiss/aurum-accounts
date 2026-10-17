@@ -1555,7 +1555,7 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json, text/event-stream',
                         'Content-Length': Buffer.byteLength(body),
-                        'User-Agent': 'LeagueAccounts',
+                        'User-Agent': 'AurumAccounts',
                         ...extraHeaders
                     },
                     timeout: 20000
@@ -1610,7 +1610,7 @@
                     await mcpRequest('initialize', {
                         protocolVersion: '2025-03-26',
                         capabilities: {},
-                        clientInfo: { name: 'league-accounts', version: remoteApp.getVersion() }
+                        clientInfo: { name: 'aurum-accounts', version: remoteApp.getVersion() }
                     });
                     await mcpRequest('notifications/initialized', null, true);
                     const list = await mcpRequest('tools/list', {});
@@ -2264,6 +2264,10 @@
         
         applyLanguage();
         if (accountsRecovered) showNeonNotification(t('accountsRecovered'));
+        // Refresca la ruta del inicio con Windows: si la app se actualiza y cambia de nombre o de
+        // carpeta, la entrada que registró la versión anterior quedaría apuntando a un .exe que ya no existe.
+        // (Solo en la app instalada: en desarrollo registraría electron.exe y pisaría la buena.)
+        if (settings.launchAtStartup && remoteApp.isPackaged) applySystemSettings();
 
         // ---------- Búsqueda de actualizaciones (GitHub Releases) ----------
         // Cambia esto por tu repositorio: publica cada versión como Release con tag "v3.0.3" o "3.0.3".

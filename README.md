@@ -1,6 +1,6 @@
 <div align="center">
 
-# League Accounts
+# Aurum Accounts
 
 **Gestor de cuentas de League of Legends para Windows · League of Legends account manager for Windows**
 
@@ -8,7 +8,7 @@
 
 </div>
 
-<!-- Añade aquí una captura de pantalla de la app, por ejemplo: ![League Accounts](docs/screenshot.png) -->
+<!-- Añade aquí una captura de pantalla de la app, por ejemplo: ![Aurum Accounts](docs/screenshot.png) -->
 
 ---
 
@@ -87,7 +87,7 @@ Los usuarios con el instalador reciben la actualización la próxima vez que la 
 
 ### Aviso legal
 
-League Accounts es un proyecto de la comunidad. **No está respaldado por Riot Games** y no refleja las opiniones de Riot Games ni de nadie que participe oficialmente en la producción o gestión de sus propiedades. Riot Games, League of Legends y todas las propiedades asociadas son marcas comerciales o marcas registradas de Riot Games, Inc. **No está afiliado a OP.GG.** Úsalo bajo tu propia responsabilidad.
+Aurum Accounts es un proyecto de la comunidad. **No está respaldado por Riot Games** y no refleja las opiniones de Riot Games ni de nadie que participe oficialmente en la producción o gestión de sus propiedades. Riot Games, League of Legends y todas las propiedades asociadas son marcas comerciales o marcas registradas de Riot Games, Inc. **No está afiliado a OP.GG.** Úsalo bajo tu propia responsabilidad.
 
 ### Licencia
 
@@ -170,7 +170,7 @@ Users with the installer get the update the next time the app checks (on startup
 
 ### Disclaimer
 
-League Accounts is a community project. It is **not endorsed by Riot Games** and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, League of Legends and all associated properties are trademarks or registered trademarks of Riot Games, Inc. **It is not affiliated with OP.GG.** Use it at your own risk.
+Aurum Accounts is a community project. It is **not endorsed by Riot Games** and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, League of Legends and all associated properties are trademarks or registered trademarks of Riot Games, Inc. **It is not affiliated with OP.GG.** Use it at your own risk.
 
 ### License
 
