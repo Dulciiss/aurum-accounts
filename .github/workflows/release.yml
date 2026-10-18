@@ -47,10 +47,15 @@ jobs:
         shell: bash
         run: |
           ID=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.draft and .tag_name == \"$GITHUB_REF_NAME\") | .id" | head -n 1)
-          if [ -z "$ID" ]; then
-            echo "::error::No se encontró el borrador de la release $GITHUB_REF_NAME"
+          if [ -n "$ID" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false
+            echo "Release $GITHUB_REF_NAME publicada."
+          elif gh api "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" --silent; then
+            # Si package.json tiene "releaseType": "release", electron-builder ya la publicó: no hay nada que hacer
+            echo "La release $GITHUB_REF_NAME ya estaba publicada."
+          else
+            echo "::error::No se encontró la release $GITHUB_REF_NAME (ni como borrador ni publicada)."
             exit 1
           fi
-          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
