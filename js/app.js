@@ -126,6 +126,7 @@
                 settings.language = currentLang;
                 saveSettings();
                 applyLanguage();
+                refreshUpdateUi();
                 langDropdown.style.display = 'none';
             });
         });
@@ -2204,6 +2205,7 @@
             if (settings.language !== currentLang) {
                 currentLang = settings.language;
                 applyLanguage();
+                refreshUpdateUi();
             }
             updateTimerLabel();
             closeSettings();
@@ -2271,7 +2273,7 @@
 
         // ---------- Búsqueda de actualizaciones (GitHub Releases) ----------
         // Cambia esto por tu repositorio: publica cada versión como Release con tag "v3.0.3" o "3.0.3".
-        const UPDATE_REPO = 'Dulciiss/aurum-accounts';
+        const UPDATE_REPO = 'Dulciiss/league-accounts-clone';
         const UPDATE_CHECK_EVERY_MS = 6 * 60 * 60 * 1000; // cada 6 h mientras la app está abierta
 
         const btnCheckUpdates = document.getElementById('btn-check-updates');
@@ -2297,6 +2299,119 @@
             .then(c => { selfUpdate = !!(c && c.selfUpdate); })
             .catch(() => { /* sin actualización automática */ });
 
+        // Primera línea del error, acortada: permite saber por qué falló (red, 404, release incompleta...)
+        function errorDetail(message) {
+            const first = String(message || '').split('\n')[0].trim();
+            return first ? ` [${first.length > 110 ? first.slice(0, 107) + '...' : first}]` : '';
+        }
+
+        // ---------- Aviso de actualización ----------
+        // Ventana en el centro que no desaparece sola: el usuario elige "Actualizar ahora" o "Más tarde".
+        // Con "Más tarde" queda un botón fijo en la barra superior y la ventana vuelve a salir en la próxima
+        // comprobación automática (al arrancar y cada 6 h). No se muestra encima de un login, de los ajustes,
+        // del panel de cuentas ni de otra confirmación: espera a que se cierren.
+        const updateModal = document.getElementById('update-modal');
+        const updateModalTitle = document.getElementById('update-modal-title');
+        const updateModalText = document.getElementById('update-modal-text');
+        const updateProgress = document.getElementById('update-progress');
+        const updateProgressBar = document.getElementById('update-progress-bar');
+        const updateLaterBtn = document.getElementById('update-later');
+        const updateActionBtn = document.getElementById('update-action');
+        const updatePill = document.getElementById('update-pill');
+        const updatePillVersion = document.getElementById('update-pill-version');
+        let updateDismissed = true;   // true = no hay que enseñar la ventana (aún no toca o ya la pospuso)
+        let updateWanted = false;     // el usuario ya pidió actualizar (para enseñar el resultado o el error)
+        let updateModalTimer = null;
+
+        function updateOverlayBusy() {
+            return drawer.classList.contains('open') || settingsModal.style.display === 'flex'
+                || confirmModal.style.display === 'flex' || loginOverlay.classList.contains('open');
+        }
+
+        function startUpdateDownload() {
+            updateWanted = true;
+            silentCheck = false;
+            ipcRenderer.send('update:download');
+        }
+
+        function postponeUpdate() {
+            updateDismissed = true;
+            updateWanted = false;
+            renderUpdateModal();
+        }
+
+        function fillUpdateModal() {
+            const { state, version, percent, url } = updateState;
+            const fill = (v) => t(v).replace('{version}', () => version);
+            updateProgress.style.display = 'none';
+            updateLaterBtn.style.display = '';
+            updateActionBtn.style.display = '';
+            updateLaterBtn.textContent = t('updLater');
+            updateLaterBtn.onclick = postponeUpdate;
+
+            if (state === 'available') {
+                updateModalTitle.textContent = t('updModalTitle');
+                updateModalText.textContent = fill('updModalText');
+                if (selfUpdate) {
+                    updateActionBtn.textContent = t('updNow');
+                    updateActionBtn.onclick = startUpdateDownload;
+                } else {
+                    updateActionBtn.textContent = t('updDownload');
+                    updateActionBtn.onclick = () => { shell.openExternal(url); postponeUpdate(); };
+                }
+            } else if (state === 'downloading') {
+                updateModalTitle.textContent = t('updModalTitle');
+                updateModalText.textContent = `${t('updDownloading')} ${percent || 0}%`;
+                updateProgress.style.display = 'block';
+                updateProgressBar.style.width = `${percent || 0}%`;
+                updateLaterBtn.style.display = 'none';
+                updateActionBtn.style.display = 'none';
+            } else if (state === 'ready') {
+                updateModalTitle.textContent = t('updReady');
+                updateModalText.textContent = fill('updReadyText');
+                updateActionBtn.textContent = t('updRestart');
+                updateActionBtn.onclick = () => ipcRenderer.send('update:install');
+            } else if (state === 'error') {
+                updateModalTitle.textContent = t('updFailedTitle');
+                updateModalText.textContent = t('updError') + errorDetail(updateState.message);
+                updateLaterBtn.textContent = t('closeBtn');
+                updateActionBtn.textContent = t('loginRetry');
+                updateActionBtn.onclick = startUpdateDownload;
+            }
+        }
+
+        function renderUpdateModal() {
+            clearTimeout(updateModalTimer);
+            const { state, version } = updateState;
+            const pending = ['available', 'downloading', 'ready'].includes(state);
+            const wantModal = !updateDismissed && (pending || (state === 'error' && updateWanted));
+            const wasOpen = updateModal.style.display === 'flex';
+            let showModal = wantModal;
+            if (wantModal && updateOverlayBusy()) {
+                showModal = false;
+                updateModalTimer = setTimeout(renderUpdateModal, 3000);   // vuelve a intentarlo cuando se cierre
+            }
+            if (showModal) {
+                fillUpdateModal();
+                updateModal.style.display = 'flex';
+                if (!wasOpen && updateActionBtn.style.display !== 'none') updateActionBtn.focus();
+            } else {
+                updateModal.style.display = 'none';
+            }
+            updatePill.classList.toggle('show', pending && !showModal);
+            updatePillVersion.textContent = version ? `v${version}` : '';
+        }
+
+        // Tras cambiar de idioma hay que volver a escribir los textos que genera el JS
+        function refreshUpdateUi() {
+            renderUpdateStatus();
+        }
+
+        updatePill.addEventListener('click', () => { updateDismissed = false; renderUpdateModal(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && updateModal.style.display === 'flex' && updateState.state !== 'downloading') postponeUpdate();
+        });
+
         function updateBusy() {
             return ['checking', 'downloading', 'ready'].includes(updateState.state);
         }
@@ -2315,7 +2430,7 @@
                 updateStatusEl.textContent = t('updLatest');
             } else if (state === 'error') {
                 updateStatusEl.classList.add('error');
-                updateStatusEl.textContent = t('updError');
+                updateStatusEl.textContent = t('updError') + errorDetail(updateState.message);
             } else if (state === 'available') {
                 updateStatusEl.classList.add('available');
                 const label = document.createElement('span');
@@ -2324,7 +2439,7 @@
                 btn.className = 'update-download';
                 if (selfUpdate) {
                     btn.textContent = t('updDownloadInstall');
-                    btn.addEventListener('click', () => { silentCheck = false; ipcRenderer.send('update:download'); });
+                    btn.addEventListener('click', startUpdateDownload);
                 } else {
                     btn.textContent = t('updDownload');
                     btn.addEventListener('click', () => shell.openExternal(url));
@@ -2343,6 +2458,7 @@
                 btn.addEventListener('click', () => ipcRenderer.send('update:install'));
                 updateStatusEl.append(label, btn);
             }
+            renderUpdateModal();
         }
 
         // Estados que llegan del proceso principal (solo instalador)
@@ -2351,17 +2467,17 @@
                 updateState = { state: 'checking', version: null, url: null };
             } else if (s.state === 'available') {
                 updateState = { state: 'available', version: s.version, url: null };
-                if (silentCheck) showNeonNotification(`${t('updAvailable')} ${s.version}`);
+                if (silentCheck) updateDismissed = false;   // aviso automático: sale la ventana
             } else if (s.state === 'latest') {
                 updateState = { state: 'latest', version: null, url: null };
             } else if (s.state === 'downloading') {
                 updateState = { state: 'downloading', version: updateState.version, url: null, percent: s.percent };
             } else if (s.state === 'ready') {
                 updateState = { state: 'ready', version: s.version, url: null };
-                showNeonNotification(`${t('updReady')} (${s.version})`);
+                if (updateWanted) updateDismissed = false;   // lo pidió el usuario: ofrecer reiniciar
             } else if (s.state === 'error') {
                 console.error('Error de actualización:', s.message);
-                updateState = { state: silentCheck ? 'idle' : 'error', version: null, url: null };
+                updateState = { state: silentCheck ? 'idle' : 'error', version: null, url: null, message: s.message };
             }
             renderUpdateStatus();
         });
@@ -2385,13 +2501,13 @@
                 const latest = String(release.tag_name || '').replace(/^v/i, '');
                 if (latest && compareVersions(latest, remoteApp.getVersion()) > 0) {
                     updateState = { state: 'available', version: latest, url: release.html_url };
-                    if (silent) showNeonNotification(`${t('updAvailable')} ${latest}`);
+                    if (silent) updateDismissed = false;   // aviso automático: sale la ventana
                 } else {
                     updateState = { state: 'latest', version: null, url: null };
                 }
             } catch (err) {
                 console.error('Error buscando actualizaciones:', err);
-                updateState = { state: silent ? 'idle' : 'error', version: null, url: null };
+                updateState = { state: silent ? 'idle' : 'error', version: null, url: null, message: err && err.message };
             }
             renderUpdateStatus();
         }

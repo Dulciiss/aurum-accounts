@@ -1152,3 +1152,43 @@ button.sb-add span { min-width: 0; overflow: hidden; text-overflow: ellipsis; wh
     .field input, .field select { padding: 10px 14px; }
     .field textarea { min-height: 120px; }
 }
+
+/* ===================== AVISO DE ACTUALIZACIÓN ===================== */
+.update-card {
+    width: 410px; max-width: calc(100% - 40px);
+    padding: 30px 28px 24px; text-align: center;
+    border-color: rgba(201, 168, 92, 0.5);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.65), 0 0 36px rgba(201, 168, 92, 0.16);
+}
+.update-icon {
+    width: 62px; height: 62px; margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; color: var(--gold);
+    background: radial-gradient(circle, rgba(201, 168, 92, 0.22) 0%, rgba(201, 168, 92, 0.06) 70%);
+    border: 1px solid rgba(201, 168, 92, 0.5);
+}
+.update-card h3 { margin: 0 0 8px; font-size: 20px; color: var(--gold); }
+.update-card p {
+    margin: 0 0 20px; font-size: 14px; line-height: 1.55; color: #aab2c0;
+    font-family: 'Segoe UI', Tahoma, sans-serif; overflow-wrap: anywhere;
+}
+.update-progress { display: none; height: 6px; margin: 0 0 20px; border-radius: 3px; background: #161821; overflow: hidden; }
+.update-progress span { display: block; height: 100%; width: 0; border-radius: 3px; background: linear-gradient(90deg, #a98a43, #e2c677); transition: width 0.25s ease; }
+.update-actions { display: flex; gap: 10px; }
+.update-actions button { flex: 1; min-width: 0; padding: 11px 14px; font: 700 14px 'Segoe UI', Tahoma, sans-serif; border-radius: 10px; cursor: pointer; }
+
+/* Botón fijo en la barra superior mientras haya una actualización pendiente */
+.tb-update-pill {
+    display: none; align-items: center; gap: 7px; height: 42px; padding: 0 14px;
+    border-radius: 12px; cursor: pointer; flex-shrink: 0;
+    background: rgba(201, 168, 92, 0.12); border: 1px solid rgba(201, 168, 92, 0.6); color: var(--gold);
+    font: 700 13px 'Segoe UI', Tahoma, sans-serif;
+    animation: update-pulse 2.4s ease-in-out infinite;
+}
+.tb-update-pill.show { display: inline-flex; }
+.tb-update-pill:hover { background: rgba(201, 168, 92, 0.22); }
+@keyframes update-pulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(201, 168, 92, 0); }
+    50% { box-shadow: 0 0 14px rgba(201, 168, 92, 0.35); }
+}
+@media (prefers-reduced-motion: reduce) { .tb-update-pill { animation: none; } }

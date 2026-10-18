@@ -188,7 +188,14 @@ const translations = {
         updDownloading: "Downloading update...",
         updReady: "Update ready",
         updRestart: "Restart and install",
-        accountsRecovered: "A problem was detected in accounts.json and the last backup was restored."
+        accountsRecovered: "A problem was detected in accounts.json and the last backup was restored.",
+        // --- Aviso de actualización ---,
+        updModalTitle: "New version available",
+        updModalText: "Aurum Accounts {version} is now available. Update to get the latest improvements and fixes.",
+        updReadyText: "Restart Aurum Accounts to finish installing version {version}. If you leave it for later, it will be installed when you close the app.",
+        updNow: "Update now",
+        updLater: "Later",
+        updFailedTitle: "Update failed"
     },
     es: {
         // --- Interfaz principal ---
@@ -376,7 +383,14 @@ const translations = {
         updDownloading: "Descargando actualización...",
         updReady: "Actualización lista",
         updRestart: "Reiniciar e instalar",
-        accountsRecovered: "Se detectó un error en accounts.json y se restauró la última copia de seguridad."
+        accountsRecovered: "Se detectó un error en accounts.json y se restauró la última copia de seguridad.",
+        // --- Aviso de actualización ---,
+        updModalTitle: "Nueva versión disponible",
+        updModalText: "Aurum Accounts {version} ya está disponible. Actualiza para tener las últimas mejoras y correcciones.",
+        updReadyText: "Reinicia Aurum Accounts para terminar de instalar la versión {version}. Si lo dejas para más tarde, se instalará al cerrar la app.",
+        updNow: "Actualizar ahora",
+        updLater: "Más tarde",
+        updFailedTitle: "No se pudo actualizar"
     },
     fr: {
         // --- Interfaz principal ---
@@ -564,7 +578,14 @@ const translations = {
         updDownloading: "Téléchargement de la mise à jour...",
         updReady: "Mise à jour prête",
         updRestart: "Redémarrer et installer",
-        accountsRecovered: "Un problème a été détecté dans accounts.json et la dernière sauvegarde a été restaurée."
+        accountsRecovered: "Un problème a été détecté dans accounts.json et la dernière sauvegarde a été restaurée.",
+        // --- Aviso de actualización ---,
+        updModalTitle: "Nouvelle version disponible",
+        updModalText: "Aurum Accounts {version} est disponible. Mettez à jour pour profiter des dernières améliorations et corrections.",
+        updReadyText: "Redémarrez Aurum Accounts pour terminer l'installation de la version {version}. Si vous la reportez, elle sera installée à la fermeture de l'application.",
+        updNow: "Mettre à jour maintenant",
+        updLater: "Plus tard",
+        updFailedTitle: "Échec de la mise à jour"
     },
     de: {
         // --- Interfaz principal ---
@@ -752,7 +773,14 @@ const translations = {
         updDownloading: "Update wird heruntergeladen...",
         updReady: "Update bereit",
         updRestart: "Neu starten und installieren",
-        accountsRecovered: "In accounts.json wurde ein Fehler erkannt und die letzte Sicherung wurde wiederhergestellt."
+        accountsRecovered: "In accounts.json wurde ein Fehler erkannt und die letzte Sicherung wurde wiederhergestellt.",
+        // --- Aviso de actualización ---,
+        updModalTitle: "Neue Version verfügbar",
+        updModalText: "Aurum Accounts {version} ist jetzt verfügbar. Aktualisiere, um die neuesten Verbesserungen und Fehlerbehebungen zu erhalten.",
+        updReadyText: "Starte Aurum Accounts neu, um die Installation der Version {version} abzuschließen. Wenn du es verschiebst, wird sie beim Schließen der App installiert.",
+        updNow: "Jetzt aktualisieren",
+        updLater: "Später",
+        updFailedTitle: "Update fehlgeschlagen"
     },
     pt: {
         // --- Interfaz principal ---
@@ -940,7 +968,14 @@ const translations = {
         updDownloading: "Baixando atualização...",
         updReady: "Atualização pronta",
         updRestart: "Reiniciar e instalar",
-        accountsRecovered: "Foi detectado um problema em accounts.json e o último backup foi restaurado."
+        accountsRecovered: "Foi detectado um problema em accounts.json e o último backup foi restaurado.",
+        // --- Aviso de actualización ---,
+        updModalTitle: "Nova versão disponível",
+        updModalText: "O Aurum Accounts {version} já está disponível. Atualize para ter as últimas melhorias e correções.",
+        updReadyText: "Reinicie o Aurum Accounts para concluir a instalação da versão {version}. Se deixar para depois, ela será instalada ao fechar o app.",
+        updNow: "Atualizar agora",
+        updLater: "Mais tarde",
+        updFailedTitle: "Falha ao atualizar"
     },
     ru: {
         // --- Interfaz principal ---
@@ -1128,7 +1163,14 @@ const translations = {
         updDownloading: "Загрузка обновления...",
         updReady: "Обновление готово",
         updRestart: "Перезапустить и установить",
-        accountsRecovered: "В accounts.json обнаружена ошибка, восстановлена последняя резервная копия."
+        accountsRecovered: "В accounts.json обнаружена ошибка, восстановлена последняя резервная копия.",
+        // --- Aviso de actualización ---,
+        updModalTitle: "Доступна новая версия",
+        updModalText: "Aurum Accounts {version} уже доступна. Обновитесь, чтобы получить последние улучшения и исправления.",
+        updReadyText: "Перезапустите Aurum Accounts, чтобы завершить установку версии {version}. Если отложить, она установится при закрытии приложения.",
+        updNow: "Обновить сейчас",
+        updLater: "Позже",
+        updFailedTitle: "Не удалось обновить"
     },
     tr: {
         // --- Interfaz principal ---
@@ -1316,7 +1358,14 @@ const translations = {
         updDownloading: "Güncelleme indiriliyor...",
         updReady: "Güncelleme hazır",
         updRestart: "Yeniden başlat ve yükle",
-        accountsRecovered: "accounts.json dosyasında bir sorun tespit edildi ve son yedek geri yüklendi."
+        accountsRecovered: "accounts.json dosyasında bir sorun tespit edildi ve son yedek geri yüklendi.",
+        // --- Aviso de actualización ---,
+        updModalTitle: "Yeni sürüm mevcut",
+        updModalText: "Aurum Accounts {version} artık kullanılabilir. En son iyileştirmeleri ve düzeltmeleri almak için güncelle.",
+        updReadyText: "{version} sürümünün kurulumunu tamamlamak için Aurum Accounts'u yeniden başlat. Sonraya bırakırsan uygulamayı kapattığında kurulur.",
+        updNow: "Şimdi güncelle",
+        updLater: "Sonra",
+        updFailedTitle: "Güncelleme başarısız"
     },
     zh: {
         // --- Interfaz principal ---
@@ -1504,7 +1553,14 @@ const translations = {
         updDownloading: "正在下载更新...",
         updReady: "更新已就绪",
         updRestart: "重启并安装",
-        accountsRecovered: "检测到 accounts.json 存在问题，已恢复最近一次备份。"
+        accountsRecovered: "检测到 accounts.json 存在问题，已恢复最近一次备份。",
+        // --- Aviso de actualización ---,
+        updModalTitle: "有新版本可用",
+        updModalText: "Aurum Accounts {version} 现已推出。请更新以获得最新的改进和修复。",
+        updReadyText: "请重启 Aurum Accounts 以完成 {version} 版本的安装。如果稍后再说，将在关闭应用时安装。",
+        updNow: "立即更新",
+        updLater: "稍后",
+        updFailedTitle: "更新失败"
     },
     ja: {
         // --- Interfaz principal ---
@@ -1692,7 +1748,14 @@ const translations = {
         updDownloading: "アップデートをダウンロード中...",
         updReady: "アップデートの準備ができました",
         updRestart: "再起動してインストール",
-        accountsRecovered: "accounts.json に問題が検出されたため、最新のバックアップを復元しました。"
+        accountsRecovered: "accounts.json に問題が検出されたため、最新のバックアップを復元しました。",
+        // --- Aviso de actualización ---,
+        updModalTitle: "新しいバージョンがあります",
+        updModalText: "Aurum Accounts {version} が利用可能です。最新の改善と修正を適用するために更新してください。",
+        updReadyText: "バージョン {version} のインストールを完了するには、Aurum Accounts を再起動してください。後で行う場合は、アプリを閉じるときにインストールされます。",
+        updNow: "今すぐ更新",
+        updLater: "後で",
+        updFailedTitle: "更新に失敗しました"
     },
     ko: {
         // --- Interfaz principal ---
@@ -1880,6 +1943,13 @@ const translations = {
         updDownloading: "업데이트 다운로드 중...",
         updReady: "업데이트 준비 완료",
         updRestart: "다시 시작하고 설치",
-        accountsRecovered: "accounts.json에서 문제가 감지되어 최신 백업을 복원했습니다."
+        accountsRecovered: "accounts.json에서 문제가 감지되어 최신 백업을 복원했습니다.",
+        // --- Aviso de actualización ---,
+        updModalTitle: "새 버전이 있습니다",
+        updModalText: "Aurum Accounts {version}을(를) 사용할 수 있습니다. 최신 개선 사항과 수정 사항을 받으려면 업데이트하세요.",
+        updReadyText: "버전 {version} 설치를 완료하려면 Aurum Accounts를 다시 시작하세요. 나중으로 미루면 앱을 닫을 때 설치됩니다.",
+        updNow: "지금 업데이트",
+        updLater: "나중에",
+        updFailedTitle: "업데이트 실패"
     }
 };
