@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Aurum Accounts · Gestor de cuentas de League of Legends para Windows</title>
+    <meta name="description" content="Aurum Accounts: guarda tus cuentas de League of Legends, mira sus rangos de un vistazo e inicia sesión con un clic. Gratis, de código abierto y con tus contraseñas cifradas en tu equipo.">
+    <meta name="theme-color" content="#07080a">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Aurum Accounts">
+    <meta property="og:description" content="Gestor de cuentas de League of Legends para Windows. Gratis y de código abierto.">
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&display=swap" rel="stylesheet">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Aurum Accounts",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Windows 10, Windows 11",
+        "description": "Gestor de cuentas de League of Legends para Windows. Gratis y de código abierto.",
+        "license": "https://opensource.org/licenses/MIT",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+    }
+    </script>
+    <style>
+        :root {
+            --bg: #07080a; --panel: #0d0f14; --panel-2: #11141b; --line: #212635;
+            --gold: #c9a85c; --gold-2: #e2c677; --gold-dim: #a98a43;
+            --text: #e8eaf0; --muted: #9aa3b2; --ok: #4ade80;
+            --serif: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+            --sans: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+        body {
+            margin: 0; background: var(--bg); color: var(--text);
+            font-family: var(--sans); font-size: 16px; line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: inherit; }
+        :focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; border-radius: 6px; }
+        .wrap { width: min(1080px, 100% - 40px); margin: 0 auto; }
+
+        /* ---------- Cabecera ---------- */
+        header.top {
+            position: sticky; top: 0; z-index: 20;
+            background: rgba(7, 8, 10, 0.82); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--line);
+        }
+        .nav { display: flex; align-items: center; gap: 22px; height: 64px; }
+        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; }
+        .brand img { width: 34px; height: 34px; }
+        .brand span { font-family: var(--serif); font-weight: 700; font-size: 17px; letter-spacing: 0.04em; color: var(--gold-2); }
+        .nav a.link { text-decoration: none; color: var(--muted); font-size: 14.5px; transition: color 0.15s; }
+        .nav a.link:hover { color: var(--text); }
+        .lang-btn {
+            background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 8px;
+            padding: 6px 11px; font: 600 13px var(--sans); cursor: pointer; transition: 0.15s;
+        }
+        .lang-btn:hover { color: var(--gold-2); border-color: var(--gold-dim); }
+
+        /* ---------- Botones ---------- */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+            padding: 13px 24px; border-radius: 12px; text-decoration: none; cursor: pointer;
+            font: 700 15.5px var(--sans); transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-primary { background: linear-gradient(180deg, var(--gold-2), var(--gold)); color: #15110a; box-shadow: 0 8px 26px rgba(201, 168, 92, 0.28); }
+        .btn-primary:hover { box-shadow: 0 10px 32px rgba(201, 168, 92, 0.42); }
+        .btn-ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+        .btn-ghost:hover { border-color: var(--gold-dim); }
+        .btn svg { flex-shrink: 0; }
+
+        /* ---------- Portada ---------- */
+        .hero {
+            text-align: center; padding: 84px 0 56px;
+            background:
+                radial-gradient(ellipse 60% 55% at 50% 0%, rgba(201, 168, 92, 0.16), transparent 70%),
+                radial-gradient(ellipse 40% 40% at 85% 20%, rgba(59, 130, 246, 0.07), transparent 70%);
+        }
+        .hero .logo { width: 104px; height: 104px; margin: 0 auto 18px; filter: drop-shadow(0 6px 24px rgba(201, 168, 92, 0.35)); }
+        .eyebrow { color: var(--gold); font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 14px; }
+        h1 { font-family: var(--serif); font-weight: 900; font-size: clamp(34px, 6vw, 60px); line-height: 1.1; margin: 0 0 18px; letter-spacing: 0.01em; }
+        h1 em { font-style: normal; color: var(--gold-2); }
+        .lead { max-width: 640px; margin: 0 auto 30px; color: var(--muted); font-size: clamp(16px, 2.2vw, 19px); }
+        .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .meta { margin: 16px 0 0; color: var(--muted); font-size: 13.5px; }
+        .meta b { color: var(--text); font-weight: 600; }
+
+        figure.shot { margin: 46px auto 0; max-width: 960px; }
+        figure.shot img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 60px rgba(201, 168, 92, 0.1); }
+
+        /* ---------- Secciones ---------- */
+        section { padding: 70px 0; }
+        section.alt { background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.02), transparent); }
+        h2 { font-family: var(--serif); font-weight: 700; font-size: clamp(26px, 4vw, 36px); text-align: center; margin: 0 0 12px; color: var(--gold-2); }
+        .sub { text-align: center; color: var(--muted); max-width: 620px; margin: 0 auto 40px; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; }
+        .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px; transition: border-color 0.2s, transform 0.2s; }
+        .card:hover { border-color: rgba(201, 168, 92, 0.45); transform: translateY(-2px); }
+        .card .ico { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; color: var(--gold-2); background: rgba(201, 168, 92, 0.1); border: 1px solid rgba(201, 168, 92, 0.3); margin-bottom: 14px; }
+        .card h3 { margin: 0 0 6px; font-size: 17px; }
+        .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+        .secure { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; max-width: 900px; margin: 0 auto; }
+        .secure li { list-style: none; display: flex; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; color: #c4cad6; font-size: 15px; }
+        .secure svg { flex-shrink: 0; color: var(--ok); margin-top: 3px; }
+        ul.secure { padding: 0; margin: 0 auto; }
+
+        .dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; max-width: 820px; margin: 0 auto; }
+        .dl .card { display: flex; flex-direction: column; text-align: center; align-items: center; }
+        .dl .card.main { border-color: rgba(201, 168, 92, 0.55); box-shadow: 0 0 40px rgba(201, 168, 92, 0.1); }
+        .dl .tag { font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #15110a; background: var(--gold-2); padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; }
+        .dl .tag.plain { background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
+        .dl .card p { flex: 1; margin-bottom: 18px; }
+        .dl .size { color: var(--muted); font-size: 13px; margin-top: 10px; min-height: 20px; }
+        .notice { max-width: 820px; margin: 26px auto 0; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 10px; padding: 16px 20px; color: #c4cad6; font-size: 14.5px; }
+        .notice b { color: var(--text); }
+
+        details { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; margin: 0 auto 10px; max-width: 800px; }
+        details[open] { border-color: rgba(201, 168, 92, 0.4); }
+        summary { cursor: pointer; padding: 16px 20px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 14px; align-items: center; }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: '+'; color: var(--gold-2); font-size: 22px; line-height: 1; transition: transform 0.2s; }
+        details[open] summary::after { transform: rotate(45deg); }
+        details p { margin: 0; padding: 0 20px 18px; color: var(--muted); font-size: 15px; }
+
+        footer { border-top: 1px solid var(--line); padding: 36px 0 48px; color: var(--muted); font-size: 13px; text-align: center; }
+        footer .links { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; font-size: 14px; }
+        footer .links a { color: var(--text); text-decoration: none; }
+        footer .links a:hover { color: var(--gold-2); }
+        footer p { max-width: 760px; margin: 0 auto 8px; }
+
+        @media (max-width: 720px) {
+            .nav .link { display: none; }
+            .hero { padding-top: 56px; }
+            section { padding: 52px 0; }
+        }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+    </style>
+</head>
+<body>
+    <header class="top">
+        <div class="wrap nav">
+            <a class="brand" href="#top" aria-label="Aurum Accounts"><img src="logo.svg" alt=""><span>Aurum Accounts</span></a>
+            <a class="link" href="#funciones" data-i="navFeatures">Características</a>
+            <a class="link" href="#seguridad" data-i="navSecurity">Seguridad</a>
+            <a class="link" href="#descargar" data-i="navDownload">Descargar</a>
+            <a class="link" href="#faq" data-i="navFaq">Preguntas</a>
+            <a class="link" data-repo="" href="https://github.com/Dulciiss/league-accounts-clone" target="_blank" rel="noopener">GitHub</a>
+            <button class="lang-btn" id="lang-btn" type="button" aria-label="Idioma / Language">EN</button>
+        </div>
+    </header>
+
+    <main id="top">
+        <!-- ===== Portada ===== -->
+        <div class="hero">
+            <div class="wrap">
+                <img class="logo" src="logo.svg" alt="Logo de Aurum Accounts">
+                <p class="eyebrow" data-i="eyebrow">Gestor de cuentas de League of Legends · Windows</p>
+                <h1 data-i-html="h1">Todas tus cuentas, <em>a un clic.</em></h1>
+                <p class="lead" data-i="lead">Guarda tus cuentas, mira sus rangos de un vistazo e inicia sesión automáticamente. Gratis, de código abierto y con tus contraseñas cifradas en tu propio equipo.</p>
+                <div class="cta">
+                    <a class="btn btn-primary" data-dl="setup" href="https://github.com/Dulciiss/league-accounts-clone/releases/latest">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>
+                        <span data-i="dlWindows">Descargar para Windows</span>
+                    </a>
+                    <a class="btn btn-ghost" data-dl="portable" href="https://github.com/Dulciiss/league-accounts-clone/releases/latest" data-i="dlPortableShort">Versión portable</a>
+                </div>
+                <p class="meta"><b id="ver-label"></b><span id="ver-sep" hidden> · </span><span data-i="metaReq">Windows 10/11 (64 bits) · Gratis · Licencia MIT</span></p>
+
+                <!-- Pon aquí tu captura: docs/screenshot.png (si no existe, esta zona desaparece sola) -->
+                <figure class="shot" id="shot">
+                    <img src="screenshot.png" alt="Captura de Aurum Accounts" onerror="document.getElementById('shot').remove()">
+                </figure>
+            </div>
+        </div>
+
+        <!-- ===== Características ===== -->
+        <section id="funciones">
+            <div class="wrap">
+                <h2 data-i="featTitle">Todo lo que necesitas, nada que sobre</h2>
+                <p class="sub" data-i="featSub">Pensado para quien juega con varias cuentas y quiere dejar de apuntar contraseñas.</p>
+                <div class="grid">
+                    <div class="card">
+                        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg></div>
+                        <h3 data-i="f1t">Inicio de sesión con un clic</h3>
+                        <p data-i="f1p">Abre el Riot Client y escribe tus credenciales por ti. Si quieres, también abre el juego al terminar.</p>
+                    </div>
+                    <div class="card">
+                        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-7"/></svg></div>
+                        <h3 data-i="f2t">Rangos y estadísticas</h3>
+                        <p data-i="f2p">Solo/Duo y Flex con sus LP, campeones más jugados y últimas partidas, obtenidos de OP.GG.</p>
+                    </div>
+                    <div class="card">
+                        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></div>
+                        <h3 data-i="f3t">Se actualiza solo</h3>
+                        <p data-i="f3p">Los rangos se refrescan automáticamente cada 15 minutos (configurable) y la propia app te avisa de las nuevas versiones.</p>
+                    </div>
+                    <div class="card">
+                        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+                        <h3 data-i="f4t">Muchas cuentas, sin líos</h3>
+                        <p data-i="f4p">Busca, filtra por región y ordena por rango. Añade cuentas en bloque, e importa y exporta tu lista.</p>
+                    </div>
+                    <div class="card">
+                        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg></div>
+                        <h3 data-i="f5t">10 idiomas</h3>
+                        <p data-i="f5p">Español, inglés, francés, alemán, portugués, ruso, turco, chino, japonés y coreano.</p>
+                    </div>
+                    <div class="card">
+                        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                        <h3 data-i="f6t">Tus datos, a salvo</h3>
+                        <p data-i="f6p">Copia de seguridad automática de tu lista de cuentas y recuperación si el archivo llegara a dañarse.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Seguridad ===== -->
+        <section id="seguridad" class="alt">
+            <div class="wrap">
+                <h2 data-i="secTitle">Tus contraseñas son solo tuyas</h2>
+                <p class="sub" data-i="secSub">Así funciona por dentro, sin letra pequeña.</p>
+                <ul class="secure">
+                    <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg><span data-i="s1">Las contraseñas se guardan cifradas con la protección de datos de Windows: solo tu usuario, en tu equipo, puede descifrarlas.</span></li>
+                    <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg><span data-i="s2">Todo se guarda en local. La app no envía tus credenciales a ningún servidor: solo las escribe en el Riot Client de tu PC.</span></li>
+                    <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg><span data-i="s3">Código abierto: puedes revisar todo en GitHub y compilarlo tú mismo.</span></li>
+                    <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg><span data-i="s4">Solo se conecta a OP.GG, Riot Data Dragon, Community Dragon y GitHub, y a la API local del Riot Client para abrir el juego.</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- ===== Descarga ===== -->
+        <section id="descargar">
+            <div class="wrap">
+                <h2 data-i="dlTitle">Descarga Aurum Accounts</h2>
+                <p class="sub" data-i="dlSub">Gratis. Elige cómo quieres usarlo.</p>
+                <div class="dl">
+                    <div class="card main">
+                        <span class="tag" data-i="dlRecommended">Recomendado</span>
+                        <h3 data-i="dlSetupT">Instalador</h3>
+                        <p data-i="dlSetupP">Se instala como cualquier programa y se actualiza solo cuando sale una versión nueva.</p>
+                        <a class="btn btn-primary" data-dl="setup" href="https://github.com/Dulciiss/league-accounts-clone/releases/latest" data-i="dlSetupBtn">Descargar instalador</a>
+                        <div class="size" data-size="setup"></div>
+                    </div>
+                    <div class="card">
+                        <span class="tag plain" data-i="dlNoInstall">Sin instalación</span>
+                        <h3 data-i="dlPortT">Portable</h3>
+                        <p data-i="dlPortP">Un solo archivo que ejecutas donde quieras. Las actualizaciones hay que descargarlas a mano (la app te avisa).</p>
+                        <a class="btn btn-ghost" data-dl="portable" href="https://github.com/Dulciiss/league-accounts-clone/releases/latest" data-i="dlPortBtn">Descargar portable</a>
+                        <div class="size" data-size="portable"></div>
+                    </div>
+                </div>
+                <div class="notice" data-i-html="smart"><b>Aviso de Windows:</b> la primera vez puede aparecer «Windows protegió su PC», porque la aplicación aún no está firmada digitalmente. Pulsa <b>Más información</b> y luego <b>Ejecutar de todos modos</b>. Descárgala solo desde esta página o desde su repositorio de GitHub.</div>
+            </div>
+        </section>
+
+        <!-- ===== Preguntas ===== -->
+        <section id="faq" class="alt">
+            <div class="wrap">
+                <h2 data-i="faqTitle">Preguntas frecuentes</h2>
+                <p class="sub" data-i="faqSub">Lo que más nos preguntan antes de descargarla.</p>
+                <details><summary data-i="q1">¿Es seguro?</summary><p data-i="a1">El código es abierto, así que cualquiera puede revisarlo en GitHub. Aun así, como con cualquier programa, descárgalo solo desde esta página o desde su repositorio oficial, nunca de otros sitios.</p></details>
+                <details><summary data-i="q2">¿Pueden sancionar mi cuenta por usarlo?</summary><p data-i="a2">Aurum Accounts no modifica el juego ni lee su memoria: solo escribe tu usuario y contraseña en el Riot Client oficial, igual que harías tú. Aun así es una herramienta no oficial y no podemos darte garantías sobre las normas de Riot. Úsala bajo tu responsabilidad.</p></details>
+                <details><summary data-i="q3">¿Dónde se guardan mis cuentas?</summary><p data-i="a3">En tu propio equipo, en la carpeta de datos de la aplicación. Puedes abrirla desde Ajustes → Abrir carpeta de datos. Nunca se suben a ningún servidor.</p></details>
+                <details><summary data-i="q4">¿Cómo se actualiza?</summary><p data-i="a4">Con el instalador, la app comprueba sola si hay una versión nueva, te avisa y la instala cuando tú quieras. Con la versión portable te avisa y te lleva a la descarga.</p></details>
+                <details><summary data-i="q5">¿Funciona en Mac o Linux?</summary><p data-i="a5">No, de momento solo en Windows 10 y 11 de 64 bits.</p></details>
+                <details><summary data-i="q6">¿Está afiliado a Riot Games o a OP.GG?</summary><p data-i="a6">No. Es un proyecto de la comunidad y no está respaldado por Riot Games ni por OP.GG.</p></details>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap">
+            <div class="links">
+                <a data-repo="" href="https://github.com/Dulciiss/league-accounts-clone" target="_blank" rel="noopener" data-i="fGithub">Código en GitHub</a>
+                <a data-repo="/releases" href="https://github.com/Dulciiss/league-accounts-clone/releases" target="_blank" rel="noopener" data-i="fReleases">Todas las versiones</a>
+                <a data-repo="/issues" href="https://github.com/Dulciiss/league-accounts-clone/issues" target="_blank" rel="noopener" data-i="fIssues">Informar de un problema</a>
+            </div>
+            <p data-i="fLegal">Aurum Accounts es un proyecto de la comunidad. No está respaldado por Riot Games y no refleja las opiniones de Riot Games ni de nadie que participe oficialmente en la producción o gestión de sus propiedades. Riot Games, League of Legends y todas las propiedades asociadas son marcas comerciales o marcas registradas de Riot Games, Inc. No está afiliado a OP.GG.</p>
+            <p>© 2026 Dulciiss · <span data-i="fLicense">Licencia MIT</span></p>
+        </div>
+    </footer>
+
+    <script>
+        // ====== Ajusta aquí el repositorio si cambia de nombre ======
+        const REPO = 'Dulciiss/league-accounts-clone';
+        const REPO_URL = 'https://github.com/' + REPO;
+
+        const T = {
+            es: {
+                navFeatures: 'Características', navSecurity: 'Seguridad', navDownload: 'Descargar', navFaq: 'Preguntas',
+                eyebrow: 'Gestor de cuentas de League of Legends · Windows',
+                h1: 'Todas tus cuentas, <em>a un clic.</em>',
+                lead: 'Guarda tus cuentas, mira sus rangos de un vistazo e inicia sesión automáticamente. Gratis, de código abierto y con tus contraseñas cifradas en tu propio equipo.',
+                dlWindows: 'Descargar para Windows', dlPortableShort: 'Versión portable',
+                metaReq: 'Windows 10/11 (64 bits) · Gratis · Licencia MIT',
+                featTitle: 'Todo lo que necesitas, nada que sobre', featSub: 'Pensado para quien juega con varias cuentas y quiere dejar de apuntar contraseñas.',
+                f1t: 'Inicio de sesión con un clic', f1p: 'Abre el Riot Client y escribe tus credenciales por ti. Si quieres, también abre el juego al terminar.',
+                f2t: 'Rangos y estadísticas', f2p: 'Solo/Duo y Flex con sus LP, campeones más jugados y últimas partidas, obtenidos de OP.GG.',
+                f3t: 'Se actualiza solo', f3p: 'Los rangos se refrescan automáticamente cada 15 minutos (configurable) y la propia app te avisa de las nuevas versiones.',
+                f4t: 'Muchas cuentas, sin líos', f4p: 'Busca, filtra por región y ordena por rango. Añade cuentas en bloque, e importa y exporta tu lista.',
+                f5t: '10 idiomas', f5p: 'Español, inglés, francés, alemán, portugués, ruso, turco, chino, japonés y coreano.',
+                f6t: 'Tus datos, a salvo', f6p: 'Copia de seguridad automática de tu lista de cuentas y recuperación si el archivo llegara a dañarse.',
+                secTitle: 'Tus contraseñas son solo tuyas', secSub: 'Así funciona por dentro, sin letra pequeña.',
+                s1: 'Las contraseñas se guardan cifradas con la protección de datos de Windows: solo tu usuario, en tu equipo, puede descifrarlas.',
+                s2: 'Todo se guarda en local. La app no envía tus credenciales a ningún servidor: solo las escribe en el Riot Client de tu PC.',
+                s3: 'Código abierto: puedes revisar todo en GitHub y compilarlo tú mismo.',
+                s4: 'Solo se conecta a OP.GG, Riot Data Dragon, Community Dragon y GitHub, y a la API local del Riot Client para abrir el juego.',
+                dlTitle: 'Descarga Aurum Accounts', dlSub: 'Gratis. Elige cómo quieres usarlo.',
+                dlRecommended: 'Recomendado', dlSetupT: 'Instalador', dlSetupP: 'Se instala como cualquier programa y se actualiza solo cuando sale una versión nueva.', dlSetupBtn: 'Descargar instalador',
+                dlNoInstall: 'Sin instalación', dlPortT: 'Portable', dlPortP: 'Un solo archivo que ejecutas donde quieras. Las actualizaciones hay que descargarlas a mano (la app te avisa).', dlPortBtn: 'Descargar portable',
+                smart: '<b>Aviso de Windows:</b> la primera vez puede aparecer «Windows protegió su PC», porque la aplicación aún no está firmada digitalmente. Pulsa <b>Más información</b> y luego <b>Ejecutar de todos modos</b>. Descárgala solo desde esta página o desde su repositorio de GitHub.',
+                faqTitle: 'Preguntas frecuentes', faqSub: 'Lo que más nos preguntan antes de descargarla.',
+                q1: '¿Es seguro?', a1: 'El código es abierto, así que cualquiera puede revisarlo en GitHub. Aun así, como con cualquier programa, descárgalo solo desde esta página o desde su repositorio oficial, nunca de otros sitios.',
+                q2: '¿Pueden sancionar mi cuenta por usarlo?', a2: 'Aurum Accounts no modifica el juego ni lee su memoria: solo escribe tu usuario y contraseña en el Riot Client oficial, igual que harías tú. Aun así es una herramienta no oficial y no podemos darte garantías sobre las normas de Riot. Úsala bajo tu responsabilidad.',
+                q3: '¿Dónde se guardan mis cuentas?', a3: 'En tu propio equipo, en la carpeta de datos de la aplicación. Puedes abrirla desde Ajustes → Abrir carpeta de datos. Nunca se suben a ningún servidor.',
+                q4: '¿Cómo se actualiza?', a4: 'Con el instalador, la app comprueba sola si hay una versión nueva, te avisa y la instala cuando tú quieras. Con la versión portable te avisa y te lleva a la descarga.',
+                q5: '¿Funciona en Mac o Linux?', a5: 'No, de momento solo en Windows 10 y 11 de 64 bits.',
+                q6: '¿Está afiliado a Riot Games o a OP.GG?', a6: 'No. Es un proyecto de la comunidad y no está respaldado por Riot Games ni por OP.GG.',
+                fGithub: 'Código en GitHub', fReleases: 'Todas las versiones', fIssues: 'Informar de un problema',
+                fLegal: 'Aurum Accounts es un proyecto de la comunidad. No está respaldado por Riot Games y no refleja las opiniones de Riot Games ni de nadie que participe oficialmente en la producción o gestión de sus propiedades. Riot Games, League of Legends y todas las propiedades asociadas son marcas comerciales o marcas registradas de Riot Games, Inc. No está afiliado a OP.GG.',
+                fLicense: 'Licencia MIT',
+                title: 'Aurum Accounts · Gestor de cuentas de League of Legends para Windows',
+                desc: 'Aurum Accounts: guarda tus cuentas de League of Legends, mira sus rangos de un vistazo e inicia sesión con un clic. Gratis, de código abierto y con tus contraseñas cifradas en tu equipo.',
+                shotAlt: 'Captura de Aurum Accounts', logoAlt: 'Logo de Aurum Accounts'
+            },
+            en: {
+                navFeatures: 'Features', navSecurity: 'Security', navDownload: 'Download', navFaq: 'FAQ',
+                eyebrow: 'League of Legends account manager · Windows',
+                h1: 'Every account, <em>one click away.</em>',
+                lead: 'Keep all your accounts, see their ranks at a glance and sign in automatically. Free, open source, with your passwords encrypted on your own computer.',
+                dlWindows: 'Download for Windows', dlPortableShort: 'Portable version',
+                metaReq: 'Windows 10/11 (64-bit) · Free · MIT license',
+                featTitle: 'Everything you need, nothing you don’t', featSub: 'Built for people who play on several accounts and want to stop writing passwords down.',
+                f1t: 'One-click sign-in', f1p: 'It opens the Riot Client and types your credentials for you. If you want, it also launches the game afterwards.',
+                f2t: 'Ranks and stats', f2p: 'Solo/Duo and Flex with their LP, most played champions and recent games, taken from OP.GG.',
+                f3t: 'Keeps itself up to date', f3p: 'Ranks refresh automatically every 15 minutes (configurable) and the app itself tells you about new versions.',
+                f4t: 'Many accounts, no hassle', f4p: 'Search, filter by region and sort by rank. Add accounts in bulk, and import or export your list.',
+                f5t: '10 languages', f5p: 'Spanish, English, French, German, Portuguese, Russian, Turkish, Chinese, Japanese and Korean.',
+                f6t: 'Your data, safe', f6p: 'Automatic backup of your account list and recovery if the file ever gets corrupted.',
+                secTitle: 'Your passwords are yours alone', secSub: 'How it works under the hood, no fine print.',
+                s1: 'Passwords are stored encrypted with Windows data protection: only your user, on your computer, can decrypt them.',
+                s2: 'Everything is stored locally. The app never sends your credentials to any server: it only types them into the Riot Client on your own PC.',
+                s3: 'Open source: you can review everything on GitHub and build it yourself.',
+                s4: 'It only connects to OP.GG, Riot Data Dragon, Community Dragon and GitHub, and to the Riot Client’s local API to launch the game.',
+                dlTitle: 'Download Aurum Accounts', dlSub: 'Free. Choose how you want to use it.',
+                dlRecommended: 'Recommended', dlSetupT: 'Installer', dlSetupP: 'Installs like any other program and updates itself whenever a new version is out.', dlSetupBtn: 'Download installer',
+                dlNoInstall: 'No installation', dlPortT: 'Portable', dlPortP: 'A single file you run wherever you like. Updates must be downloaded by hand (the app notifies you).', dlPortBtn: 'Download portable',
+                smart: '<b>Windows notice:</b> the first time you may see “Windows protected your PC”, because the app is not digitally signed yet. Click <b>More info</b> and then <b>Run anyway</b>. Download it only from this page or from its GitHub repository.',
+                faqTitle: 'Frequently asked questions', faqSub: 'What people ask most before downloading it.',
+                q1: 'Is it safe?', a1: 'The code is open source, so anyone can review it on GitHub. Still, as with any program, download it only from this page or its official repository, never from other sites.',
+                q2: 'Can my account be penalised for using it?', a2: 'Aurum Accounts does not modify the game or read its memory: it only types your username and password into the official Riot Client, just as you would. Still, it is an unofficial tool and we cannot give you guarantees about Riot’s rules. Use it at your own risk.',
+                q3: 'Where are my accounts stored?', a3: 'On your own computer, in the app’s data folder. You can open it from Settings → Open data folder. They are never uploaded to any server.',
+                q4: 'How does it update?', a4: 'With the installer, the app checks for new versions on its own, tells you and installs when you decide. The portable version notifies you and takes you to the download.',
+                q5: 'Does it work on Mac or Linux?', a5: 'No, for now only on 64-bit Windows 10 and 11.',
+                q6: 'Is it affiliated with Riot Games or OP.GG?', a6: 'No. It is a community project and is not endorsed by Riot Games or OP.GG.',
+                fGithub: 'Code on GitHub', fReleases: 'All versions', fIssues: 'Report a problem',
+                fLegal: 'Aurum Accounts is a community project. It is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, League of Legends and all associated properties are trademarks or registered trademarks of Riot Games, Inc. It is not affiliated with OP.GG.',
+                fLicense: 'MIT license',
+                title: 'Aurum Accounts · League of Legends account manager for Windows',
+                desc: 'Aurum Accounts: keep your League of Legends accounts, see their ranks at a glance and sign in with one click. Free, open source, with your passwords encrypted on your computer.',
+                shotAlt: 'Aurum Accounts screenshot', logoAlt: 'Aurum Accounts logo'
+            }
+        };
+
+        let lang = 'es';
+        try { lang = localStorage.getItem('aurum-lang') || ''; } catch (e) { /* sin almacenamiento */ }
+        if (lang !== 'es' && lang !== 'en') lang = /^es/i.test(navigator.language || '') ? 'es' : 'en';
+
+        function applyLang() {
+            const d = T[lang];
+            document.documentElement.lang = lang;
+            document.title = d.title;
+            document.querySelector('meta[name="description"]').setAttribute('content', d.desc);
+            document.querySelectorAll('[data-i]').forEach(el => { el.textContent = d[el.dataset.i]; });
+            // Textos con negrita/énfasis: las cadenas son propias de esta página (no vienen de fuera)
+            document.querySelectorAll('[data-i-html]').forEach(el => { el.innerHTML = d[el.dataset.iHtml]; });
+            const shot = document.querySelector('#shot img'); if (shot) shot.alt = d.shotAlt;
+            document.querySelector('.hero .logo').alt = d.logoAlt;
+            const btn = document.getElementById('lang-btn');
+            btn.textContent = lang === 'es' ? 'EN' : 'ES';
+            btn.setAttribute('aria-label', lang === 'es' ? 'Switch to English' : 'Cambiar a español');
+        }
+        document.getElementById('lang-btn').addEventListener('click', () => {
+            lang = lang === 'es' ? 'en' : 'es';
+            try { localStorage.setItem('aurum-lang', lang); } catch (e) { /* sin almacenamiento */ }
+            applyLang();
+        });
+        applyLang();
+
+        // ====== Descarga directa: se busca el instalador y el portable de la última release ======
+        // Si no se pudiera consultar GitHub, los botones llevan a la página de la release (siempre funciona).
+        const LATEST_URL = REPO_URL + '/releases/latest';
+        document.querySelectorAll('[data-dl]').forEach(a => { a.href = LATEST_URL; });
+        document.querySelectorAll('[data-repo]').forEach(a => { a.href = REPO_URL + a.dataset.repo; });
+
+        fetch('https://api.github.com/repos/' + REPO + '/releases/latest', { headers: { 'Accept': 'application/vnd.github+json' } })
+            .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+            .then(rel => {
+                const assets = Array.isArray(rel.assets) ? rel.assets : [];
+                const find = (re) => assets.find(a => re.test(a.name) && typeof a.browser_download_url === 'string' && a.browser_download_url.startsWith('https://github.com/'));
+                const kinds = { setup: find(/-Setup\.exe$/i), portable: find(/-Portable\.exe$/i) };
+                for (const [kind, asset] of Object.entries(kinds)) {
+                    if (!asset) continue;
+                    document.querySelectorAll('[data-dl="' + kind + '"]').forEach(a => { a.href = asset.browser_download_url; });
+                    const size = document.querySelector('[data-size="' + kind + '"]');
+                    if (size) size.textContent = asset.name + ' · ' + Math.round(asset.size / 1048576) + ' MB';
+                }
+                const version = String(rel.tag_name || '').replace(/^v/i, '');
+                if (/^[0-9][0-9A-Za-z.\-+]*$/.test(version)) {
+                    document.getElementById('ver-label').textContent = 'v' + version;
+                    document.getElementById('ver-sep').hidden = false;
+                }
+            })
+            .catch(() => { /* se quedan los enlaces a la página de la release */ });
+    </script>
+</body>
+</html>

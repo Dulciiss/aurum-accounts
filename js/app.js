@@ -2273,7 +2273,7 @@
 
         // ---------- Búsqueda de actualizaciones (GitHub Releases) ----------
         // Cambia esto por tu repositorio: publica cada versión como Release con tag "v3.0.3" o "3.0.3".
-        const UPDATE_REPO = 'Dulciiss/league-accounts-clone';
+        const UPDATE_REPO = 'Dulciiss/aurum-accounts';
         const UPDATE_CHECK_EVERY_MS = 6 * 60 * 60 * 1000; // cada 6 h mientras la app está abierta
 
         const btnCheckUpdates = document.getElementById('btn-check-updates');
