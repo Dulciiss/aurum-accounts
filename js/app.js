@@ -36,7 +36,12 @@
             refreshMinutes: 15,          // 900 s, como hasta ahora
             loginMode: 'riotClient',     // 'riotClient' | 'previousWindow'
             launchGame: false,
-            autoCheckUpdates: true
+            autoCheckUpdates: true,
+            streamerMode: false,         // modo streamer activado ahora mismo
+            streamerIds: true,           // ...qué se oculta cuando está activado:
+            streamerLogin: true,
+            streamerDescs: false,
+            streamerPass: true
         };
 
         function loadSettings() {
@@ -1239,7 +1244,7 @@
                 const cls = pct <= 1 ? 'lad-elite' : pct <= 5 ? 'lad-high' : pct <= 15 ? 'lad-good' : pct <= 40 ? 'lad-mid' : '';
                 const pctText = pct < 0.01 ? '<' + (0.01).toLocaleString(currentLang)
                     : pct.toLocaleString(currentLang, { maximumFractionDigits: pct < 1 ? 2 : 1 });
-                ladderHtml = `<span class="acc-badge ladder ${cls}" title="${escapeHtml(t('ladderTitle'))}">${TROPHY_ICON}#${account.ladder.rank.toLocaleString(currentLang)} · ${escapeHtml(t('topLabel'))} ${pctText}%</span>`;
+                ladderHtml = `<span class="acc-badge ladder ${cls} sens sens-id" title="${escapeHtml(t('ladderTitle'))}">${TROPHY_ICON}#${account.ladder.rank.toLocaleString(currentLang)} · ${escapeHtml(t('topLabel'))} ${pctText}%</span>`;
             }
 
             // Campeones más jugados
@@ -1294,13 +1299,13 @@
                 <div style="position: relative; z-index: 1; display: flex; gap: 14px; align-items: center;">
                     <img src="${iconUrl}" alt="" style="width: 52px; height: 52px; min-width: 52px; object-fit: contain; transform: scale(3.5); transform-origin: center; filter: drop-shadow(0 0 8px ${rankTheme.glow});">
                     <div style="flex-grow: 1; min-width: 0;">
-                        <div class="acc-name-line" title="${escapeHtml(account.riotId || account.loginUser)}">
+                        <div class="acc-name-line sens sens-id" title="${escapeHtml(account.riotId || account.loginUser)}">
                             <span class="acc-name">${escapeHtml(shownName)}</span>${tag ? `<span class="acc-tag">#${escapeHtml(tag)}</span>` : ''}
                         </div>
                         <div class="acc-badges">
                             <span class="acc-badge region">${escapeHtml(region)}</span>
                             ${showLevel ? `<span class="acc-badge">${escapeHtml(t('levelShort'))} ${escapeHtml(account.level)}</span>` : ''}
-                            <span class="acc-badge user" title="${escapeHtml(t('fieldLoginUser'))}">${USER_ICON}${escapeHtml(account.loginUser)}</span>
+                            <span class="acc-badge user sens sens-login" title="${escapeHtml(t('fieldLoginUser'))}">${USER_ICON}${escapeHtml(account.loginUser)}</span>
                             ${ladderHtml}
                         </div>
                     </div>
@@ -1328,7 +1333,7 @@
                 ${champsHtml}
                 ${recentHtml}
 
-                ${account.description ? `<div class="acc-description" style="position: relative; z-index: 1;" title="${escapeHtml(account.description)}">${escapeHtml(account.description)}</div>` : ''}
+                ${account.description ? `<div class="acc-description sens sens-desc" style="position: relative; z-index: 1;" title="${escapeHtml(account.description)}">${escapeHtml(account.description)}</div>` : ''}
 
                 <div class="card-actions" style="position: relative; z-index: 1; margin-top: 12px; display: flex; gap: 8px; border-top: 1px solid #1f2029; padding-top: 12px;">
                     <button class="btn-login">${LOGIN_ICON}<span>${escapeHtml(t('loginAction'))}</span></button>
@@ -1379,7 +1384,13 @@
 
         function askDelete(acc) {
             accountToDelete = acc.id;
-            confirmText.textContent = t('deleteConfirm').replace('{name}', () => acc.riotId || acc.loginUser);
+            // El nombre va en su propio <span> para poder difuminarlo en modo streamer
+            const [confirmBefore, confirmAfter] = t('deleteConfirm').split('{name}');
+            const confirmName = document.createElement('span');
+            confirmName.className = 'sens sens-id';
+            confirmName.textContent = acc.riotId || acc.loginUser;
+            confirmText.textContent = '';
+            confirmText.append(confirmBefore || '', confirmName, confirmAfter || '');
             confirmModal.style.display = 'flex';
         }
 
@@ -2082,6 +2093,7 @@
             if (tab) { clearDrawerErrors(); setDrawerTab(tab.dataset.tab); }
         });
         document.getElementById('toggle-password').addEventListener('click', () => {
+            if (settings.streamerMode && settings.streamerPass) return;   // el modo streamer no deja enseñar contraseñas
             accPassword.type = accPassword.type === 'password' ? 'text' : 'password';
         });
         document.getElementById('drawer-submit').addEventListener('click', submitSingle);
@@ -2105,6 +2117,10 @@
         const btnSaveSettings = document.getElementById('save-settings');
         const btnXSettings = document.getElementById('settings-x');
         const setAutoUpdates = document.getElementById('set-auto-updates');
+        const setStIds = document.getElementById('set-st-ids');
+        const setStLogin = document.getElementById('set-st-login');
+        const setStDescs = document.getElementById('set-st-descs');
+        const setStPass = document.getElementById('set-st-pass');
 
         function highlightPreset(minutes) {
             presetButtons.forEach(b => b.classList.toggle('active', parseInt(b.dataset.min, 10) === minutes));
@@ -2126,6 +2142,10 @@
             document.querySelectorAll('input[name="login-mode"]').forEach(r => r.checked = (r.value === settings.loginMode));
             setLaunchGame.checked = settings.launchGame;
             setAutoUpdates.checked = settings.autoCheckUpdates;
+            setStIds.checked = settings.streamerIds;
+            setStLogin.checked = settings.streamerLogin;
+            setStDescs.checked = settings.streamerDescs;
+            setStPass.checked = settings.streamerPass;
             renderUpdateStatus();
             syncDependentControls();
         }
@@ -2192,9 +2212,14 @@
                 refreshMinutes: minutes,
                 loginMode: checkedMode ? checkedMode.value : 'riotClient',
                 launchGame: setLaunchGame.checked,
-                autoCheckUpdates: setAutoUpdates.checked
+                autoCheckUpdates: setAutoUpdates.checked,
+                streamerIds: setStIds.checked,
+                streamerLogin: setStLogin.checked,
+                streamerDescs: setStDescs.checked,
+                streamerPass: setStPass.checked
             };
             saveSettings();
+            applyStreamerMode();
 
             if (prev.launchAtStartup !== settings.launchAtStartup || prev.startMinimized !== settings.startMinimized) {
                 applySystemSettings();
@@ -2223,7 +2248,34 @@
         document.getElementById('btn-data-folder').addEventListener('click', () => shell.showItemInFolder(dataPath));
         document.getElementById('sb-version').textContent = 'v' + remoteApp.getVersion();
 
-        // Atajos: Ctrl+F buscar, Ctrl+N añadir cuenta
+        // ---------- Modo streamer ----------
+        // Difumina lo que permite identificar o acceder a una cuenta (Riot IDs, usuarios de inicio de sesión,
+        // descripciones, rutas...) para poder enseñar la app en directo o en capturas. El difuminado lo hace
+        // el CSS; aquí solo se ponen las clases del <body> según los ajustes.
+        const streamerBtn = document.getElementById('streamer-btn');
+
+        function applyStreamerMode() {
+            const on = !!settings.streamerMode;
+            const cl = document.body.classList;
+            cl.toggle('streamer', on);
+            cl.toggle('st-ids', !!settings.streamerIds);
+            cl.toggle('st-login', !!settings.streamerLogin);
+            cl.toggle('st-desc', !!settings.streamerDescs);
+            cl.toggle('st-pass', !!settings.streamerPass);
+            streamerBtn.classList.toggle('active', on);
+            streamerBtn.setAttribute('aria-pressed', String(on));
+            if (on && settings.streamerPass) accPassword.type = 'password';   // si estaba a la vista, se vuelve a ocultar
+        }
+
+        function toggleStreamerMode() {
+            settings.streamerMode = !settings.streamerMode;
+            saveSettings();
+            applyStreamerMode();
+            showNeonNotification(t(settings.streamerMode ? 'streamerOn' : 'streamerOff'));
+        }
+        streamerBtn.addEventListener('click', toggleStreamerMode);
+
+        // Atajos: Ctrl+F buscar, Ctrl+N añadir cuenta, Ctrl+H modo streamer
         document.addEventListener('keydown', (e) => {
             if (!e.ctrlKey || e.altKey || e.shiftKey) return;
             const key = e.key.toLowerCase();
@@ -2236,6 +2288,9 @@
             } else if (key === 'n' && !overlayOpen) {
                 e.preventDefault();
                 openDrawer('add');
+            } else if (key === 'h') {   // también con paneles abiertos: sirve justo para taparlos
+                e.preventDefault();
+                toggleStreamerMode();
             }
         });
 
@@ -2264,6 +2319,7 @@
         sortSelect.addEventListener('change', loadAccounts);
         loadChampionData();
         
+        applyStreamerMode();
         applyLanguage();
         if (accountsRecovered) showNeonNotification(t('accountsRecovered'));
         // Refresca la ruta del inicio con Windows: si la app se actualiza y cambia de nombre o de
@@ -2273,7 +2329,7 @@
 
         // ---------- Búsqueda de actualizaciones (GitHub Releases) ----------
         // Cambia esto por tu repositorio: publica cada versión como Release con tag "v3.0.3" o "3.0.3".
-        const UPDATE_REPO = 'Dulciiss/aurum-accounts';
+        const UPDATE_REPO = 'Dulciiss/league-accounts-clone';
         const UPDATE_CHECK_EVERY_MS = 6 * 60 * 60 * 1000; // cada 6 h mientras la app está abierta
 
         const btnCheckUpdates = document.getElementById('btn-check-updates');

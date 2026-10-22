@@ -1102,7 +1102,9 @@ button.sb-add span { min-width: 0; overflow: hidden; text-overflow: ellipsis; wh
 .sb-label, .sb-refresh-label, #auto-refresh-timer { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rd-row { grid-template-columns: 20px minmax(0, 1fr) 36px 18px; gap: 7px; }
 .rd-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tb-search { min-width: 170px; }
+.tb-search { min-width: 124px; }   /* + relleno y borde: ~150 px en total */
+/* Ventanas estrechas: el recordatorio "Ctrl F" sobra; sin él la búsqueda aguanta tener todos los botones a la vez */
+@media (max-width: 1080px) { .tb-search kbd { display: none; } }
 .tb-controls { flex-shrink: 0; }
 
 #auto-refresh-box.sb-refresh { gap: 10px; padding-right: 10px !important; }
@@ -1192,3 +1194,52 @@ button.sb-add span { min-width: 0; overflow: hidden; text-overflow: ellipsis; wh
     50% { box-shadow: 0 0 14px rgba(201, 168, 92, 0.35); }
 }
 @media (prefers-reduced-motion: reduce) { .tb-update-pill { animation: none; } }
+
+/* ===================== MODO STREAMER ===================== */
+:root { --stream: #a78bfa; --stream-2: #38bdf8; }
+.sens { transition: filter 0.3s ease, opacity 0.3s ease; }
+
+/* Texto que identifica una cuenta: se difumina (y no se puede seleccionar ni "tocar", así tampoco sale su tooltip) */
+body.streamer.st-ids .sens-id,
+body.streamer.st-login .sens-login,
+body.streamer.st-desc .sens-desc,
+body.streamer .sens-path {
+    filter: blur(8px); opacity: 0.85; user-select: none; pointer-events: none;
+}
+/* Campos de formulario: difuminados pero editables (así se puede seguir escribiendo) */
+#acc-login-user, #acc-riot-id, #acc-description, #bulk-text { transition: filter 0.3s ease; }
+body.streamer.st-login #acc-login-user,
+body.streamer.st-ids #acc-riot-id,
+body.streamer.st-desc #acc-description,
+body.streamer #bulk-text { filter: blur(6px); user-select: none; }
+body.streamer.st-pass #toggle-password { display: none; }
+
+/* Botón de la barra superior: neón violeta cuando está activo */
+.tb-streamer-btn .eye-off { display: none; }
+.tb-streamer-btn.active .eye-on { display: none; }
+.tb-streamer-btn.active .eye-off { display: block; }
+.tb-streamer-btn.active, .tb-streamer-btn.active:hover {
+    color: var(--stream) !important; border-color: rgba(167, 139, 250, 0.7) !important;
+    box-shadow: 0 0 16px rgba(167, 139, 250, 0.45), inset 0 0 10px rgba(167, 139, 250, 0.14);
+    animation: stream-glow 2.6s ease-in-out infinite;
+}
+@keyframes stream-glow {
+    0%, 100% { box-shadow: 0 0 14px rgba(167, 139, 250, 0.4), inset 0 0 9px rgba(167, 139, 250, 0.12); }
+    50% { box-shadow: 0 0 26px rgba(167, 139, 250, 0.7), inset 0 0 13px rgba(167, 139, 250, 0.22); }
+}
+
+/* Línea de neón bajo la barra de título: se despliega al activar el modo */
+.streamer-line {
+    position: fixed; top: var(--tb-h); left: 0; right: 0; height: 2px; z-index: 900; pointer-events: none;
+    opacity: 0; transform: scaleX(0.15); transform-origin: center;
+    transition: opacity 0.35s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: linear-gradient(90deg, transparent 0%, var(--stream) 25%, var(--stream-2) 50%, var(--stream) 75%, transparent 100%);
+    background-size: 200% 100%;
+    box-shadow: 0 0 10px rgba(167, 139, 250, 0.7);
+}
+body.streamer .streamer-line { opacity: 1; transform: scaleX(1); animation: stream-flow 5s linear infinite; }
+@keyframes stream-flow { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+    .tb-streamer-btn.active, .tb-streamer-btn.active:hover, body.streamer .streamer-line { animation: none; }
+    .sens, .streamer-line { transition: none; }
+}

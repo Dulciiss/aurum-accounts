@@ -92,6 +92,11 @@
                     <span id="update-pill-version"></span>
                 </button>
 
+                <button id="streamer-btn" class="tb-icon-btn tb-streamer-btn" type="button" aria-pressed="false" data-i18n-title="streamerTip">
+                    <svg class="eye-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg class="eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.9 4.2A10.6 10.6 0 0 1 12 4c6.4 0 10 8 10 8a17 17 0 0 1-3.2 4.2"/><path d="M6.6 6.6A16.6 16.6 0 0 0 2 12s3.6 8 10 8a10.4 10.4 0 0 0 5.4-1.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="m2 2 20 20"/></svg>
+                </button>
+
                 <div style="position: relative;">
                     <button id="lang-btn" class="tb-icon-btn" data-i18n-title="langTip">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
@@ -119,6 +124,9 @@
 
     <!-- Modales -->
     <!-- Panel lateral: añadir / editar cuenta -->
+    <!-- Línea de neón bajo la barra de título mientras el modo streamer está activo -->
+    <div id="streamer-line" class="streamer-line" aria-hidden="true"></div>
+
     <div id="drawer-overlay" class="drawer-overlay"></div>
     <aside id="account-drawer" class="account-drawer" aria-hidden="true" role="dialog" aria-labelledby="drawer-title">
         <div class="drawer-head">
@@ -202,7 +210,7 @@
                 <div class="login-core"><img id="login-emblem-img" alt="" onerror="this.style.visibility='hidden'" onload="this.style.visibility='visible'"></div>
             </div>
             <h2 class="login-title" id="login-title"></h2>
-            <div class="login-account" id="login-account"></div>
+            <div class="login-account sens sens-id" id="login-account"></div>
             <div class="login-bar"><div class="login-bar-fill" id="login-bar-fill"></div></div>
             <ul class="login-steps" id="login-steps"></ul>
             <div class="login-footer-text" id="login-footer-text"></div>
@@ -336,13 +344,54 @@
                     </div>
                 </div>
 
+                <!-- MODO STREAMER -->
+                <div class="settings-section">
+                    <div class="settings-section-title" data-i18n="setStreamer"></div>
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <span class="setting-desc" data-i18n="setStreamerHint"></span>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <span class="setting-name" data-i18n="setStreamerIds"></span>
+                            <span class="setting-desc" data-i18n="setStreamerIdsDesc"></span>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="set-st-ids"><span class="track"></span></label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <span class="setting-name" data-i18n="setStreamerLogin"></span>
+                            <span class="setting-desc" data-i18n="setStreamerLoginDesc"></span>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="set-st-login"><span class="track"></span></label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <span class="setting-name" data-i18n="setStreamerDescs"></span>
+                            <span class="setting-desc" data-i18n="setStreamerDescsDesc"></span>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="set-st-descs"><span class="track"></span></label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <span class="setting-name" data-i18n="setStreamerPass"></span>
+                            <span class="setting-desc" data-i18n="setStreamerPassDesc"></span>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="set-st-pass"><span class="track"></span></label>
+                    </div>
+                </div>
+
                 <!-- DATOS -->
                 <div class="settings-section">
                     <div class="settings-section-title" data-i18n="setData"></div>
                     <div class="setting-row">
                         <div class="setting-text">
                             <span class="setting-name"><span data-i18n="savedAccountsLabel"></span> <span id="accounts-count-label">0</span></span>
-                            <span class="data-path" id="data-path-label"></span>
+                            <span class="data-path sens sens-path" id="data-path-label"></span>
                         </div>
                         <button id="btn-open-folder" class="settings-ghost-btn" data-i18n="openFolderBtn"></button>
                     </div>

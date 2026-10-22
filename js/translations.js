@@ -195,7 +195,21 @@ const translations = {
         updReadyText: "Restart Aurum Accounts to finish installing version {version}. If you leave it for later, it will be installed when you close the app.",
         updNow: "Update now",
         updLater: "Later",
-        updFailedTitle: "Update failed"
+        updFailedTitle: "Update failed",
+        // --- Modo streamer ---,
+        streamerTip: "Streamer mode (Ctrl H)",
+        streamerOn: "Streamer mode on",
+        streamerOff: "Streamer mode off",
+        setStreamer: "Streamer mode",
+        setStreamerHint: "Blurs sensitive data so it doesn't show on stream or in screenshots. Turn it on with the eye button in the top bar or with Ctrl H.",
+        setStreamerIds: "Hide Riot IDs and rankings",
+        setStreamerIdsDesc: "Names, tags and server ladder position, which can identify the account.",
+        setStreamerLogin: "Hide login usernames",
+        setStreamerLoginDesc: "The name you use to sign in to the Riot Client.",
+        setStreamerDescs: "Hide descriptions",
+        setStreamerDescsDesc: "In case you note something there you don't want to show.",
+        setStreamerPass: "Don't allow showing passwords",
+        setStreamerPassDesc: "Disables the eye in the account panel while the mode is on."
     },
     es: {
         // --- Interfaz principal ---
@@ -390,7 +404,21 @@ const translations = {
         updReadyText: "Reinicia Aurum Accounts para terminar de instalar la versión {version}. Si lo dejas para más tarde, se instalará al cerrar la app.",
         updNow: "Actualizar ahora",
         updLater: "Más tarde",
-        updFailedTitle: "No se pudo actualizar"
+        updFailedTitle: "No se pudo actualizar",
+        // --- Modo streamer ---,
+        streamerTip: "Modo streamer (Ctrl H)",
+        streamerOn: "Modo streamer activado",
+        streamerOff: "Modo streamer desactivado",
+        setStreamer: "Modo streamer",
+        setStreamerHint: "Difumina los datos sensibles para que no se vean en directo ni en capturas. Actívalo con el botón del ojo de la barra superior o con Ctrl H.",
+        setStreamerIds: "Ocultar Riot IDs y posiciones",
+        setStreamerIdsDesc: "Nombres, etiquetas y puesto en la clasificación del servidor, que permiten identificar la cuenta.",
+        setStreamerLogin: "Ocultar usuarios de inicio de sesión",
+        setStreamerLoginDesc: "El nombre con el que entras al Riot Client.",
+        setStreamerDescs: "Ocultar descripciones",
+        setStreamerDescsDesc: "Por si en ellas apuntas algo que no quieres enseñar.",
+        setStreamerPass: "No permitir mostrar contraseñas",
+        setStreamerPassDesc: "Desactiva el ojo del panel de cuentas mientras el modo está activo."
     },
     fr: {
         // --- Interfaz principal ---
@@ -585,7 +613,21 @@ const translations = {
         updReadyText: "Redémarrez Aurum Accounts pour terminer l'installation de la version {version}. Si vous la reportez, elle sera installée à la fermeture de l'application.",
         updNow: "Mettre à jour maintenant",
         updLater: "Plus tard",
-        updFailedTitle: "Échec de la mise à jour"
+        updFailedTitle: "Échec de la mise à jour",
+        // --- Modo streamer ---,
+        streamerTip: "Mode streamer (Ctrl H)",
+        streamerOn: "Mode streamer activé",
+        streamerOff: "Mode streamer désactivé",
+        setStreamer: "Mode streamer",
+        setStreamerHint: "Floute les données sensibles pour qu'elles n'apparaissent ni en direct ni dans les captures. Activez-le avec le bouton œil de la barre supérieure ou avec Ctrl H.",
+        setStreamerIds: "Masquer les Riot ID et classements",
+        setStreamerIdsDesc: "Noms, tags et position dans le classement du serveur, qui permettent d'identifier le compte.",
+        setStreamerLogin: "Masquer les identifiants de connexion",
+        setStreamerLoginDesc: "Le nom avec lequel vous vous connectez au Riot Client.",
+        setStreamerDescs: "Masquer les descriptions",
+        setStreamerDescsDesc: "Au cas où vous y noteriez quelque chose que vous ne voulez pas montrer.",
+        setStreamerPass: "Interdire l'affichage des mots de passe",
+        setStreamerPassDesc: "Désactive l'œil du panneau des comptes tant que le mode est actif."
     },
     de: {
         // --- Interfaz principal ---
@@ -780,7 +822,21 @@ const translations = {
         updReadyText: "Starte Aurum Accounts neu, um die Installation der Version {version} abzuschließen. Wenn du es verschiebst, wird sie beim Schließen der App installiert.",
         updNow: "Jetzt aktualisieren",
         updLater: "Später",
-        updFailedTitle: "Update fehlgeschlagen"
+        updFailedTitle: "Update fehlgeschlagen",
+        // --- Modo streamer ---,
+        streamerTip: "Streamer-Modus (Ctrl H)",
+        streamerOn: "Streamer-Modus aktiviert",
+        streamerOff: "Streamer-Modus deaktiviert",
+        setStreamer: "Streamer-Modus",
+        setStreamerHint: "Verwischt sensible Daten, damit sie weder im Stream noch auf Screenshots zu sehen sind. Aktiviere ihn mit dem Augen-Button in der oberen Leiste oder mit Ctrl H.",
+        setStreamerIds: "Riot IDs und Platzierungen ausblenden",
+        setStreamerIdsDesc: "Namen, Tags und Platz in der Server-Rangliste, über die sich das Konto identifizieren lässt.",
+        setStreamerLogin: "Anmeldenamen ausblenden",
+        setStreamerLoginDesc: "Der Name, mit dem du dich im Riot Client anmeldest.",
+        setStreamerDescs: "Beschreibungen ausblenden",
+        setStreamerDescsDesc: "Falls du dort etwas notierst, das du nicht zeigen möchtest.",
+        setStreamerPass: "Anzeigen von Passwörtern nicht erlauben",
+        setStreamerPassDesc: "Deaktiviert das Auge im Kontenfeld, solange der Modus aktiv ist."
     },
     pt: {
         // --- Interfaz principal ---
@@ -975,7 +1031,21 @@ const translations = {
         updReadyText: "Reinicie o Aurum Accounts para concluir a instalação da versão {version}. Se deixar para depois, ela será instalada ao fechar o app.",
         updNow: "Atualizar agora",
         updLater: "Mais tarde",
-        updFailedTitle: "Falha ao atualizar"
+        updFailedTitle: "Falha ao atualizar",
+        // --- Modo streamer ---,
+        streamerTip: "Modo streamer (Ctrl H)",
+        streamerOn: "Modo streamer ativado",
+        streamerOff: "Modo streamer desativado",
+        setStreamer: "Modo streamer",
+        setStreamerHint: "Desfoca os dados sensíveis para que não apareçam na transmissão nem em capturas de tela. Ative-o com o botão do olho na barra superior ou com Ctrl H.",
+        setStreamerIds: "Ocultar Riot IDs e posições",
+        setStreamerIdsDesc: "Nomes, tags e posição no ranking do servidor, que permitem identificar a conta.",
+        setStreamerLogin: "Ocultar usuários de login",
+        setStreamerLoginDesc: "O nome com que você entra no Riot Client.",
+        setStreamerDescs: "Ocultar descrições",
+        setStreamerDescsDesc: "Caso você anote ali algo que não quer mostrar.",
+        setStreamerPass: "Não permitir mostrar senhas",
+        setStreamerPassDesc: "Desativa o olho do painel de contas enquanto o modo estiver ativo."
     },
     ru: {
         // --- Interfaz principal ---
@@ -1170,7 +1240,21 @@ const translations = {
         updReadyText: "Перезапустите Aurum Accounts, чтобы завершить установку версии {version}. Если отложить, она установится при закрытии приложения.",
         updNow: "Обновить сейчас",
         updLater: "Позже",
-        updFailedTitle: "Не удалось обновить"
+        updFailedTitle: "Не удалось обновить",
+        // --- Modo streamer ---,
+        streamerTip: "Режим стримера (Ctrl H)",
+        streamerOn: "Режим стримера включён",
+        streamerOff: "Режим стримера выключен",
+        setStreamer: "Режим стримера",
+        setStreamerHint: "Размывает конфиденциальные данные, чтобы их не было видно в эфире и на скриншотах. Включается кнопкой с глазом на верхней панели или сочетанием Ctrl H.",
+        setStreamerIds: "Скрывать Riot ID и позиции",
+        setStreamerIdsDesc: "Имена, теги и место в рейтинге сервера, по которым можно определить аккаунт.",
+        setStreamerLogin: "Скрывать логины для входа",
+        setStreamerLoginDesc: "Имя, с которым вы входите в Riot Client.",
+        setStreamerDescs: "Скрывать описания",
+        setStreamerDescsDesc: "На случай, если вы записали там то, что не хотите показывать.",
+        setStreamerPass: "Не показывать пароли",
+        setStreamerPassDesc: "Отключает значок глаза в панели аккаунта, пока режим включён."
     },
     tr: {
         // --- Interfaz principal ---
@@ -1365,7 +1449,21 @@ const translations = {
         updReadyText: "{version} sürümünün kurulumunu tamamlamak için Aurum Accounts'u yeniden başlat. Sonraya bırakırsan uygulamayı kapattığında kurulur.",
         updNow: "Şimdi güncelle",
         updLater: "Sonra",
-        updFailedTitle: "Güncelleme başarısız"
+        updFailedTitle: "Güncelleme başarısız",
+        // --- Modo streamer ---,
+        streamerTip: "Yayıncı modu (Ctrl H)",
+        streamerOn: "Yayıncı modu açık",
+        streamerOff: "Yayıncı modu kapalı",
+        setStreamer: "Yayıncı modu",
+        setStreamerHint: "Hassas verileri bulanıklaştırır, böylece yayında ve ekran görüntülerinde görünmez. Üst çubuktaki göz düğmesiyle veya Ctrl H ile aç.",
+        setStreamerIds: "Riot ID'leri ve sıralamaları gizle",
+        setStreamerIdsDesc: "Hesabı belirlemeye yarayan adlar, etiketler ve sunucu sıralamasındaki yer.",
+        setStreamerLogin: "Giriş kullanıcı adlarını gizle",
+        setStreamerLoginDesc: "Riot Client'a girerken kullandığın ad.",
+        setStreamerDescs: "Açıklamaları gizle",
+        setStreamerDescsDesc: "Oraya göstermek istemediğin bir şey yazdıysan diye.",
+        setStreamerPass: "Parolaların gösterilmesine izin verme",
+        setStreamerPassDesc: "Mod açıkken hesap panelindeki göz düğmesini devre dışı bırakır."
     },
     zh: {
         // --- Interfaz principal ---
@@ -1560,7 +1658,21 @@ const translations = {
         updReadyText: "请重启 Aurum Accounts 以完成 {version} 版本的安装。如果稍后再说，将在关闭应用时安装。",
         updNow: "立即更新",
         updLater: "稍后",
-        updFailedTitle: "更新失败"
+        updFailedTitle: "更新失败",
+        // --- Modo streamer ---,
+        streamerTip: "主播模式 (Ctrl H)",
+        streamerOn: "主播模式已开启",
+        streamerOff: "主播模式已关闭",
+        setStreamer: "主播模式",
+        setStreamerHint: "模糊敏感信息，使其不会出现在直播或截图中。可通过顶部栏的眼睛按钮或 Ctrl H 开启。",
+        setStreamerIds: "隐藏 Riot ID 和排名",
+        setStreamerIdsDesc: "可用于识别账号的名称、标签和服务器排行榜名次。",
+        setStreamerLogin: "隐藏登录用户名",
+        setStreamerLoginDesc: "你登录 Riot 客户端所用的名称。",
+        setStreamerDescs: "隐藏备注",
+        setStreamerDescsDesc: "以防你在其中写了不想展示的内容。",
+        setStreamerPass: "禁止显示密码",
+        setStreamerPassDesc: "模式开启期间，禁用账号面板中的眼睛按钮。"
     },
     ja: {
         // --- Interfaz principal ---
@@ -1755,7 +1867,21 @@ const translations = {
         updReadyText: "バージョン {version} のインストールを完了するには、Aurum Accounts を再起動してください。後で行う場合は、アプリを閉じるときにインストールされます。",
         updNow: "今すぐ更新",
         updLater: "後で",
-        updFailedTitle: "更新に失敗しました"
+        updFailedTitle: "更新に失敗しました",
+        // --- Modo streamer ---,
+        streamerTip: "配信者モード (Ctrl H)",
+        streamerOn: "配信者モードをオンにしました",
+        streamerOff: "配信者モードをオフにしました",
+        setStreamer: "配信者モード",
+        setStreamerHint: "機密情報をぼかして、配信やスクリーンショットに映らないようにします。上部バーの目のボタン、または Ctrl H でオンにできます。",
+        setStreamerIds: "Riot ID とランキング順位を隠す",
+        setStreamerIdsDesc: "アカウントの特定につながる名前、タグ、サーバーラダーの順位。",
+        setStreamerLogin: "ログインユーザー名を隠す",
+        setStreamerLoginDesc: "Riot Client へのログインに使う名前。",
+        setStreamerDescs: "説明を隠す",
+        setStreamerDescsDesc: "見せたくない内容を書いている場合に備えて。",
+        setStreamerPass: "パスワードの表示を許可しない",
+        setStreamerPassDesc: "モードがオンの間、アカウントパネルの目のボタンを無効にします。"
     },
     ko: {
         // --- Interfaz principal ---
@@ -1950,6 +2076,20 @@ const translations = {
         updReadyText: "버전 {version} 설치를 완료하려면 Aurum Accounts를 다시 시작하세요. 나중으로 미루면 앱을 닫을 때 설치됩니다.",
         updNow: "지금 업데이트",
         updLater: "나중에",
-        updFailedTitle: "업데이트 실패"
+        updFailedTitle: "업데이트 실패",
+        // --- Modo streamer ---,
+        streamerTip: "스트리머 모드 (Ctrl H)",
+        streamerOn: "스트리머 모드 켜짐",
+        streamerOff: "스트리머 모드 꺼짐",
+        setStreamer: "스트리머 모드",
+        setStreamerHint: "민감한 정보를 흐리게 처리해 방송이나 스크린샷에 보이지 않게 합니다. 상단 바의 눈 버튼 또는 Ctrl H로 켤 수 있습니다.",
+        setStreamerIds: "Riot ID와 순위 숨기기",
+        setStreamerIdsDesc: "계정을 식별할 수 있는 이름, 태그, 서버 래더 순위.",
+        setStreamerLogin: "로그인 사용자 이름 숨기기",
+        setStreamerLoginDesc: "Riot Client에 로그인할 때 쓰는 이름.",
+        setStreamerDescs: "설명 숨기기",
+        setStreamerDescsDesc: "보여 주고 싶지 않은 내용을 적어 둔 경우를 위해.",
+        setStreamerPass: "비밀번호 표시 허용 안 함",
+        setStreamerPassDesc: "모드가 켜져 있는 동안 계정 패널의 눈 버튼을 비활성화합니다."
     }
 };
