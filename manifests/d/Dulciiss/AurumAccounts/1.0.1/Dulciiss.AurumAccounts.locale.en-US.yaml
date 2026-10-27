@@ -1,0 +1,12 @@
+PackageIdentifier: Dulciiss.AurumAccounts
+PackageVersion: 1.0.1
+PackageLocale: en-US
+Publisher: Dulciiss
+PackageName: Aurum Accounts
+License: MIT
+LicenseUrl: https://github.com/Dulciiss/aurum-accounts/blob/main/LICENSE
+ShortDescription: Manage League of Legends accounts, ranks, and client sign-in on Windows.
+PackageUrl: https://github.com/Dulciiss/aurum-accounts
+PublisherUrl: https://github.com/Dulciiss
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

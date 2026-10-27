@@ -41,13 +41,22 @@
             streamerIds: true,           // ...qué se oculta cuando está activado:
             streamerLogin: true,
             streamerDescs: false,
-            streamerPass: true
+            streamerPass: true,
+            trayIcon: true,                  // icono en la bandeja del sistema
+            closeToTray: false,              // la X oculta la ventana en la bandeja en lugar de cerrar la app
+            trayShortcutOn: true,            // atajo global para mostrar/ocultar la ventana
+            trayShortcut: 'Control+Alt+A',
+            trayHintShown: false,            // ya se avisó (una vez) de que la app sigue en la bandeja
+            viewMode: 'grid',
+            rankChangeNotifications: true
         };
 
         function loadSettings() {
             try {
                 if (fs.existsSync(settingsPath)) {
-                    return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) };
+                    const loaded = { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) };
+                    loaded.viewMode = loaded.viewMode === 'list' ? 'list' : 'grid';
+                    return loaded;
                 }
             } catch (e) {
                 console.error('Error leyendo settings.json, se usan los valores por defecto', e);
@@ -56,7 +65,9 @@
         }
 
         function saveSettings() {
-            fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4));
+            const tempPath = settingsPath + '.tmp';
+            fs.writeFileSync(tempPath, JSON.stringify(settings, null, 4));
+            fs.renameSync(tempPath, settingsPath);
         }
 
         let settings = loadSettings();
@@ -103,6 +114,7 @@
             });
             document.documentElement.lang = currentLang;
             refreshWindowLabels();
+            applyViewMode(settings.viewMode);
             document.querySelectorAll('.lang-option').forEach(btn => {
                 if (btn.getAttribute('data-lang') === currentLang) {
                     btn.classList.add('active');
@@ -249,6 +261,7 @@
 
         enhanceSelect(document.getElementById('filter-region'));
         enhanceSelect(document.getElementById('sort-select'));
+        enhanceSelect(document.getElementById('filter-category'));
         window.addEventListener('click', () => closeAllDropdowns());
         langBtn.addEventListener('click', () => closeAllDropdowns());
 
@@ -261,6 +274,7 @@
         const settingsModal = document.getElementById('settings-modal');
         const btnCloseSettings = document.getElementById('close-settings');
         const btnOpenFolder = document.getElementById('btn-open-folder');
+        const btnCopyDiagnostics = document.getElementById('btn-copy-diagnostics');
         const dataPathLabel = document.getElementById('data-path-label');
         const accountsCountLabel = document.getElementById('accounts-count-label');
 
@@ -271,11 +285,43 @@
         let accountToDelete = null;
 
         const mainContent = document.querySelector('.main-content');
+        const clientSyncBanner = document.getElementById('client-sync-banner');
+        const clientSyncMessage = document.getElementById('client-sync-message');
+        const clientSyncImport = document.getElementById('client-sync-import');
         const searchInput = document.getElementById('search-input');
         const filterRegion = document.getElementById('filter-region');
         const sortSelect = document.getElementById('sort-select');
+        const filterCategory = document.getElementById('filter-category');
+        const viewToggle = document.getElementById('toggle-view');
+        let traySyncTimer = null;       // bandeja del sistema: envío de la lista de cuentas (con retardo para agrupar cambios)
+        let trayAccountsCache = null;   // última lista de cuentas leída
         const rankStatsContainer = document.getElementById('rank-stats-container');
         const autoRefreshTimerLabel = document.getElementById('auto-refresh-timer');
+        let activeClientAccountId = null;
+        let latestClientSnapshot = null;
+        let clientSyncBusy = false;
+
+        function setClientSyncState(state, messageKey, canImport = false) {
+            clientSyncBanner.dataset.state = state;
+            clientSyncMessage.textContent = t(messageKey);
+            clientSyncImport.hidden = !canImport;
+        }
+
+        function applyViewMode(mode) {
+            const isList = mode === 'list';
+            mainContent.classList.toggle('compact-list', isList);
+            viewToggle.classList.toggle('active', isList);
+            viewToggle.setAttribute('aria-pressed', String(isList));
+            const label = t(isList ? 'viewToGrid' : 'viewToList');
+            viewToggle.title = label;
+            viewToggle.setAttribute('aria-label', label);
+        }
+
+        viewToggle.addEventListener('click', () => {
+            settings.viewMode = settings.viewMode === 'list' ? 'grid' : 'list';
+            saveSettings();
+            applyViewMode(settings.viewMode);
+        });
 
         // ---------- Barra de título propia (ventana sin marco) ----------
         function applyWindowState(state) {
@@ -361,6 +407,44 @@
                 sel.value = REGIONS.includes(prev) ? prev : 'euw';
             });
         }
+
+        function populateCategorySelect(accounts) {
+            const selected = filterCategory.value || 'all';
+            const groups = new Map();
+            const tags = new Map();
+            accounts.forEach(account => {
+                const group = String(account.group || '').trim();
+                if (group) groups.set(group.toLowerCase(), group);
+                (Array.isArray(account.tags) ? account.tags : []).forEach(tag => {
+                    const value = String(tag || '').trim();
+                    if (value) tags.set(value.toLowerCase(), value);
+                });
+            });
+
+            filterCategory.textContent = '';
+            const all = document.createElement('option');
+            all.value = 'all';
+            all.textContent = t('allCategories');
+            filterCategory.appendChild(all);
+
+            const hideNames = settings.streamerMode && settings.streamerDescs;
+            const addCategoryGroup = (type, values, labelKey, categoryKey) => {
+                if (!values.size) return;
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = t(labelKey);
+                [...values.entries()].sort((a, b) => a[1].localeCompare(b[1], currentLang)).forEach(([key, name], index) => {
+                    const option = document.createElement('option');
+                    option.value = `${type}:${key}`;
+                    option.textContent = t(categoryKey).replace('{name}', hideNames ? String(index + 1) : name);
+                    optgroup.appendChild(option);
+                });
+                filterCategory.appendChild(optgroup);
+            };
+            addCategoryGroup('group', groups, 'groupsLabel', 'categoryGroup');
+            addCategoryGroup('tag', tags, 'tagsLabel', 'categoryTag');
+            filterCategory.value = Array.from(filterCategory.options).some(option => option.value === selected) ? selected : 'all';
+        }
+
         const EMPTY_QUEUE = () => ({ tier: 'UNRANKED', lp: 0, minLp: 0, maxLp: 100 });
 
         function escapeHtml(str) {
@@ -369,6 +453,18 @@
 
         function newAccountId() {
             return 'acc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        }
+
+        function normalizeTags(input) {
+            const values = Array.isArray(input) ? input : (typeof input === 'string' ? input.split(',') : []);
+            return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))];
+        }
+
+        function nextAccountOrder(accounts) {
+            return accounts.reduce((highest, account) => {
+                const order = Number(account.order);
+                return Math.max(highest, Number.isFinite(order) ? order : -1);
+            }, -1) + 1;
         }
 
         // Cifra con safeStorage (main.js). Devuelve true si quedó cifrada.
@@ -454,10 +550,17 @@
             if (!Array.isArray(accounts)) return [];
 
             let changed = false;
-            accounts.forEach(acc => {
+            accounts.forEach((acc, index) => {
                 if (!acc.id) { acc.id = newAccountId(); changed = true; }
                 const normRegion = normalizeRegion(acc.region) || 'euw';
                 if (acc.region !== normRegion) { acc.region = normRegion; changed = true; }
+                const tags = normalizeTags(acc.tags);
+                if (!Array.isArray(acc.tags) || JSON.stringify(acc.tags) !== JSON.stringify(tags)) { acc.tags = tags; changed = true; }
+                const history = normalizeLpHistory(acc.lpHistory);
+                if (!Array.isArray(acc.lpHistory) || JSON.stringify(acc.lpHistory) !== JSON.stringify(history)) { acc.lpHistory = history; changed = true; }
+                const group = typeof acc.group === 'string' ? acc.group.trim() : '';
+                if (acc.group !== group) { acc.group = group; changed = true; }
+                if (typeof acc.order !== 'number' || !Number.isFinite(acc.order)) { acc.order = index; changed = true; }
                 if (acc.note !== undefined) {
                     if (!acc.description && acc.note) acc.description = acc.note;
                     delete acc.note;
@@ -670,19 +773,122 @@
 
         const rankWeights = { 'CHALLENGER': 10, 'GRANDMASTER': 9, 'MASTER': 8, 'DIAMOND': 7, 'EMERALD': 6, 'PLATINUM': 5, 'GOLD': 4, 'SILVER': 3, 'BRONZE': 2, 'IRON': 1, 'UNRANKED': 0 };
 
+        const MAX_LP_HISTORY = 180;
+        const CHART_LP_HISTORY = 30;
+
+        function createRankSnapshot(queue, timestamp = Date.now()) {
+            const tier = String(queue && queue.tier || 'UNRANKED').toUpperCase().trim();
+            const [base, division] = tier.split(/\s+/);
+            const tierWeight = rankWeights[base] || 0;
+            const divisionOffset = { IV: 0, III: 1, II: 2, I: 3 }[division] || 0;
+            const rankOrder = tierWeight * 4 + divisionOffset;
+            const lp = Math.max(0, Number(queue && queue.lp) || 0);
+            return { timestamp, tier, lp, rankOrder, score: rankOrder * 100 + lp };
+        }
+
+        function normalizeLpHistory(history) {
+            if (!Array.isArray(history)) return [];
+            return history.filter(point =>
+                point && Number.isFinite(point.timestamp) &&
+                typeof point.tier === 'string' &&
+                Number.isFinite(point.lp) &&
+                Number.isFinite(point.rankOrder) &&
+                Number.isFinite(point.score)
+            ).slice(-MAX_LP_HISTORY);
+        }
+
+        function rankChangeMessage(change, index) {
+            const hiddenIds = settings.streamerMode && settings.streamerIds;
+            const hiddenLogin = settings.streamerMode && settings.streamerLogin;
+            const hiddenDesc = settings.streamerMode && settings.streamerDescs;
+            const account = change.account;
+            const name = (account.riotId && !hiddenIds ? account.riotId : '')
+                || (account.loginUser && !hiddenLogin ? account.loginUser : '')
+                || (account.description && !hiddenDesc ? account.description : '')
+                || t('trayAccountN').replace('{n}', String(index + 1));
+            const rankHidden = settings.streamerMode && settings.streamerIds;
+            const previous = rankHidden ? '' : prettyTier(change.previous.tier);
+            const current = rankHidden ? '' : prettyTier(change.current.tier);
+            const promoted = change.current.rankOrder > change.previous.rankOrder;
+            const direction = rankHidden
+                ? (promoted ? 'rankPromotionPrivate' : 'rankDemotionPrivate')
+                : (promoted ? 'rankPromotionNotice' : 'rankDemotionNotice');
+            return t(direction)
+                .replace('{name}', name)
+                .replace('{previous}', previous)
+                .replace('{current}', current);
+        }
+
+        function notifyRankChanges(changes) {
+            if (!settings.rankChangeNotifications || !changes.length) return;
+            const lines = changes.slice(0, 3).map(rankChangeMessage);
+            if (changes.length > lines.length) lines.push(t('rankChangeMore').replace('{count}', String(changes.length - lines.length)));
+            const message = lines.join(' · ');
+            if (document.visibilityState === 'hidden') trayNotify(message);
+            else showNeonNotification(message);
+        }
+
+        function formatHistoryTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString(currentLang, { dateStyle: 'short', timeStyle: 'short' });
+        }
+
+        function renderLpHistory(account) {
+            const history = normalizeLpHistory(account.lpHistory).slice(-CHART_LP_HISTORY);
+            if (!history.length) return '';
+
+            const width = 300, height = 68, inset = 6;
+            const values = history.map(point => point.score);
+            const min = Math.min(...values), max = Math.max(...values);
+            const spread = Math.max(100, max - min);
+            const points = history.map((point, index) => {
+                const x = history.length === 1 ? width / 2 : inset + index * (width - inset * 2) / (history.length - 1);
+                const centeredValue = point.score - min + (max === min ? spread / 2 : 0);
+                const y = height - inset - (centeredValue / spread) * (height - inset * 2);
+                return { x, y, point };
+            });
+            const trend = history.length > 1 ? history[history.length - 1].score - history[0].score : 0;
+            const trendText = t('lpTrend').replace('{value}', `${trend > 0 ? '+' : ''}${trend}`);
+            const trendClass = trend > 0 ? 'up' : trend < 0 ? 'down' : 'steady';
+            const pathData = points.map((point, index) => `${index ? 'L' : 'M'}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+            const chartPoints = points.map(({ x, y, point }) =>
+                `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4"><title>${escapeHtml(formatHistoryTimestamp(point.timestamp))} · ${escapeHtml(prettyTier(point.tier))} · ${point.lp} LP</title></circle>`
+            ).join('');
+            const first = history[0];
+            const last = history[history.length - 1];
+
+            return `<div class="lp-history card-section sens sens-id" aria-label="${escapeHtml(t('lpHistoryTitle'))}">
+                <div class="lp-history-head">
+                    <span class="sec-label">${escapeHtml(t('lpHistoryTitle'))} · ${history.length}</span>
+                    <span class="lp-history-trend ${trendClass}">${escapeHtml(trendText)}</span>
+                </div>
+                <svg class="lp-history-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(t('lpHistoryChartLabel').replace('{count}', history.length))}">
+                    <path class="lp-history-gridline" d="M0 ${height / 2}H${width}"></path>
+                    <path class="lp-history-line" d="${pathData}"></path>
+                    ${chartPoints}
+                </svg>
+                <div class="lp-history-dates"><span>${escapeHtml(formatHistoryTimestamp(first.timestamp))}</span><span>${escapeHtml(formatHistoryTimestamp(last.timestamp))}</span></div>
+            </div>`;
+        }
+
         function showNeonNotification(message) {
             const existingToast = document.querySelector('.neon-toast');
             if (existingToast) existingToast.remove();
 
             const toast = document.createElement('div');
             toast.className = 'neon-toast';
-            toast.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>${message}</span>
-            `;
+            const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            icon.setAttribute('width', '20');
+            icon.setAttribute('height', '20');
+            icon.setAttribute('viewBox', '0 0 24 24');
+            icon.setAttribute('fill', 'none');
+            icon.setAttribute('stroke', '#38bdf8');
+            icon.setAttribute('stroke-width', '2.5');
+            icon.setAttribute('stroke-linecap', 'round');
+            icon.setAttribute('stroke-linejoin', 'round');
+            icon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
+            const text = document.createElement('span');
+            text.textContent = message;
+            toast.append(icon, text);
             document.body.appendChild(toast);
 
             setTimeout(() => {
@@ -744,17 +950,266 @@
         function readRiotLockfile() {
             const lockPath = path.join(process.env.LOCALAPPDATA || '', 'Riot Games', 'Riot Client', 'Config', 'lockfile');
             try {
-                const [, , port, password] = fs.readFileSync(lockPath, 'utf8').trim().split(':');
-                return port && password ? { port: Number(port), password } : null;
+                return parseClientLockfile(fs.readFileSync(lockPath, 'utf8'));
             } catch (e) {
                 return null;
             }
         }
 
+        function parseClientLockfile(contents) {
+            const [, , rawPort, password] = String(contents).trim().split(':');
+            const port = Number(rawPort);
+            return Number.isInteger(port) && port > 0 && port <= 65535 && password ? { port, password } : null;
+        }
+
+        function readLeagueClientLockfile() {
+            const installsPath = path.join(process.env.ProgramData || 'C:\\ProgramData', 'Riot Games', 'RiotClientInstalls.json');
+            try {
+                const installs = JSON.parse(fs.readFileSync(installsPath, 'utf8'));
+                const installPath = typeof installs.product_install_full_path === 'string' ? installs.product_install_full_path : '';
+                const installRoot = typeof installs.product_install_root === 'string' ? installs.product_install_root : '';
+                const clientPaths = [installs.rc_default, installs.rc_live]
+                    .filter(value => typeof value === 'string' && value);
+                const siblingGameDirs = clientPaths.map(clientPath =>
+                    path.join(path.dirname(path.dirname(clientPath)), 'League of Legends')
+                );
+                const installDirs = [...new Set([
+                    installPath && path.extname(installPath) ? path.dirname(installPath) : installPath,
+                    installRoot,
+                    installRoot && path.join(installRoot, 'League of Legends'),
+                    ...siblingGameDirs
+                ].filter(Boolean))];
+                for (const dir of installDirs) {
+                    try {
+                        const lock = parseClientLockfile(fs.readFileSync(path.join(dir, 'lockfile'), 'utf8'));
+                        if (lock) return lock;
+                    } catch (e) { /* El cliente aún no creó el lockfile de juego en esta ubicación. */ }
+                }
+            } catch (e) {
+                return null;
+            }
+            return null;
+        }
+
+        function clientResponseJson(response, endpoint) {
+            if (!response.ok) return null;
+            try {
+                return JSON.parse(response.body);
+            } catch (e) {
+                console.warn(`Respuesta inesperada del cliente de League of Legends (${endpoint})`, e.message);
+                return null;
+            }
+        }
+
+        function clientRankQueue(queue) {
+            if (!queue || typeof queue !== 'object') return null;
+            let baseTier = String(queue.tier || '').toUpperCase().trim();
+            if (!baseTier) return null;
+            if (baseTier === 'NONE') baseTier = 'UNRANKED';
+            const division = String(queue.division || '').toUpperCase().trim();
+            const tier = ['MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED'].includes(baseTier) || !division
+                ? baseTier
+                : `${baseTier} ${division}`;
+            const lp = Number(queue.leaguePoints);
+            return { tier, lp: Number.isFinite(lp) ? Math.max(0, lp) : 0 };
+        }
+
+        async function readGameClientProfile(lock) {
+            const endpoints = [
+                ['/lol-summoner/v1/current-summoner', 'summoner'],
+                ['/lol-chat/v1/me', 'identity'],
+                ['/lol-ranked/v1/current-ranked-stats', 'ranked']
+            ];
+            const responses = await Promise.all(endpoints.map(([endpoint]) =>
+                riotClientRequest('GET', endpoint, lock)
+            ));
+            const [summoner, identity, ranked] = responses.map((response, index) =>
+                clientResponseJson(response, endpoints[index][1])
+            );
+            if (!summoner && !identity) return null;
+
+            const gameName = String(identity && identity.gameName || '').trim();
+            const gameTag = String(identity && identity.gameTag || '').trim().replace(/^#/, '');
+            const riotId = gameName && gameTag ? `${gameName}#${gameTag}` : '';
+            const platform = String(
+                (identity && (identity.platformId || identity.pid)) ||
+                (summoner && (summoner.platformId || summoner.region)) || ''
+            ).trim();
+            const queueMap = ranked && ranked.queueMap && typeof ranked.queueMap === 'object' ? ranked.queueMap : {};
+            const profileIconId = Number(summoner && summoner.profileIconId);
+            const level = Number(summoner && summoner.summonerLevel);
+
+            return {
+                puuid: String((summoner && summoner.puuid) || (identity && identity.puuid) || '').trim(),
+                riotId,
+                region: normalizeRegion(platform),
+                profileIconId: Number.isInteger(profileIconId) && profileIconId > 0 ? profileIconId : null,
+                level: Number.isFinite(level) && level > 0 ? level : null,
+                soloq: clientRankQueue(queueMap.RANKED_SOLO_5x5),
+                flex: clientRankQueue(queueMap.RANKED_FLEX_SR)
+            };
+        }
+
+        function matchesClientAccount(account, profile) {
+            if (profile.puuid && account.puuid) {
+                return profile.puuid.toLowerCase() === String(account.puuid).toLowerCase();
+            }
+            if (!profile.riotId || String(account.riotId || '').trim().toLowerCase() !== profile.riotId.toLowerCase()) return false;
+            return !profile.region || normalizeRegion(account.region) === profile.region;
+        }
+
+        function applyClientQueue(account, key, incoming, rankChanges) {
+            if (!incoming) return false;
+            const current = account[key] || EMPTY_QUEUE();
+            const changed = current.tier !== incoming.tier || Number(current.lp) !== incoming.lp;
+            let historyChanged = false;
+
+            if (changed) account[key] = { ...current, ...incoming };
+            if (key === 'soloq') {
+                const previousHistory = normalizeLpHistory(account.lpHistory);
+                const nextSnapshot = createRankSnapshot(incoming);
+                if (!previousHistory.length) {
+                    previousHistory.push(nextSnapshot);
+                    historyChanged = true;
+                } else {
+                    const previousPoint = previousHistory[previousHistory.length - 1];
+                    if (previousPoint.tier !== nextSnapshot.tier || previousPoint.lp !== nextSnapshot.lp) {
+                        if (previousPoint.rankOrder !== nextSnapshot.rankOrder) {
+                            rankChanges.push({
+                                account,
+                                previous: createRankSnapshot(previousPoint),
+                                current: nextSnapshot
+                            });
+                        }
+                        previousHistory.push(nextSnapshot);
+                        historyChanged = true;
+                    }
+                }
+                if (historyChanged) account.lpHistory = previousHistory.slice(-MAX_LP_HISTORY);
+            }
+            return changed || historyChanged;
+        }
+
+        function syncClientProfile(profile) {
+            const accounts = readAccounts();
+            const matchedAccount = accounts.find(account => matchesClientAccount(account, profile));
+            const previousActiveId = activeClientAccountId;
+            const rankChanges = [];
+            let changed = false;
+
+            if (matchedAccount) {
+                activeClientAccountId = matchedAccount.id;
+                if (profile.puuid && matchedAccount.puuid !== profile.puuid) {
+                    matchedAccount.puuid = profile.puuid;
+                    changed = true;
+                }
+                if (profile.riotId && matchedAccount.riotId !== profile.riotId) {
+                    matchedAccount.riotId = profile.riotId;
+                    changed = true;
+                }
+                if (profile.region && matchedAccount.region !== profile.region) {
+                    matchedAccount.region = profile.region;
+                    changed = true;
+                }
+                if (profile.profileIconId && matchedAccount.profileIconId !== profile.profileIconId) {
+                    matchedAccount.profileIconId = profile.profileIconId;
+                    changed = true;
+                }
+                if (profile.level && matchedAccount.level !== profile.level) {
+                    matchedAccount.level = profile.level;
+                    changed = true;
+                }
+                changed = applyClientQueue(matchedAccount, 'soloq', profile.soloq, rankChanges) || changed;
+                changed = applyClientQueue(matchedAccount, 'flex', profile.flex, rankChanges) || changed;
+            } else {
+                activeClientAccountId = null;
+            }
+
+            if (changed) writeAccounts(accounts);
+            if (changed || previousActiveId !== activeClientAccountId) loadAccounts();
+            if (rankChanges.length) notifyRankChanges(rankChanges);
+            latestClientSnapshot = profile;
+            setClientSyncState(
+                matchedAccount ? 'active' : 'unknown',
+                matchedAccount ? 'clientSyncActive' : 'clientSyncUnknown',
+                !matchedAccount && !!profile.riotId
+            );
+        }
+
+        function importDetectedClientAccount() {
+            if (!latestClientSnapshot || !latestClientSnapshot.riotId) return;
+            try {
+                const accounts = readAccounts();
+                const existing = accounts.find(account => matchesClientAccount(account, latestClientSnapshot));
+                if (existing) {
+                    syncClientProfile(latestClientSnapshot);
+                    return;
+                }
+
+                const profile = latestClientSnapshot;
+                const imported = {
+                    id: newAccountId(),
+                    puuid: profile.puuid || '',
+                    riotId: profile.riotId,
+                    region: profile.region || 'euw',
+                    loginUser: '',
+                    profileIconId: profile.profileIconId || undefined,
+                    level: profile.level || undefined,
+                    soloq: profile.soloq || EMPTY_QUEUE(),
+                    flex: profile.flex || EMPTY_QUEUE(),
+                    lpHistory: profile.soloq ? [createRankSnapshot(profile.soloq)] : [],
+                    tags: [],
+                    group: '',
+                    order: nextAccountOrder(accounts),
+                    clientImportedNeedsCredentials: true
+                };
+                accounts.push(imported);
+                writeAccounts(accounts);
+                activeClientAccountId = imported.id;
+                loadAccounts();
+                setClientSyncState('active', 'clientSyncActive');
+                showNeonNotification(t('clientSyncImported'));
+            } catch (e) {
+                console.error('Error al importar la cuenta del cliente de League of Legends', e);
+                showNeonNotification(t('clientSyncImportError'));
+            }
+        }
+
+        async function syncWithGameClient() {
+            if (clientSyncBusy) return;
+            clientSyncBusy = true;
+            try {
+                const lock = readLeagueClientLockfile();
+                if (!lock) {
+                    const hadActiveAccount = activeClientAccountId !== null;
+                    activeClientAccountId = null;
+                    latestClientSnapshot = null;
+                    if (hadActiveAccount) loadAccounts();
+                    setClientSyncState('offline', 'clientSyncOffline');
+                    return;
+                }
+
+                const profile = await readGameClientProfile(lock);
+                if (profile && (profile.puuid || profile.riotId)) {
+                    syncClientProfile(profile);
+                } else {
+                    const hadActiveAccount = activeClientAccountId !== null;
+                    activeClientAccountId = null;
+                    latestClientSnapshot = null;
+                    if (hadActiveAccount) loadAccounts();
+                    setClientSyncState('waiting', 'clientSyncWaiting');
+                }
+            } catch (e) {
+                console.error('Error al sincronizar con el cliente de League of Legends', e);
+                setClientSyncState('error', 'clientSyncError');
+            } finally {
+                clientSyncBusy = false;
+            }
+        }
+
         // Siempre resuelve: { ok, status, note, body }
-        function riotClientRequest(method, apiPath) {
+        function riotClientRequest(method, apiPath, lock = readRiotLockfile()) {
             return new Promise(resolve => {
-                const lock = readRiotLockfile();
                 if (!lock) { resolve({ ok: false, status: 0, note: 'sin lockfile' }); return; }
                 let finished = false;
                 const finish = result => { if (!finished) { finished = true; resolve(result); } };
@@ -765,7 +1220,7 @@
                     timeout: 5000
                 }, res => {
                     let body = '';
-                    res.on('data', chunk => { if (body.length < 300) body += chunk; });
+                    res.on('data', chunk => { if (body.length < 65536) body += chunk; });
                     res.on('end', () => finish({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, body }));
                 });
                 req.on('timeout', () => { req.destroy(); finish({ ok: false, status: 0, note: 'timeout' }); });
@@ -954,6 +1409,11 @@
             session.footer = launchedGame ? 'loginLaunching' : 'loginDoneNoGame';
             renderLogin();
             loginBtnClose.focus();
+            if (session.fromTray) {
+                trayNotify(t('trayLoginOk'));
+                // Nadie está mirando la ventana: se recoge sola para no dejarla con la pantalla de "listo" abierta
+                setTimeout(() => { if (loginSession === session) closeLoginOverlay(); }, 1500);
+            }
         }
 
         function failLogin(messageKey) {
@@ -965,6 +1425,7 @@
             session.footer = messageKey;
             renderLogin();
             loginBtnRetry.focus();
+            if (session.fromTray) trayNotify(t('trayLoginFail'));   // el detalle queda en la ventana al abrirla
         }
 
         // Solo ejecuta fn si esta sesión sigue en curso (no se canceló)
@@ -975,11 +1436,12 @@
             session.timers.push(id);
         }
 
-        function startLogin(account) {
+        function startLogin(account, opts = {}) {
             if (loginSession && loginSession.state === 'running') return;
             const password = getAccountPassword(account);
             if (!password) {
                 showNeonNotification(t('errNoPassword'));
+                if (opts.fromTray) trayNotify(t('errNoPassword'));
                 return;
             }
 
@@ -987,7 +1449,8 @@
             const session = {
                 account, steps,
                 status: steps.map(() => 'pending'),
-                state: 'running', footer: '', child: null, timers: []
+                state: 'running', footer: '', child: null, timers: [],
+                fromTray: !!opts.fromTray   // lanzado desde la bandeja con la ventana oculta: se avisa con una notificación
             };
             loginSession = session;
 
@@ -1207,9 +1670,11 @@
             }
         }
 
-        function renderCard(account) {
+        function renderCard(account, visibleIndex, visibleCount) {
             const newCard = document.createElement('div');
             newCard.className = 'account-card';
+            newCard.dataset.accountId = account.id;
+            newCard.classList.toggle('client-active', account.id === activeClientAccountId);
 
             const soloq = account.soloq || EMPTY_QUEUE();
             const flex = account.flex || EMPTY_QUEUE();
@@ -1233,6 +1698,18 @@
 
             const { name, tag } = splitRiotId(account.riotId);
             const shownName = name || account.loginUser || '?';
+            const profileIconUrl = Number.isInteger(Number(account.profileIconId)) && Number(account.profileIconId) > 0 && ddragon.version
+                ? `https://ddragon.leagueoflegends.com/cdn/${ddragon.version}/img/profileicon/${Number(account.profileIconId)}.png`
+                : '';
+            const profileIconHtml = profileIconUrl
+                ? `<img class="acc-profile-avatar sens sens-id" src="${profileIconUrl}" alt="" aria-hidden="true">`
+                : '';
+            const activeAccountHtml = account.id === activeClientAccountId
+                ? `<span class="acc-badge client-active-badge">${escapeHtml(t('clientActive'))}</span>`
+                : '';
+            const missingCredentialsHtml = account.clientImportedNeedsCredentials
+                ? `<span class="acc-badge client-credentials-badge" title="${escapeHtml(t('clientNeedsCredentialsHint'))}">${escapeHtml(t('clientNeedsCredentials'))}</span>`
+                : '';
             const lastSeasonText = !hasRiotId(account) ? '—'
                 : account.opggUpdatedAt ? (account.lastSeason || t('unranked')) : '…';
             const notFound = account.opggStatus === 'notFound';
@@ -1292,6 +1769,20 @@
             }
             const flexText = (flex.tier || 'UNRANKED') === 'UNRANKED' ? t('unranked') : `${prettyTier(flex.tier)} · ${flex.lp} LP`;
             const showLevel = hasRiotId(account) && account.level;
+            const taxonomyHtml = [
+                account.group ? `<span class="account-taxonomy-item group sens sens-desc">${escapeHtml(account.group)}</span>` : '',
+                ...(Array.isArray(account.tags) ? account.tags : []).map(tag => `<span class="account-taxonomy-item sens sens-desc">${escapeHtml(tag)}</span>`)
+            ].filter(Boolean).join('');
+            const taxonomy = taxonomyHtml ? `<div class="acc-taxonomy">${taxonomyHtml}</div>` : '';
+            const reorderActions = sortSelect.value === 'manual' ? `
+                <div class="account-order-actions">
+                    <button type="button" class="card-icon-btn" data-move="up" aria-label="${escapeHtml(t('moveUp'))}" title="${escapeHtml(t('moveUp'))}" ${visibleIndex === 0 ? 'disabled' : ''}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+                    </button>
+                    <button type="button" class="card-icon-btn" data-move="down" aria-label="${escapeHtml(t('moveDown'))}" title="${escapeHtml(t('moveDown'))}" ${visibleIndex === visibleCount - 1 ? 'disabled' : ''}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                </div>` : '';
 
             newCard.innerHTML = `
                 <div style="position: absolute; top: 30%; left: 50%; width: 220px; height: 220px; background: radial-gradient(circle, ${rankTheme.glow} 0%, transparent 70%); border-radius: 50%; pointer-events: none; animation: cardRadarWave 6s ease-in-out infinite; z-index: 0;"></div>
@@ -1300,14 +1791,18 @@
                     <img src="${iconUrl}" alt="" style="width: 52px; height: 52px; min-width: 52px; object-fit: contain; transform: scale(3.5); transform-origin: center; filter: drop-shadow(0 0 8px ${rankTheme.glow});">
                     <div style="flex-grow: 1; min-width: 0;">
                         <div class="acc-name-line sens sens-id" title="${escapeHtml(account.riotId || account.loginUser)}">
+                            ${profileIconHtml}
                             <span class="acc-name">${escapeHtml(shownName)}</span>${tag ? `<span class="acc-tag">#${escapeHtml(tag)}</span>` : ''}
                         </div>
                         <div class="acc-badges">
                             <span class="acc-badge region">${escapeHtml(region)}</span>
                             ${showLevel ? `<span class="acc-badge">${escapeHtml(t('levelShort'))} ${escapeHtml(account.level)}</span>` : ''}
-                            <span class="acc-badge user sens sens-login" title="${escapeHtml(t('fieldLoginUser'))}">${USER_ICON}${escapeHtml(account.loginUser)}</span>
+                            ${account.loginUser ? `<span class="acc-badge user sens sens-login" title="${escapeHtml(t('fieldLoginUser'))}">${USER_ICON}${escapeHtml(account.loginUser)}</span>` : ''}
+                            ${activeAccountHtml}
+                            ${missingCredentialsHtml}
                             ${ladderHtml}
                         </div>
+                        ${taxonomy}
                     </div>
                 </div>
 
@@ -1332,19 +1827,25 @@
 
                 ${champsHtml}
                 ${recentHtml}
+                ${renderLpHistory(account)}
 
                 ${account.description ? `<div class="acc-description sens sens-desc" style="position: relative; z-index: 1;" title="${escapeHtml(account.description)}">${escapeHtml(account.description)}</div>` : ''}
 
                 <div class="card-actions" style="position: relative; z-index: 1; margin-top: 12px; display: flex; gap: 8px; border-top: 1px solid #1f2029; padding-top: 12px;">
+                    ${reorderActions}
                     <button class="btn-login">${LOGIN_ICON}<span>${escapeHtml(t('loginAction'))}</span></button>
                     <button class="card-icon-btn" data-copy="riot" data-tip="${escapeHtml(t('copyRiotId'))}" aria-label="${escapeHtml(t('copyRiotId'))}" ${hasRiotId(account) ? '' : 'disabled'}>${CLIPBOARD_ICON}${OK_ICON}</button>
                     <button class="card-icon-btn" data-copy="password" data-tip="${escapeHtml(t('copyPassword'))}" aria-label="${escapeHtml(t('copyPassword'))}">${KEY_ICON}${OK_ICON}</button>
                 </div>
             `;
 
+            newCard.querySelectorAll('[data-move]').forEach(btn => btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                moveAccount(account.id, btn.dataset.move === 'up' ? -1 : 1);
+            }));
             newCard.querySelectorAll('.card-icon-btn').forEach(btn => btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                copyFromAccount(account, btn.dataset.copy, btn);
+                if (btn.dataset.copy) copyFromAccount(account, btn.dataset.copy, btn);
             }));
 
             newCard.querySelector('.btn-login').addEventListener('click', () => {
@@ -1473,28 +1974,10 @@
             mainContent.appendChild(el);
         }
 
-        function loadAccounts() {
-            const allAccounts = readAccounts();
-            populateRegionSelects(allAccounts);
-            updateRankDistribution(allAccounts);
-            mainContent.innerHTML = '';
-
-            if (allAccounts.length === 0) {
-                renderEmptyState();
-                return;
-            }
-
-            const searchTerm = searchInput.value.toLowerCase();
-            const selectedRegion = filterRegion.value;
-            const sortBy = sortSelect.value;
-
-            const filteredAccounts = allAccounts.filter(acc => {
-                const haystack = [acc.riotId, acc.loginUser, acc.description].filter(Boolean).join(' ').toLowerCase();
-                const matchesRegion = selectedRegion === 'all' || (acc.region || 'euw').toLowerCase() === selectedRegion;
-                return haystack.includes(searchTerm) && matchesRegion;
-            });
-
-            filteredAccounts.sort((a, b) => {
+        // Orden de las cuentas (rango, nombre u orden manual): lo usan la ventana y el menú de la bandeja.
+        function accountComparator(sortBy) {
+            return (a, b) => {
+                if (sortBy === 'manual') return a.order - b.order;
                 if (sortBy === 'rank') {
                     const tierA = a.soloq && a.soloq.tier ? a.soloq.tier.toUpperCase().split(' ')[0] : 'UNRANKED';
                     const tierB = b.soloq && b.soloq.tier ? b.soloq.tier.toUpperCase().split(' ')[0] : 'UNRANKED';
@@ -1504,13 +1987,63 @@
                     return (b.soloq ? b.soloq.lp : 0) - (a.soloq ? a.soloq.lp : 0);
                 }
                 return displayName(a).localeCompare(displayName(b));
+            };
+        }
+
+        function getFilteredAccounts(allAccounts) {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedRegion = filterRegion.value;
+            const selectedCategory = filterCategory.value;
+            return allAccounts.filter(acc => {
+                const haystack = [acc.riotId, acc.loginUser, acc.description, acc.group, ...(acc.tags || [])].filter(Boolean).join(' ').toLowerCase();
+                const matchesRegion = selectedRegion === 'all' || (acc.region || 'euw').toLowerCase() === selectedRegion;
+                const matchesCategory = selectedCategory === 'all' ||
+                    (selectedCategory.startsWith('group:') && String(acc.group || '').trim().toLowerCase() === selectedCategory.slice(6)) ||
+                    (selectedCategory.startsWith('tag:') && (acc.tags || []).some(tag => String(tag).trim().toLowerCase() === selectedCategory.slice(4)));
+                return haystack.includes(searchTerm) && matchesRegion && matchesCategory;
             });
+        }
+
+        function moveAccount(id, direction) {
+            const accounts = readAccounts();
+            const visible = getFilteredAccounts(accounts).sort(accountComparator('manual'));
+            const visibleIndex = visible.findIndex(account => account.id === id);
+            const target = visible[visibleIndex + direction];
+            if (!target) return;
+
+            const ordered = accounts.slice().sort(accountComparator('manual'));
+            const from = ordered.findIndex(account => account.id === id);
+            ordered.splice(from, 1);
+            const targetIndex = ordered.findIndex(account => account.id === target.id);
+            ordered.splice(targetIndex + (direction > 0 ? 1 : 0), 0, accounts.find(account => account.id === id));
+            ordered.forEach((account, index) => { account.order = index; });
+            writeAccounts(ordered);
+            loadAccounts();
+        }
+
+        function loadAccounts() {
+            const allAccounts = readAccounts();
+            syncTray(allAccounts);
+            populateRegionSelects(allAccounts);
+            populateCategorySelect(allAccounts);
+            updateRankDistribution(allAccounts);
+            mainContent.innerHTML = '';
+
+            if (allAccounts.length === 0) {
+                renderEmptyState();
+                return;
+            }
+
+            const sortBy = sortSelect.value;
+            const filteredAccounts = getFilteredAccounts(allAccounts);
+
+            filteredAccounts.sort(accountComparator(sortBy));
 
             if (filteredAccounts.length === 0) {
                 renderNoResults();
                 return;
             }
-            filteredAccounts.forEach(acc => renderCard(acc));
+            filteredAccounts.forEach((acc, index) => renderCard(acc, index, filteredAccounts.length));
         }
 
         // ---------- Imágenes de campeones (Data Dragon, CDN de imágenes oficial de LoL) ----------
@@ -1886,11 +2419,22 @@
             if (!results.size) return;
             // Se guarda sobre lo que haya en disco; si la cuenta se borró o cambió de Riot ID mientras tanto, se ignora
             const disk = readAccounts();
+            const rankChanges = [];
             disk.forEach(a => {
                 const r = results.get(a.id);
                 if (!r || a.riotId !== r.riotId || a.region !== r.region) return;
                 a.opggStatus = r.opggStatus;
                 if (r.opggStatus === 'ok') {
+                    const history = normalizeLpHistory(a.lpHistory);
+                    const previous = history.length ? history[history.length - 1] : null;
+                    const current = createRankSnapshot(r.soloq, r.opggUpdatedAt);
+                    if (previous && previous.rankOrder !== current.rankOrder) {
+                        rankChanges.push({ account: a, previous, current });
+                    }
+                    if (!previous || previous.rankOrder !== current.rankOrder || previous.lp !== current.lp) {
+                        history.push(current);
+                        a.lpHistory = history.slice(-MAX_LP_HISTORY);
+                    }
                     if (r.level) a.level = r.level;
                     a.soloq = r.soloq;
                     a.flex = r.flex;
@@ -1904,6 +2448,7 @@
             writeAccounts(disk);
             loadAccounts();
             showNeonNotification(t('syncMsg'));
+            notifyRankChanges(rankChanges);
         }
 
         // ---------- Panel lateral: añadir / editar cuenta ----------
@@ -1918,6 +2463,8 @@
         const accRegion = document.getElementById('acc-region');
         const accPassword = document.getElementById('acc-password');
         const accDescription = document.getElementById('acc-description');
+        const accTags = document.getElementById('acc-tags');
+        const accGroup = document.getElementById('acc-group');
         const singleError = document.getElementById('single-error');
         const drawerSubmitLabel = document.getElementById('drawer-submit-label');
         const bulkText = document.getElementById('bulk-text');
@@ -1958,6 +2505,8 @@
             accPassword.type = 'password';
             accPassword.placeholder = isEdit ? t('passwordKeepPh') : '';
             accDescription.value = acc ? (acc.description || '') : '';
+            accTags.value = acc && Array.isArray(acc.tags) ? acc.tags.join(', ') : '';
+            accGroup.value = acc ? (acc.group || '') : '';
             if (!isEdit) bulkText.value = '';
             clearDrawerErrors();
 
@@ -1991,6 +2540,8 @@
             const region = accRegion.value;
             const password = accPassword.value; // sin trim: los espacios pueden ser parte de la contraseña
             const description = accDescription.value.trim();
+            const tags = normalizeTags(accTags.value);
+            const group = accGroup.value.trim();
             const isEdit = drawerMode === 'edit';
 
             if (!loginUser) return showFieldError(accLoginUser, 'errLoginUser');
@@ -2004,14 +2555,21 @@
             if (isEdit) {
                 const acc = accounts.find(a => a.id === editingId);
                 if (!acc) { closeDrawer(); loadAccounts(); return; }
-                const riotChanged = acc.riotId !== riotId || acc.region !== region;
-                Object.assign(acc, { loginUser, riotId, region, description });
+                const riotIdChanged = acc.riotId !== riotId;
+                const riotChanged = riotIdChanged || acc.region !== region;
+                Object.assign(acc, { loginUser, riotId, region, description, tags, group });
                 if (password) setAccountPassword(acc, password);
+                if (loginUser && (password || getAccountPassword(acc))) delete acc.clientImportedNeedsCredentials;
                 if (riotChanged) {
                     // El rango guardado era de otro Riot ID/región
                     Object.assign(acc, { level: null, soloq: EMPTY_QUEUE(), flex: EMPTY_QUEUE(), lastSeason: null });
+                    if (riotIdChanged) {
+                        delete acc.puuid;
+                        delete acc.profileIconId;
+                    }
                     delete acc.opggUpdatedAt;
                     delete acc.opggStatus;
+                    delete acc.lpHistory;
                     delete acc.ladder;
                     delete acc.topChampions;
                     delete acc.recentGames;
@@ -2019,7 +2577,8 @@
                 }
             } else {
                 const acc = {
-                    id: newAccountId(), loginUser, riotId, region, description,
+                    id: newAccountId(), loginUser, riotId, region, description, tags, group,
+                    order: nextAccountOrder(accounts),
                     level: null, soloq: EMPTY_QUEUE(), flex: EMPTY_QUEUE(), lastSeason: null
                 };
                 setAccountPassword(acc, password);
@@ -2065,7 +2624,8 @@
                 if (isDuplicateUser(accounts, parsed.loginUser)) { skipped++; return; }
                 const acc = {
                     id: newAccountId(), loginUser: parsed.loginUser, riotId: parsed.riotId, region: parsed.region,
-                    description: '', level: null, soloq: EMPTY_QUEUE(), flex: EMPTY_QUEUE(), lastSeason: null
+                    description: '', tags: [], group: '', order: nextAccountOrder(accounts),
+                    level: null, soloq: EMPTY_QUEUE(), flex: EMPTY_QUEUE(), lastSeason: null
                 };
                 setAccountPassword(acc, parsed.password);
                 accounts.push(acc);
@@ -2110,6 +2670,7 @@
         const setLaunchStartup = document.getElementById('set-launch-startup');
         const setStartMinimized = document.getElementById('set-start-minimized');
         const setAutoRefresh = document.getElementById('set-auto-refresh');
+        const setRankNotifications = document.getElementById('set-rank-notifications');
         const setRefreshMinutes = document.getElementById('set-refresh-minutes');
         const setLaunchGame = document.getElementById('set-launch-game');
         const intervalBlock = document.getElementById('interval-block');
@@ -2121,6 +2682,11 @@
         const setStLogin = document.getElementById('set-st-login');
         const setStDescs = document.getElementById('set-st-descs');
         const setStPass = document.getElementById('set-st-pass');
+        const setTrayIcon = document.getElementById('set-tray-icon');
+        const setTrayClose = document.getElementById('set-tray-close');
+        const setTrayShortcutOn = document.getElementById('set-tray-shortcut-on');
+        const shortcutBtn = document.getElementById('set-shortcut-btn');
+        const shortcutWarn = document.getElementById('shortcut-warn');
 
         function highlightPreset(minutes) {
             presetButtons.forEach(b => b.classList.toggle('active', parseInt(b.dataset.min, 10) === minutes));
@@ -2136,6 +2702,7 @@
             setLaunchStartup.checked = settings.launchAtStartup;
             setStartMinimized.checked = settings.startMinimized;
             setAutoRefresh.checked = settings.autoRefresh;
+            setRankNotifications.checked = settings.rankChangeNotifications;
             setRefreshMinutes.value = settings.refreshMinutes;
             setRefreshMinutes.classList.remove('invalid');
             highlightPreset(settings.refreshMinutes);
@@ -2146,6 +2713,13 @@
             setStLogin.checked = settings.streamerLogin;
             setStDescs.checked = settings.streamerDescs;
             setStPass.checked = settings.streamerPass;
+            setTrayIcon.checked = settings.trayIcon;
+            setTrayClose.checked = settings.closeToTray;
+            setTrayClose.disabled = !settings.trayIcon;
+            setTrayShortcutOn.checked = settings.trayShortcutOn;
+            pendingShortcut = settings.trayShortcut;
+            stopShortcutRecording();
+            shortcutWarn.hidden = !shortcutFailed;
             renderUpdateStatus();
             syncDependentControls();
         }
@@ -2209,6 +2783,7 @@
                 launchAtStartup: setLaunchStartup.checked,
                 startMinimized: setStartMinimized.checked,
                 autoRefresh: setAutoRefresh.checked,
+                rankChangeNotifications: setRankNotifications.checked,
                 refreshMinutes: minutes,
                 loginMode: checkedMode ? checkedMode.value : 'riotClient',
                 launchGame: setLaunchGame.checked,
@@ -2216,10 +2791,16 @@
                 streamerIds: setStIds.checked,
                 streamerLogin: setStLogin.checked,
                 streamerDescs: setStDescs.checked,
-                streamerPass: setStPass.checked
+                streamerPass: setStPass.checked,
+                trayIcon: setTrayIcon.checked,
+                closeToTray: setTrayClose.checked,
+                trayShortcutOn: setTrayShortcutOn.checked,
+                trayShortcut: pendingShortcut,
+                trayHintShown: settings.trayHintShown
             };
             saveSettings();
             applyStreamerMode();
+            pushTrayConfig({ warn: true });
 
             if (prev.launchAtStartup !== settings.launchAtStartup || prev.startMinimized !== settings.startMinimized) {
                 applySystemSettings();
@@ -2245,6 +2826,46 @@
             if (e.key === 'Escape' && settingsModal.style.display === 'flex') closeSettings();
         });
         btnOpenFolder.addEventListener('click', () => shell.showItemInFolder(dataPath));
+        btnCopyDiagnostics.addEventListener('click', async () => {
+            btnCopyDiagnostics.disabled = true;
+            try {
+                const info = await ipcRenderer.invoke('diagnostics:collect');
+                const clientStateKey = {
+                    active: 'clientSyncActive',
+                    unknown: 'clientSyncUnknown',
+                    offline: 'clientSyncOffline',
+                    waiting: 'clientSyncWaiting',
+                    error: 'clientSyncError'
+                }[clientSyncBanner.dataset.state] || 'clientSyncWaiting';
+                const clean = value => String(value).replace(/[|\r\n]/g, ' ');
+                const report = [
+                    '# Aurum Accounts diagnostics',
+                    '',
+                    `- App version: ${clean(info.appVersion)}`,
+                    `- Packaged build: ${info.packaged ? 'Yes' : 'No'}`,
+                    `- Operating system: ${clean(info.platform)} ${clean(info.osVersion)}`,
+                    `- OS architecture: ${clean(info.osArchitecture)}`,
+                    `- Process architecture: ${clean(info.processArchitecture)}`,
+                    `- Electron: ${clean(info.electronVersion)}`,
+                    `- Chromium: ${clean(info.chromiumVersion)}`,
+                    `- Node.js: ${clean(info.nodeVersion)}`,
+                    `- Main-process IPC: ${t('diagnosticsAvailable')}`,
+                    `- Windows secure storage: ${t(info.secureStorageAvailable ? 'diagnosticsAvailable' : 'diagnosticsUnavailable')}`,
+                    `- System tray: ${t(info.trayAvailable ? 'diagnosticsAvailable' : 'diagnosticsUnavailable')}`,
+                    `- Native notifications: ${t(info.notificationsAvailable ? 'diagnosticsAvailable' : 'diagnosticsUnavailable')}`,
+                    `- League Client: ${t(clientStateKey)}`,
+                    '',
+                    `> ${t('diagnosticsPrivacy')}`
+                ].join('\n');
+                clipboard.writeText(report);
+                showNeonNotification(t('diagnosticsCopied'));
+            } catch (e) {
+                console.error('No se pudo recopilar o copiar el diagnóstico', e);
+                showNeonNotification(t('diagnosticsError'));
+            } finally {
+                btnCopyDiagnostics.disabled = false;
+            }
+        });
         document.getElementById('btn-data-folder').addEventListener('click', () => shell.showItemInFolder(dataPath));
         document.getElementById('sb-version').textContent = 'v' + remoteApp.getVersion();
 
@@ -2265,6 +2886,8 @@
             streamerBtn.classList.toggle('active', on);
             streamerBtn.setAttribute('aria-pressed', String(on));
             if (on && settings.streamerPass) accPassword.type = 'password';   // si estaba a la vista, se vuelve a ocultar
+            populateCategorySelect(readAccounts());
+            syncTray();   // el menú de la bandeja también oculta nombres y marca la casilla
         }
 
         function toggleStreamerMode() {
@@ -2274,6 +2897,143 @@
             showNeonNotification(t(settings.streamerMode ? 'streamerOn' : 'streamerOff'));
         }
         streamerBtn.addEventListener('click', toggleStreamerMode);
+
+        // ---------- Bandeja del sistema ----------
+        // El icono, su menú y el atajo global viven en el proceso principal (main.js). Desde aquí solo se le envía la
+        // lista de cuentas SIN credenciales (id + etiqueta) y los textos ya traducidos, y se atiende lo que el usuario
+        // elige en el menú. Las contraseñas no salen nunca de este proceso.
+        let pendingShortcut = settings.trayShortcut;   // combinación elegida en Ajustes (se aplica al guardar)
+        let recordingShortcut = false;
+        let shortcutFailed = false;                    // el último intento de registrar el atajo falló
+
+        // Etiqueta de una cuenta en el menú: respeta lo que el modo streamer esté ocultando
+        function trayLabel(account, index) {
+            const hiddenIds = settings.streamerMode && settings.streamerIds;
+            const hiddenLogin = settings.streamerMode && settings.streamerLogin;
+            const hiddenDesc = settings.streamerMode && settings.streamerDescs;
+            let primary = '';
+            if (account.riotId) { if (!hiddenIds) primary = account.riotId; }
+            else if (account.loginUser && !hiddenLogin) primary = account.loginUser;
+            const desc = account.description && !hiddenDesc ? account.description : '';
+            let who = primary;
+            if (desc) who = primary ? `${primary} (${desc})` : desc;
+            if (!who) who = t('trayAccountN').replace('{n}', () => index + 1);
+            const tier = account.soloq && account.soloq.tier ? account.soloq.tier : '';
+            const rank = tier && tier.toUpperCase() !== 'UNRANKED' ? prettyTier(tier) : '';
+            return rank ? `${who} · ${rank}` : who;
+        }
+
+        function syncTray(accounts) {
+            if (accounts) trayAccountsCache = accounts;
+            if (!trayAccountsCache) return;
+            clearTimeout(traySyncTimer);
+            traySyncTimer = setTimeout(() => {
+                const sorted = trayAccountsCache.slice().sort(accountComparator(sortSelect.value));
+                ipcRenderer.send('tray:accounts', {
+                    accounts: sorted.map((a, i) => ({ id: a.id, label: trayLabel(a, i) })),
+                    streamer: !!settings.streamerMode,
+                    strings: {
+                        open: t('trayOpen'), loginWith: t('trayLoginWith'), noAccounts: t('trayNoAccounts'),
+                        more: t('trayMore'), streamer: t('setStreamer'), quit: t('trayQuit')
+                    }
+                });
+            }, 150);
+        }
+
+        // Configuración de la bandeja para el proceso principal; avisa si el atajo no se pudo registrar
+        function pushTrayConfig({ warn = false } = {}) {
+            return ipcRenderer.invoke('tray:config', {
+                trayIcon: settings.trayIcon, closeToTray: settings.closeToTray,
+                trayShortcutOn: settings.trayShortcutOn, trayShortcut: settings.trayShortcut
+            }).then(res => {
+                shortcutFailed = !!(res && res.shortcutOk === false);
+                if (shortcutFailed && warn) showNeonNotification(t('shortcutFailed'));
+                return res;
+            }).catch(() => null);
+        }
+
+        function trayNotify(body) {
+            ipcRenderer.send('tray:notify', { title: 'Aurum Accounts', body });
+        }
+
+        // Cuenta elegida en el menú de la bandeja
+        function trayLogin(id) {
+            const account = readAccounts().find(a => a.id === id);
+            if (!account) return;
+            const background = document.visibilityState === 'hidden';   // ventana oculta o minimizada: nadie la mira
+            const say = (text) => { if (background) trayNotify(text); else showNeonNotification(text); };
+            if (loginSession && loginSession.state === 'running') { say(t('trayLoginBusy')); return; }
+            if (settings.loginMode === 'previousWindow') {
+                // Ese modo hace Alt+Tab antes de escribir: desde la bandeja saltaría a otra ventana y la contraseña
+                // podría acabar donde no toca. Se abre la app para hacerlo desde ahí.
+                ipcRenderer.send('tray:show');
+                showNeonNotification(t('trayNeedsWindow'));
+                return;
+            }
+            startLogin(account, { fromTray: background });
+        }
+
+        ipcRenderer.on('tray:login', (event, id) => trayLogin(id));
+        ipcRenderer.on('tray:toggle-streamer', () => toggleStreamerMode());
+        ipcRenderer.on('tray:hidden', () => {
+            if (settings.trayHintShown) return;
+            settings.trayHintShown = true;   // el aviso de "sigo en la bandeja" sale solo la primera vez
+            saveSettings();
+            trayNotify(t('trayHint'));
+        });
+
+        // --- Grabador de la combinación de teclas (Ajustes) ---
+        const SHORTCUT_KEYS = { Space: 'Space', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right', Home: 'Home', End: 'End', PageUp: 'PageUp', PageDown: 'PageDown', Insert: 'Insert' };
+
+        // Devuelve la combinación en formato de Electron ("Control+Alt+K"), 'invalid' si no sirve como atajo
+        // global, o null si la tecla no está admitida. Un atajo global "pisa" esa combinación en todo Windows,
+        // por eso se exige al menos Ctrl/Alt/Win (y dos modificadores si es una letra o un número).
+        function acceleratorFromEvent(e) {
+            const code = e.code || '';
+            let key = null, plain = false;
+            if (/^Key[A-Z]$/.test(code)) { key = code.slice(3); plain = true; }
+            else if (/^Digit[0-9]$/.test(code)) { key = code.slice(5); plain = true; }
+            else if (/^F([1-9]|1[0-9]|2[0-4])$/.test(code)) key = code;
+            else if (SHORTCUT_KEYS[code]) { key = SHORTCUT_KEYS[code]; plain = code === 'Space'; }
+            if (!key) return null;
+            const mods = [e.ctrlKey && 'Control', e.altKey && 'Alt', e.shiftKey && 'Shift', e.metaKey && 'Super'].filter(Boolean);
+            const strong = mods.some(m => m !== 'Shift');
+            if (!strong || (plain && mods.length < 2)) return 'invalid';
+            return [...mods, key].join('+');
+        }
+
+        function prettyAccelerator(acc) {
+            return acc ? acc.split('+').map(p => ({ Control: 'Ctrl', Super: 'Win' }[p] || p)).join(' + ') : t('shortcutNone');
+        }
+
+        function renderShortcutBtn() {
+            shortcutBtn.textContent = recordingShortcut ? t('shortcutPress') : prettyAccelerator(pendingShortcut);
+            shortcutBtn.classList.toggle('recording', recordingShortcut);
+        }
+
+        function stopShortcutRecording() {
+            recordingShortcut = false;
+            renderShortcutBtn();
+        }
+
+        function onShortcutKey(e) {
+            if (!recordingShortcut) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();   // mientras se graba, ningún otro atajo de la app debe reaccionar
+            if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) return;   // se espera a la tecla principal
+            if (e.key === 'Escape') { stopShortcutRecording(); return; }
+            if (e.key === 'Backspace' || e.key === 'Delete') { pendingShortcut = ''; stopShortcutRecording(); return; }
+            const acc = acceleratorFromEvent(e);
+            if (acc === 'invalid') { showNeonNotification(t('shortcutInvalid')); return; }   // sigue grabando
+            if (!acc) return;
+            pendingShortcut = acc;
+            stopShortcutRecording();
+        }
+
+        shortcutBtn.addEventListener('click', () => { recordingShortcut = true; renderShortcutBtn(); shortcutBtn.focus(); });
+        shortcutBtn.addEventListener('blur', stopShortcutRecording);
+        document.addEventListener('keydown', onShortcutKey, true);   // en captura: va antes que el resto
+        setTrayIcon.addEventListener('change', () => { setTrayClose.disabled = !setTrayIcon.checked; });
 
         // Atajos: Ctrl+F buscar, Ctrl+N añadir cuenta, Ctrl+H modo streamer
         document.addEventListener('keydown', (e) => {
@@ -2316,11 +3076,17 @@
 
         searchInput.addEventListener('input', loadAccounts);
         filterRegion.addEventListener('change', loadAccounts);
+        filterCategory.addEventListener('change', loadAccounts);
         sortSelect.addEventListener('change', loadAccounts);
+        clientSyncImport.addEventListener('click', importDetectedClientAccount);
         loadChampionData();
         
         applyStreamerMode();
+        applyViewMode(settings.viewMode);
+        pushTrayConfig();
         applyLanguage();
+        syncWithGameClient();
+        setInterval(syncWithGameClient, 5000);
         if (accountsRecovered) showNeonNotification(t('accountsRecovered'));
         // Refresca la ruta del inicio con Windows: si la app se actualiza y cambia de nombre o de
         // carpeta, la entrada que registró la versión anterior quedaría apuntando a un .exe que ya no existe.
@@ -2460,6 +3226,7 @@
 
         // Tras cambiar de idioma hay que volver a escribir los textos que genera el JS
         function refreshUpdateUi() {
+            syncTray();   // el menú de la bandeja cambia de idioma
             renderUpdateStatus();
         }
 

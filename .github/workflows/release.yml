@@ -36,12 +36,40 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Preparar certificado de firma opcional
+        shell: pwsh
+        env:
+          WINDOWS_CSC_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CSC_CERTIFICATE_BASE64 }}
+          WINDOWS_CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+        run: |
+          if (-not $env:WINDOWS_CSC_CERTIFICATE_BASE64) {
+            Write-Host "No hay certificado Authenticode configurado; los ejecutables se compilarán sin firma."
+            exit 0
+          }
+          if (-not $env:WINDOWS_CSC_KEY_PASSWORD) {
+            throw "WINDOWS_CSC_KEY_PASSWORD is required when a signing certificate is configured."
+          }
+          $certificatePath = Join-Path $env:RUNNER_TEMP "aurum-accounts-signing.pfx"
+          $certificateBytes = [Convert]::FromBase64String($env:WINDOWS_CSC_CERTIFICATE_BASE64)
+          [System.IO.File]::WriteAllBytes($certificatePath, $certificateBytes)
+          "CSC_LINK=$certificatePath" >> $env:GITHUB_ENV
+
       # electron-builder sube todo a un BORRADOR (releaseType: draft en package.json). Así nadie, ni la
       # actualización automática, ve una release a medias mientras se compila o si algo falla por el camino.
       - name: Compilar y subir los archivos (borrador)
         run: npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+
+      - name: Eliminar certificado temporal
+        if: always()
+        shell: pwsh
+        run: |
+          $certificatePath = Join-Path $env:RUNNER_TEMP "aurum-accounts-signing.pfx"
+          if (Test-Path -LiteralPath $certificatePath) {
+            Remove-Item -LiteralPath $certificatePath -Force
+          }
 
       - name: Publicar la release (ya con todos los archivos subidos)
         shell: bash

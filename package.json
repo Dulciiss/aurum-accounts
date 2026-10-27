@@ -12,6 +12,7 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win --publish never",
+    "build:signed": "node scripts/require-signing-cert.js && electron-builder --win --publish never",
     "release": "electron-builder --win --publish always",
     "build:all": "electron-builder -w -m -l"
   },
