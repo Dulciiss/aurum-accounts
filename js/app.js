@@ -32,6 +32,7 @@
             language: getSystemLanguage(),
             launchAtStartup: false,
             startMinimized: false,
+            christmasTheme: false,
             autoRefresh: true,
             refreshMinutes: 15,          // 900 s, como hasta ahora
             loginMode: 'riotClient',     // 'riotClient' | 'previousWindow'
@@ -48,7 +49,11 @@
             trayShortcut: 'Control+Alt+A',
             trayHintShown: false,            // ya se avisó (una vez) de que la app sigue en la bandeja
             viewMode: 'grid',
-            rankChangeNotifications: true
+            activeView: 'accounts',
+            friendRivals: [],
+            friendsDesktopNotifications: false,
+            rankChangeNotifications: true,
+            desktopRankNotifications: false
         };
 
         function loadSettings() {
@@ -56,6 +61,25 @@
                 if (fs.existsSync(settingsPath)) {
                     const loaded = { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) };
                     loaded.viewMode = loaded.viewMode === 'list' ? 'list' : 'grid';
+                    loaded.activeView = loaded.activeView === 'friends' ? 'friends' : 'accounts';
+                    loaded.friendRivals = Array.isArray(loaded.friendRivals) ? loaded.friendRivals
+                        .filter(friend => friend && typeof friend.riotId === 'string' && friend.riotId.trim())
+                        .map(friend => ({
+                            id: typeof friend.id === 'string' && friend.id ? friend.id : newAccountId(),
+                            riotId: friend.riotId.trim(),
+                            region: typeof friend.region === 'string' ? friend.region.toLowerCase() : 'euw',
+                            relation: friend.relation === 'rival' ? 'rival' : 'friend',
+                            note: typeof friend.note === 'string' ? friend.note.slice(0, 120) : '',
+                            soloq: friend.soloq || null,
+                            flex: friend.flex || null,
+                            lpHistory: Array.isArray(friend.lpHistory) ? friend.lpHistory : [],
+                            lpHistoryFlex: Array.isArray(friend.lpHistoryFlex) ? friend.lpHistoryFlex : [],
+                            opggStatus: friend.opggStatus || null,
+                            opggUpdatedAt: Number.isFinite(friend.opggUpdatedAt) ? friend.opggUpdatedAt : null
+                        })) : [];
+                    loaded.friendsDesktopNotifications = loaded.friendsDesktopNotifications === true;
+                    loaded.christmasTheme = loaded.christmasTheme === true;
+                    loaded.desktopRankNotifications = loaded.desktopRankNotifications === true;
                     return loaded;
                 }
             } catch (e) {
@@ -72,6 +96,12 @@
 
         let settings = loadSettings();
         let currentLang = translations[settings.language] ? settings.language : getSystemLanguage();
+
+        function applyChristmasTheme() {
+            document.body.classList.toggle('christmas-theme', settings.christmasTheme);
+        }
+
+        applyChristmasTheme();
 
         function t(key) {
             return translations[currentLang][key] || translations['en'][key] || key;
@@ -115,6 +145,7 @@
             document.documentElement.lang = currentLang;
             refreshWindowLabels();
             applyViewMode(settings.viewMode);
+            applyMainView(settings.activeView);
             document.querySelectorAll('.lang-option').forEach(btn => {
                 if (btn.getAttribute('data-lang') === currentLang) {
                     btn.classList.add('active');
@@ -297,6 +328,7 @@
         let trayAccountsCache = null;   // última lista de cuentas leída
         const rankStatsContainer = document.getElementById('rank-stats-container');
         const autoRefreshTimerLabel = document.getElementById('auto-refresh-timer');
+        const mainViewTabs = document.querySelectorAll('[data-main-view]');
         let activeClientAccountId = null;
         let latestClientSnapshot = null;
         let clientSyncBusy = false;
@@ -316,6 +348,33 @@
             viewToggle.title = label;
             viewToggle.setAttribute('aria-label', label);
         }
+
+        function applyMainView(view) {
+            const activeView = view === 'friends' ? 'friends' : 'accounts';
+            document.body.classList.toggle('friends-view-active', activeView === 'friends');
+            mainViewTabs.forEach(button => {
+                const selected = button.dataset.mainView === activeView;
+                button.classList.toggle('active', selected);
+                button.setAttribute('aria-pressed', String(selected));
+            });
+            document.querySelectorAll('.accounts-only-control').forEach(control => {
+                control.hidden = activeView === 'friends';
+            });
+            if (searchInput) {
+                searchInput.placeholder = t(activeView === 'friends' ? 'friendsSearchPlaceholder' : 'searchPlaceholder');
+            }
+            if (activeView === 'accounts') applyViewMode(settings.viewMode);
+            else mainContent.classList.remove('compact-list');
+        }
+
+        mainViewTabs.forEach(button => button.addEventListener('click', () => {
+            const nextView = button.dataset.mainView === 'friends' ? 'friends' : 'accounts';
+            if (settings.activeView === nextView) return;
+            settings.activeView = nextView;
+            saveSettings();
+            applyMainView(nextView);
+            loadAccounts();
+        }));
 
         viewToggle.addEventListener('click', () => {
             settings.viewMode = settings.viewMode === 'list' ? 'grid' : 'list';
@@ -558,6 +617,8 @@
                 if (!Array.isArray(acc.tags) || JSON.stringify(acc.tags) !== JSON.stringify(tags)) { acc.tags = tags; changed = true; }
                 const history = normalizeLpHistory(acc.lpHistory);
                 if (!Array.isArray(acc.lpHistory) || JSON.stringify(acc.lpHistory) !== JSON.stringify(history)) { acc.lpHistory = history; changed = true; }
+                const flexHistory = normalizeLpHistory(acc.lpHistoryFlex);
+                if (!Array.isArray(acc.lpHistoryFlex) || JSON.stringify(acc.lpHistoryFlex) !== JSON.stringify(flexHistory)) { acc.lpHistoryFlex = flexHistory; changed = true; }
                 const group = typeof acc.group === 'string' ? acc.group.trim() : '';
                 if (acc.group !== group) { acc.group = group; changed = true; }
                 if (typeof acc.order !== 'number' || !Number.isFinite(acc.order)) { acc.order = index; changed = true; }
@@ -692,7 +753,7 @@
             return { tier, lp, minLp: 0, maxLp: 100 };
         }
 
-        // Devuelve { notFound } o { level, soloq, flex, lastSeason } o null si no se pudo leer
+        // Devuelve { notFound } o { level, soloq, flex, flexRankAvailable, lastSeason } o null si no se pudo leer
         function parseOpggProfile(html, acc) {
             const text = htmlToText(html);
             const { name, tag } = splitRiotId(acc.riotId);
@@ -754,7 +815,7 @@
             }
 
             if (!soloq && !flexM && !level) return null; // no se reconoce la página
-            return { level, soloq: soloq || EMPTY_QUEUE(), flex, lastSeason, ladder, topChampions };
+            return { level, soloq: soloq || EMPTY_QUEUE(), flex, flexRankAvailable: !!flexM, lastSeason, ladder, topChampions };
         }
 
         const tierIcons = {
@@ -828,14 +889,87 @@
             else showNeonNotification(message);
         }
 
+        async function ensureDesktopNotificationPermission() {
+            const NotificationApi = window.Notification;
+            if (!NotificationApi) {
+                showNeonNotification(t('desktopNotificationsUnsupported'));
+                return false;
+            }
+            if (NotificationApi.permission === 'granted') return true;
+            if (NotificationApi.permission === 'denied') {
+                showNeonNotification(t('desktopNotificationsPermissionDenied'));
+                return false;
+            }
+
+            try {
+                const permission = await NotificationApi.requestPermission();
+                if (permission === 'granted') return true;
+                showNeonNotification(t('desktopNotificationsPermissionDenied'));
+                return false;
+            } catch (err) {
+                console.error('No se pudo solicitar permiso para notificaciones de escritorio', err);
+                showNeonNotification(t('desktopNotificationsPermissionDenied'));
+                return false;
+            }
+        }
+
+        function desktopRankChangeBody(change, index) {
+            const hiddenIds = settings.streamerMode && settings.streamerIds;
+            const hiddenLogin = settings.streamerMode && settings.streamerLogin;
+            const hiddenDesc = settings.streamerMode && settings.streamerDescs;
+            const account = change.account;
+            const name = (account.riotId && !hiddenIds ? account.riotId : '')
+                || (account.loginUser && !hiddenLogin ? account.loginUser : '')
+                || (account.description && !hiddenDesc ? account.description : '')
+                || t('trayAccountN').replace('{n}', String(change.accountIndex ?? index + 1));
+            const rankChanged = change.previous.rankOrder !== change.current.rankOrder;
+            const rankHidden = settings.streamerMode && settings.streamerIds;
+            const details = [];
+
+            if (!rankHidden) {
+                const lpDelta = change.current.lp - change.previous.lp;
+                if (lpDelta !== 0) details.push(`${lpDelta > 0 ? '+' : ''}${lpDelta} LP`);
+            }
+            if (rankChanged) {
+                details.push(t(change.current.rankOrder > change.previous.rankOrder ? 'desktopRankUp' : 'desktopRankDown'));
+            }
+            if (!details.length) details.push(t('desktopLpChanged'));
+
+            const queue = change.queue === 'flex' ? t('flex') : 'Solo/Duo';
+            const rank = rankHidden ? '' : ` · ${prettyTier(change.current.tier)} (${change.current.lp} LP)`;
+            return t('desktopRankChangeBody')
+                .replace('{name}', name)
+                .replace('{change}', details.join(' · '))
+                .replace('{queue}', queue)
+                .replace('{rank}', rank);
+        }
+
+        function notifyDesktopRankChanges(changes) {
+            const enabledChanges = changes.filter(change => change.isFriend
+                ? settings.friendsDesktopNotifications
+                : settings.desktopRankNotifications);
+            if (!enabledChanges.length) return;
+            const NotificationApi = window.Notification;
+            if (!NotificationApi || NotificationApi.permission !== 'granted') {
+                console.warn('No se enviaron notificaciones de escritorio: el permiso no está concedido.');
+                return;
+            }
+
+            enabledChanges.forEach((change, index) => {
+                try {
+                    new NotificationApi('Aurum Accounts', { body: desktopRankChangeBody(change, index) });
+                } catch (err) {
+                    console.error('No se pudo mostrar una notificación de escritorio', err);
+                }
+            });
+        }
+
         function formatHistoryTimestamp(timestamp) {
             return new Date(timestamp).toLocaleString(currentLang, { dateStyle: 'short', timeStyle: 'short' });
         }
 
-        function renderLpHistory(account) {
-            const history = normalizeLpHistory(account.lpHistory).slice(-CHART_LP_HISTORY);
-            if (!history.length) return '';
-
+        function renderLpHistoryChart(history) {
+            if (!history.length) return '<div class="lp-history-empty">—</div>';
             const width = 300, height = 68, inset = 6;
             const values = history.map(point => point.score);
             const min = Math.min(...values), max = Math.max(...values);
@@ -856,9 +990,9 @@
             const first = history[0];
             const last = history[history.length - 1];
 
-            return `<div class="lp-history card-section sens sens-id" aria-label="${escapeHtml(t('lpHistoryTitle'))}">
-                <div class="lp-history-head">
-                    <span class="sec-label">${escapeHtml(t('lpHistoryTitle'))} · ${history.length}</span>
+            return `<div class="lp-history-chart-wrap">
+                <div class="lp-history-summary">
+                    <span class="lp-history-count">${history.length}</span>
                     <span class="lp-history-trend ${trendClass}">${escapeHtml(trendText)}</span>
                 </div>
                 <svg class="lp-history-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(t('lpHistoryChartLabel').replace('{count}', history.length))}">
@@ -867,6 +1001,25 @@
                     ${chartPoints}
                 </svg>
                 <div class="lp-history-dates"><span>${escapeHtml(formatHistoryTimestamp(first.timestamp))}</span><span>${escapeHtml(formatHistoryTimestamp(last.timestamp))}</span></div>
+            </div>`;
+        }
+
+        function renderLpHistory(account) {
+            const soloHistory = normalizeLpHistory(account.lpHistory).slice(-CHART_LP_HISTORY);
+            const flexHistory = normalizeLpHistory(account.lpHistoryFlex).slice(-CHART_LP_HISTORY);
+            if (!soloHistory.length && !flexHistory.length) return '';
+            const initialQueue = soloHistory.length ? 'solo' : 'flex';
+
+            return `<div class="lp-history card-section sens sens-id" aria-label="${escapeHtml(t('lpHistoryTitle'))}">
+                <div class="lp-history-head">
+                    <span class="sec-label">${escapeHtml(t('lpHistoryTitle'))}</span>
+                    <div class="lp-history-tabs" role="group" aria-label="${escapeHtml(t('lpHistoryTitle'))}">
+                        <button type="button" class="lp-history-tab ${initialQueue === 'solo' ? 'active' : ''}" aria-pressed="${initialQueue === 'solo'}" data-lp-queue="solo">Solo/Duo</button>
+                        <button type="button" class="lp-history-tab ${initialQueue === 'flex' ? 'active' : ''}" aria-pressed="${initialQueue === 'flex'}" data-lp-queue="flex">${escapeHtml(t('flex'))}</button>
+                    </div>
+                </div>
+                <div class="lp-history-panel" data-lp-history-panel="solo" ${initialQueue === 'flex' ? 'hidden' : ''}>${renderLpHistoryChart(soloHistory)}</div>
+                <div class="lp-history-panel" data-lp-history-panel="flex" ${initialQueue === 'solo' ? 'hidden' : ''}>${renderLpHistoryChart(flexHistory)}</div>
             </div>`;
         }
 
@@ -1855,6 +2008,18 @@
             const fixBtn = newCard.querySelector('.nf-fix');
             if (fixBtn) fixBtn.addEventListener('click', () => openDrawer('edit', account));
 
+            newCard.querySelectorAll('.lp-history-tab').forEach(button => button.addEventListener('click', () => {
+                const queue = button.dataset.lpQueue;
+                newCard.querySelectorAll('.lp-history-tab').forEach(tab => {
+                    const selected = tab.dataset.lpQueue === queue;
+                    tab.classList.toggle('active', selected);
+                    tab.setAttribute('aria-pressed', String(selected));
+                });
+                newCard.querySelectorAll('.lp-history-panel').forEach(panel => {
+                    panel.hidden = panel.dataset.lpHistoryPanel !== queue;
+                });
+            }));
+
             newCard.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 openCardMenu(e.clientX, e.clientY, account);
@@ -2021,6 +2186,159 @@
             loadAccounts();
         }
 
+        function renderFriendCard(friend) {
+            const card = document.createElement('article');
+            card.className = 'account-card friend-card';
+            card.dataset.friendId = friend.id;
+            const solo = friend.soloq;
+            const flex = friend.flex;
+            const friendRegion = REGION_LIST.find(region => region.code === friend.region)
+                || { code: friend.region, label: regionLabel(friend.region) };
+            const soloHistory = normalizeLpHistory(friend.lpHistory).slice(-CHART_LP_HISTORY);
+            const flexHistory = normalizeLpHistory(friend.lpHistoryFlex).slice(-CHART_LP_HISTORY);
+            const initialQueue = soloHistory.length || !flexHistory.length ? 'solo' : 'flex';
+            const rankSummary = (queue, label) => {
+                if (!queue || !queue.tier) return `<div class="friend-rank-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(t('unranked'))}</strong></div>`;
+                return `<div class="friend-rank-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(prettyTier(queue.tier))} · ${Number(queue.lp) || 0} LP</strong></div>`;
+            };
+            const historyMarkup = soloHistory.length || flexHistory.length ? `
+                <section class="lp-history card-section" aria-label="${escapeHtml(t('lpHistoryTitle'))}">
+                    <div class="lp-history-head">
+                        <span class="sec-label">${escapeHtml(t('lpHistoryTitle'))}</span>
+                        <div class="lp-history-tabs" role="group" aria-label="${escapeHtml(t('lpHistoryTitle'))}">
+                            <button type="button" class="lp-history-tab ${initialQueue === 'solo' ? 'active' : ''}" aria-pressed="${initialQueue === 'solo'}" data-lp-queue="solo">Solo/Duo</button>
+                            <button type="button" class="lp-history-tab ${initialQueue === 'flex' ? 'active' : ''}" aria-pressed="${initialQueue === 'flex'}" data-lp-queue="flex">${escapeHtml(t('flex'))}</button>
+                        </div>
+                    </div>
+                    <div class="lp-history-panel" data-lp-history-panel="solo" ${initialQueue === 'flex' ? 'hidden' : ''}>${renderLpHistoryChart(soloHistory)}</div>
+                    <div class="lp-history-panel" data-lp-history-panel="flex" ${initialQueue === 'solo' ? 'hidden' : ''}>${renderLpHistoryChart(flexHistory)}</div>
+                </section>` : '';
+
+            card.innerHTML = `
+                <header class="friend-card-head">
+                    <div>
+                        <div class="friend-card-name">${escapeHtml(friend.riotId)}</div>
+                        <div class="friend-card-meta">${escapeHtml(regionName(friendRegion))} · ${escapeHtml(t(friend.relation === 'rival' ? 'friendTypeRival' : 'friendTypeFriend'))}</div>
+                    </div>
+                    <button type="button" class="friend-remove" data-remove-friend="${escapeHtml(friend.id)}" aria-label="${escapeHtml(t('friendRemove'))}" title="${escapeHtml(t('friendRemove'))}">×</button>
+                </header>
+                <div class="friend-ranks">
+                    ${rankSummary(solo, 'Solo/Duo')}
+                    ${rankSummary(flex, t('flex'))}
+                </div>
+                ${historyMarkup}
+                <label class="friend-note-label" for="friend-note-${escapeHtml(friend.id)}">${escapeHtml(t('friendNote'))}</label>
+                <input class="friend-note-input" id="friend-note-${escapeHtml(friend.id)}" type="text" maxlength="120" data-friend-note="${escapeHtml(friend.id)}" value="${escapeHtml(friend.note || '')}" placeholder="${escapeHtml(t('friendNotePlaceholder'))}">
+                ${friend.opggStatus === 'notFound' ? `<div class="friend-profile-status">${escapeHtml(t('friendsProfileNotFound'))}</div>` : ''}
+            `;
+
+            card.querySelectorAll('.lp-history-tab').forEach(button => button.addEventListener('click', () => {
+                const queue = button.dataset.lpQueue;
+                card.querySelectorAll('.lp-history-tab').forEach(tab => {
+                    const selected = tab.dataset.lpQueue === queue;
+                    tab.classList.toggle('active', selected);
+                    tab.setAttribute('aria-pressed', String(selected));
+                });
+                card.querySelectorAll('.lp-history-panel').forEach(panel => {
+                    panel.hidden = panel.dataset.lpHistoryPanel !== queue;
+                });
+            }));
+            card.querySelector('[data-remove-friend]').addEventListener('click', () => {
+                settings.friendRivals = settings.friendRivals.filter(entry => entry.id !== friend.id);
+                saveSettings();
+                loadAccounts();
+            });
+            card.querySelector('[data-friend-note]').addEventListener('change', event => {
+                friend.note = event.target.value.trim().slice(0, 120);
+                saveSettings();
+            });
+            return card;
+        }
+
+        function renderFriendsView() {
+            const friends = settings.friendRivals || [];
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            const filteredFriends = friends.filter(friend =>
+                [friend.riotId, friend.note, friend.region, friend.relation].filter(Boolean).join(' ').toLowerCase().includes(searchTerm)
+            );
+            const regionOptions = REGION_LIST.map(region =>
+                `<option value="${escapeHtml(region.code)}">${escapeHtml(region.label)} — ${escapeHtml(regionName(region))}</option>`
+            ).join('');
+
+            mainContent.innerHTML = `
+                <section class="friends-view">
+                    <header class="friends-view-header">
+                        <div>
+                            <h1>${escapeHtml(t('friendsTitle'))}</h1>
+                            <p>${escapeHtml(t('friendsSubtitle'))}</p>
+                        </div>
+                    </header>
+                    <form class="friend-add-form" id="friend-add-form">
+                        <label><span>${escapeHtml(t('friendRiotId'))}</span><input id="friend-riot-id" type="text" maxlength="100" required placeholder="${escapeHtml(t('friendRiotIdPlaceholder'))}"></label>
+                        <label><span>${escapeHtml(t('friendRegion'))}</span><select id="friend-region">${regionOptions}</select></label>
+                        <label><span>${escapeHtml(t('friendRelationship'))}</span><select id="friend-relation">
+                            <option value="friend">${escapeHtml(t('friendTypeFriend'))}</option>
+                            <option value="rival">${escapeHtml(t('friendTypeRival'))}</option>
+                        </select></label>
+                        <label><span>${escapeHtml(t('friendNote'))}</span><input id="friend-note" type="text" maxlength="120" placeholder="${escapeHtml(t('friendNotePlaceholder'))}"></label>
+                        <button class="btn-gold friend-add-button" type="submit">${escapeHtml(t('friendAdd'))}</button>
+                    </form>
+                    <label class="friends-notifications-toggle">
+                        <input type="checkbox" id="friends-desktop-notifications" ${settings.friendsDesktopNotifications ? 'checked' : ''}>
+                        <span>${escapeHtml(t('friendsDesktopNotifications'))}</span>
+                    </label>
+                    <div class="friend-card-grid" id="friend-card-grid"></div>
+                </section>`;
+
+            const grid = mainContent.querySelector('#friend-card-grid');
+            if (!filteredFriends.length) {
+                const empty = document.createElement('p');
+                empty.className = 'friends-empty';
+                empty.textContent = friends.length ? t('noResultsText') : t('friendsEmpty');
+                grid.appendChild(empty);
+            } else {
+                filteredFriends.forEach(friend => grid.appendChild(renderFriendCard(friend)));
+            }
+
+            mainContent.querySelector('#friend-add-form').addEventListener('submit', event => {
+                event.preventDefault();
+                const riotId = mainContent.querySelector('#friend-riot-id').value.trim();
+                const region = mainContent.querySelector('#friend-region').value;
+                if (!hasRiotId({ riotId })) {
+                    showNeonNotification(t('friendInvalidRiotId'));
+                    return;
+                }
+                if (settings.friendRivals.some(friend => friend.riotId.toLowerCase() === riotId.toLowerCase() && friend.region === region)) {
+                    showNeonNotification(t('friendAlreadyAdded'));
+                    return;
+                }
+                settings.friendRivals.push({
+                    id: newAccountId(),
+                    riotId,
+                    region,
+                    relation: mainContent.querySelector('#friend-relation').value === 'rival' ? 'rival' : 'friend',
+                    note: mainContent.querySelector('#friend-note').value.trim().slice(0, 120),
+                    soloq: null,
+                    flex: null,
+                    lpHistory: [],
+                    lpHistoryFlex: [],
+                    opggStatus: null,
+                    opggUpdatedAt: null
+                });
+                saveSettings();
+                loadAccounts();
+                showNeonNotification(t('friendAdded'));
+            });
+            mainContent.querySelector('#friends-desktop-notifications').addEventListener('change', async event => {
+                if (event.target.checked && !await ensureDesktopNotificationPermission()) {
+                    event.target.checked = false;
+                    return;
+                }
+                settings.friendsDesktopNotifications = event.target.checked;
+                saveSettings();
+            });
+        }
+
         function loadAccounts() {
             const allAccounts = readAccounts();
             syncTray(allAccounts);
@@ -2028,6 +2346,11 @@
             populateCategorySelect(allAccounts);
             updateRankDistribution(allAccounts);
             mainContent.innerHTML = '';
+
+            if (settings.activeView === 'friends') {
+                renderFriendsView();
+                return;
+            }
 
             if (allAccounts.length === 0) {
                 renderEmptyState();
@@ -2390,10 +2713,16 @@
         // ---------- Actualización de rangos desde OP.GG ----------
         async function refreshRanksFromOpgg() {
             const accounts = readAccounts().filter(hasRiotId);
-            if (accounts.length === 0) return;
+            const friends = (settings.friendRivals || []).filter(hasRiotId);
+            const profiles = [
+                ...accounts.map(profile => ({ profile, isFriend: false })),
+                ...friends.map(profile => ({ profile, isFriend: true }))
+            ];
+            if (profiles.length === 0) return;
 
             const results = new Map();
-            for (const acc of accounts) {
+            for (const { profile: acc, isFriend } of profiles) {
+                const resultKey = `${isFriend ? 'friend' : 'account'}:${acc.id}`;
                 try {
                     const html = await httpGetText(opggUrl(acc));
                     const data = parseOpggProfile(html, acc);
@@ -2402,15 +2731,17 @@
                         try { fs.writeFileSync(path.join(path.dirname(dataPath), 'opgg-debug.html'), html); } catch (e) { /* sin permiso */ }
                         console.warn(`OP.GG: no se pudieron leer los datos de ${acc.riotId} (página guardada en opgg-debug.html)`);
                     } else if (data.notFound) {
-                        results.set(acc.id, { riotId: acc.riotId, region: acc.region, opggStatus: 'notFound' });
+                        results.set(resultKey, { riotId: acc.riotId, region: acc.region, opggStatus: 'notFound' });
                     } else {
                         let recentGames = null;
-                        try { recentGames = await fetchRecentGames(acc); }
-                        catch (e) { console.warn(`OP.GG MCP: ${acc.riotId}:`, e.message); }
-                        results.set(acc.id, { riotId: acc.riotId, region: acc.region, opggStatus: 'ok', opggUpdatedAt: Date.now(), ...data, recentGames });
+                        if (!isFriend) {
+                            try { recentGames = await fetchRecentGames(acc); }
+                            catch (e) { console.warn(`OP.GG MCP: ${acc.riotId}:`, e.message); }
+                        }
+                        results.set(resultKey, { riotId: acc.riotId, region: acc.region, opggStatus: 'ok', opggUpdatedAt: Date.now(), ...data, recentGames });
                     }
                 } catch (e) {
-                    if (e.statusCode === 404) results.set(acc.id, { riotId: acc.riotId, region: acc.region, opggStatus: 'notFound' });
+                    if (e.statusCode === 404) results.set(resultKey, { riotId: acc.riotId, region: acc.region, opggStatus: 'notFound' });
                     else console.error(`OP.GG: error consultando ${acc.riotId}:`, e.message);
                 }
                 await new Promise(r => setTimeout(r, 1200)); // no saturar OP.GG
@@ -2420,8 +2751,9 @@
             // Se guarda sobre lo que haya en disco; si la cuenta se borró o cambió de Riot ID mientras tanto, se ignora
             const disk = readAccounts();
             const rankChanges = [];
-            disk.forEach(a => {
-                const r = results.get(a.id);
+            const desktopRankChanges = [];
+            disk.forEach((a, accountIndex) => {
+                const r = results.get(`account:${a.id}`);
                 if (!r || a.riotId !== r.riotId || a.region !== r.region) return;
                 a.opggStatus = r.opggStatus;
                 if (r.opggStatus === 'ok') {
@@ -2431,9 +2763,24 @@
                     if (previous && previous.rankOrder !== current.rankOrder) {
                         rankChanges.push({ account: a, previous, current });
                     }
+                    if (previous && (previous.rankOrder !== current.rankOrder || previous.lp !== current.lp)) {
+                        desktopRankChanges.push({ account: a, accountIndex, queue: 'solo', previous, current });
+                    }
                     if (!previous || previous.rankOrder !== current.rankOrder || previous.lp !== current.lp) {
                         history.push(current);
                         a.lpHistory = history.slice(-MAX_LP_HISTORY);
+                    }
+                    if (r.flexRankAvailable) {
+                        const flexHistory = normalizeLpHistory(a.lpHistoryFlex);
+                        const previousFlex = flexHistory.length ? flexHistory[flexHistory.length - 1] : null;
+                        const currentFlex = createRankSnapshot(r.flex, r.opggUpdatedAt);
+                        if (previousFlex && (previousFlex.rankOrder !== currentFlex.rankOrder || previousFlex.lp !== currentFlex.lp)) {
+                            desktopRankChanges.push({ account: a, accountIndex, queue: 'flex', previous: previousFlex, current: currentFlex });
+                        }
+                        if (!previousFlex || previousFlex.rankOrder !== currentFlex.rankOrder || previousFlex.lp !== currentFlex.lp) {
+                            flexHistory.push(currentFlex);
+                            a.lpHistoryFlex = flexHistory.slice(-MAX_LP_HISTORY);
+                        }
                     }
                     if (r.level) a.level = r.level;
                     a.soloq = r.soloq;
@@ -2445,10 +2792,46 @@
                     if (r.recentGames) a.recentGames = r.recentGames; // si falla, se conservan las anteriores
                 }
             });
-            writeAccounts(disk);
+            let friendsChanged = false;
+            settings.friendRivals.forEach((friend, friendIndex) => {
+                const r = results.get(`friend:${friend.id}`);
+                if (!r || friend.riotId !== r.riotId || friend.region !== r.region) return;
+                friend.opggStatus = r.opggStatus;
+                friendsChanged = true;
+                if (r.opggStatus !== 'ok') return;
+
+                const history = normalizeLpHistory(friend.lpHistory);
+                const previous = history.length ? history[history.length - 1] : null;
+                const current = createRankSnapshot(r.soloq, r.opggUpdatedAt);
+                if (previous && (previous.rankOrder !== current.rankOrder || previous.lp !== current.lp)) {
+                    desktopRankChanges.push({ account: friend, accountIndex: friendIndex, queue: 'solo', previous, current, isFriend: true });
+                }
+                if (!previous || previous.rankOrder !== current.rankOrder || previous.lp !== current.lp) {
+                    history.push(current);
+                    friend.lpHistory = history.slice(-MAX_LP_HISTORY);
+                }
+                if (r.flexRankAvailable) {
+                    const flexHistory = normalizeLpHistory(friend.lpHistoryFlex);
+                    const previousFlex = flexHistory.length ? flexHistory[flexHistory.length - 1] : null;
+                    const currentFlex = createRankSnapshot(r.flex, r.opggUpdatedAt);
+                    if (previousFlex && (previousFlex.rankOrder !== currentFlex.rankOrder || previousFlex.lp !== currentFlex.lp)) {
+                        desktopRankChanges.push({ account: friend, accountIndex: friendIndex, queue: 'flex', previous: previousFlex, current: currentFlex, isFriend: true });
+                    }
+                    if (!previousFlex || previousFlex.rankOrder !== currentFlex.rankOrder || previousFlex.lp !== currentFlex.lp) {
+                        flexHistory.push(currentFlex);
+                        friend.lpHistoryFlex = flexHistory.slice(-MAX_LP_HISTORY);
+                    }
+                }
+                friend.soloq = r.soloq;
+                friend.flex = r.flex;
+                friend.opggUpdatedAt = r.opggUpdatedAt;
+            });
+            if ([...results.keys()].some(key => key.startsWith('account:'))) writeAccounts(disk);
+            if (friendsChanged) saveSettings();
             loadAccounts();
             showNeonNotification(t('syncMsg'));
             notifyRankChanges(rankChanges);
+            notifyDesktopRankChanges(desktopRankChanges);
         }
 
         // ---------- Panel lateral: añadir / editar cuenta ----------
@@ -2669,8 +3052,10 @@
         const setLanguageSel = document.getElementById('set-language');
         const setLaunchStartup = document.getElementById('set-launch-startup');
         const setStartMinimized = document.getElementById('set-start-minimized');
+        const setChristmasTheme = document.getElementById('set-christmas-theme');
         const setAutoRefresh = document.getElementById('set-auto-refresh');
         const setRankNotifications = document.getElementById('set-rank-notifications');
+        const setDesktopNotifications = document.getElementById('set-desktop-notifications');
         const setRefreshMinutes = document.getElementById('set-refresh-minutes');
         const setLaunchGame = document.getElementById('set-launch-game');
         const intervalBlock = document.getElementById('interval-block');
@@ -2701,8 +3086,10 @@
             setLanguageSel.value = currentLang;
             setLaunchStartup.checked = settings.launchAtStartup;
             setStartMinimized.checked = settings.startMinimized;
+            setChristmasTheme.checked = settings.christmasTheme;
             setAutoRefresh.checked = settings.autoRefresh;
             setRankNotifications.checked = settings.rankChangeNotifications;
+            setDesktopNotifications.checked = settings.desktopRankNotifications;
             setRefreshMinutes.value = settings.refreshMinutes;
             setRefreshMinutes.classList.remove('invalid');
             highlightPreset(settings.refreshMinutes);
@@ -2765,6 +3152,11 @@
         });
         setAutoRefresh.addEventListener('change', syncDependentControls);
         setLaunchStartup.addEventListener('change', syncDependentControls);
+        setDesktopNotifications.addEventListener('change', async () => {
+            if (setDesktopNotifications.checked && !(await ensureDesktopNotificationPermission())) {
+                setDesktopNotifications.checked = false;
+            }
+        });
 
         btnSaveSettings.addEventListener('click', () => {
             const minutes = Number(setRefreshMinutes.value);
@@ -2782,8 +3174,10 @@
                 language: setLanguageSel.value,
                 launchAtStartup: setLaunchStartup.checked,
                 startMinimized: setStartMinimized.checked,
+                christmasTheme: setChristmasTheme.checked,
                 autoRefresh: setAutoRefresh.checked,
                 rankChangeNotifications: setRankNotifications.checked,
+                desktopRankNotifications: setDesktopNotifications.checked,
                 refreshMinutes: minutes,
                 loginMode: checkedMode ? checkedMode.value : 'riotClient',
                 launchGame: setLaunchGame.checked,
@@ -2799,6 +3193,7 @@
                 trayHintShown: settings.trayHintShown
             };
             saveSettings();
+            applyChristmasTheme();
             applyStreamerMode();
             pushTrayConfig({ warn: true });
 
@@ -2807,6 +3202,7 @@
             }
             if (prev.refreshMinutes !== settings.refreshMinutes || prev.autoRefresh !== settings.autoRefresh) {
                 secondsRemaining = getRefreshSeconds();
+                updateUpdatePillRing();
             }
             if (settings.language !== currentLang) {
                 currentLang = settings.language;
@@ -3141,7 +3537,9 @@
         const updateActionBtn = document.getElementById('update-action');
         const updatePill = document.getElementById('update-pill');
         const updatePillVersion = document.getElementById('update-pill-version');
-        let updateDismissed = true;   // true = no hay que enseñar la ventana (aún no toca o ya la pospuso)
+        const updatePillRingProgress = document.querySelector('.tb-update-pill-ring-progress');
+const RING_CIRCUMFERENCE = 2 * Math.PI * 9; // 56.55
+let updateDismissed = true;   // true = no hay que enseñar la ventana (aún no toca o ya la pospuso)
         let updateWanted = false;     // el usuario ya pidió actualizar (para enseñar el resultado o el error)
         let updateModalTimer = null;
 
@@ -3360,6 +3758,28 @@
             } else {
                 autoRefreshTimerLabel.textContent = `${t('nextIn')} ${secondsRemaining}${t('unitSec')}`;
             }
+            updateUpdatePillRing();
+            updateAutoRefreshProgressRing();
+        }
+
+        function updateUpdatePillRing() {
+            if (!updatePillRingProgress) return;
+            const totalSeconds = getRefreshSeconds();
+            if (totalSeconds <= 0) return;
+            const progress = secondsRemaining / totalSeconds; // 1 = lleno (acaba de refrescar), 0 = vacío (va a refrescar)
+            const offset = RING_CIRCUMFERENCE * (1 - progress); // se vacía conforme avanza el tiempo
+            updatePillRingProgress.style.strokeDashoffset = offset;
+            // Opacidad: visible cuando hay tiempo, más tenue cuando falta poco
+            updatePillRingProgress.style.strokeOpacity = progress < 0.05 ? '0.3' : '1';
+        }
+
+        function updateAutoRefreshProgressRing() {
+            const progressCircle = document.getElementById('auto-refresh-progress-circle');
+            if (!progressCircle) return;
+            const totalSeconds = getRefreshSeconds();
+            if (totalSeconds <= 0) return;
+            const progress = Math.max(0, Math.min(1, secondsRemaining / totalSeconds));
+            progressCircle.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress);
         }
 
         async function runRefresh() {
@@ -3374,6 +3794,7 @@
                 isRefreshing = false;
                 secondsRemaining = getRefreshSeconds();
                 updateTimerLabel();
+                updateUpdatePillRing();
             }
         }
 
@@ -3393,3 +3814,4 @@
         }, 1000);
 
         updateTimerLabel();
+        updateUpdatePillRing();

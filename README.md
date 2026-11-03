@@ -22,11 +22,14 @@ Aplicación de escritorio (Electron) para guardar todas tus cuentas de League of
 - **Inicio de sesión automático** en el Riot Client con un clic, en dos modos: abrir el Riot Client y escribir allí las credenciales, o escribirlas en la ventana anterior.
 - **Abrir el juego** automáticamente tras iniciar sesión (opcional, en Ajustes).
 - **Sincronización con el cliente de League of Legends**: detecta cada 5 segundos la cuenta activa y actualiza Riot ID, región, nivel, avatar y rango/LP cuando están disponibles. Si no está guardada, puedes importar la ficha sin credenciales y añadirlas después.
-- **Rangos y estadísticas desde OP.GG**: campeones más jugados y últimas partidas. Se actualizan solos cada 15 minutos por defecto (configurable de 5 a 1440 minutos).
+- **Rangos y estadísticas desde OP.GG**: campeones más jugados y últimas partidas. Se actualizan solos cada 15 minutos por defecto (configurable de 5 a 1440 minutos), acompañados de una **barra circular de recarga** animada.
 - **Buscar, filtrar por región y ordenar** por rango, nombre u orden manual.
 - **Organizar cuentas** con etiquetas múltiples y grupos personalizados; filtra por grupos o etiquetas, y reordena manualmente con los controles de subir/bajar.
 - **Vista compacta en lista** además de las tarjetas. La vista elegida se conserva al volver a abrir la aplicación.
-- **Historial de Solo/Dúo** con gráfica del progreso, guardado local de hasta 180 cambios y avisos en la app o en Windows al subir o bajar de división/rango. La primera consulta establece la referencia y no genera avisos.
+- **Historial de Solo/Dúo y Flex** con gráfica del progreso, guardado local de hasta 180 cambios y avisos en la app o en Windows al subir o bajar de división/rango. La primera consulta establece la referencia y no genera avisos.
+- **Notificaciones de escritorio nativas**: avisos opcionales en el sistema operativo para enterarte al instante de los cambios de LP o de división tanto en tus cuentas como en tus amigos.
+- **Sección de Amigos y Rivales**: vista independiente para realizar un seguimiento de perfiles externos mediante su Riot ID, con notas personalizadas, historiales propios e integración de actualización con OP.GG.
+- **Tema navideño opcional**: un toque festivo con detalles en las tarjetas y un sutil paisaje SVG de pinos nevados anclado en la parte inferior.
 - **Diagnóstico seguro** desde Ajustes: copia al portapapeles un informe Markdown de versiones, arquitectura y servicios, sin nombres de cuenta, credenciales ni rutas locales.
 - **Añadir cuentas** una a una o **en bloque** (`usuario:contraseña:región:RiotID#TAG`; región y Riot ID son opcionales).
 - **Importar y exportar** tu lista de cuentas.
@@ -131,13 +134,16 @@ A desktop app (Electron) to keep all your League of Legends accounts in one plac
 - **Automatic sign-in** to the Riot Client with one click, in two modes: open the Riot Client and type the credentials there, or type them into the previous window.
 - **Launch the game** automatically after signing in (optional, in Settings).
 - **League of Legends client sync**: checks every 5 seconds for the active account and updates its Riot ID, region, level, avatar and rank/LP when available. If it is not saved, you can import a profile without credentials and add them later.
-- **Ranks and stats from OP.GG**: most played champions and recent games. They refresh automatically every 15 minutes by default (configurable from 5 to 1440 minutes).
+- **Ranks and stats from OP.GG**: most played champions and recent games. They refresh automatically every 15 minutes by default (configurable from 5 to 1440 minutes), accompanied by an animated **circular auto-refresh progress bar**.
 - **Search, filter by region and sort** by rank, name or manual order.
 - **Organize accounts** with multiple tags and custom groups; filter by groups or tags and manually reorder accounts with the move up/down controls.
 - **Compact list view** alongside the card grid. The selected view is restored when the app is reopened.
-- **Solo/Duo rank history** with a progress chart, up to 180 saved changes and in-app or Windows alerts when a division/tier changes. The first reading sets the baseline without an alert.
+- **Solo/Duo and Flex rank history** with a progress chart, up to 180 saved changes and in-app or Windows alerts when a division/tier changes. The first reading sets the baseline without an alert.
+- **Native desktop notifications**: optional OS-level alerts to instantly notify you of LP or tier promotions/demotions across your accounts and friends.
+- **Friends & Rivals section**: an independent view to monitor external profiles via Riot ID, featuring custom notes, independent histories, and automated OP.GG refreshing.
+- **Optional Christmas theme**: a festive look with card decorations and a subtle snowy pine landscape SVG anchored at the bottom.
 - **Privacy-safe diagnostics** in Settings: copies a Markdown report of app/system versions, architecture and service status without account names, credentials or local paths.
-- **Add accounts** one by one or **in bulk** (`username:password:region:RiotID#TAG`; region and Riot ID are optional).
+- **Add accounts** one by one or **en bulk** (`username:password:region:RiotID#TAG`; region and Riot ID are optional).
 - **Import and export** your account list.
 - **10 languages**: Spanish, English, French, German, Portuguese, Russian, Turkish, Chinese, Japanese and Korean.
 - **Start with Windows** and **start minimized** options.
