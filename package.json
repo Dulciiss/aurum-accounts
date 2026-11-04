@@ -72,7 +72,8 @@
       "icon.ico",
       "package.json",
       "css/**/*",
-      "js/**/*"
+      "js/**/*",
+      "assets/**/*"
     ]
   }
 }

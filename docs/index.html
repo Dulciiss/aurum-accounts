@@ -133,6 +133,16 @@
         details p { margin: 0; padding: 0 20px 18px; color: var(--muted); font-size: 15px; }
 
         footer { border-top: 1px solid var(--line); padding: 36px 0 48px; color: var(--muted); font-size: 13px; text-align: center; }
+        .support-card {
+            display: flex; align-items: center; justify-content: space-between; gap: 24px;
+            max-width: 820px; margin: 0 auto 34px; padding: 22px 24px;
+            background: linear-gradient(120deg, rgba(201, 168, 92, 0.09), rgba(88, 101, 242, 0.08));
+            border: 1px solid var(--line); border-radius: 14px; text-align: left;
+        }
+        .support-card h2 { margin: 0 0 4px; font-size: 21px; text-align: left; }
+        .support-card p { margin: 0; color: var(--muted); font-size: 14px; }
+        .btn-discord { flex-shrink: 0; background: #5865f2; color: #fff; box-shadow: 0 6px 20px rgba(88, 101, 242, 0.2); }
+        .btn-discord:hover { background: #6975f5; box-shadow: 0 9px 26px rgba(88, 101, 242, 0.34); }
         footer .links { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; font-size: 14px; }
         footer .links a { color: var(--text); text-decoration: none; }
         footer .links a:hover { color: var(--gold-2); }
@@ -142,6 +152,9 @@
             .nav .link { display: none; }
             .hero { padding-top: 56px; }
             section { padding: 52px 0; }
+        }
+        @media (max-width: 560px) {
+            .support-card { align-items: flex-start; flex-direction: column; gap: 16px; padding: 20px; }
         }
         @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
     </style>
@@ -279,6 +292,18 @@
 
     <footer>
         <div class="wrap">
+            <section class="support-card" aria-labelledby="support-title">
+                <div>
+                    <h2 id="support-title" data-i="supportTitle">¿Necesitas ayuda?</h2>
+                    <p data-i="supportText">Únete a nuestro Discord para recibir soporte y hablar con la comunidad.</p>
+                </div>
+                <a class="btn btn-discord" data-discord-invite href="https://discord.gg/PEGA_AQUI_TU_INVITACION" target="_blank" rel="noopener noreferrer">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M19.7 5.4a18.7 18.7 0 0 0-4.6-1.4l-.6 1.2a17.2 17.2 0 0 0-5 0l-.6-1.2a18.7 18.7 0 0 0-4.6 1.4C1.4 9.6.6 13.7 1 17.8a18.8 18.8 0 0 0 5.7 2.9l1.2-2a12 12 0 0 1-1.9-.9l.5-.4a13.4 13.4 0 0 0 11 0l.5.4a12 12 0 0 1-1.9.9l1.2 2a18.8 18.8 0 0 0 5.7-2.9c.5-4.8-.8-8.8-3.3-12.4ZM8.8 14.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/>
+                    </svg>
+                    <span data-i="supportButton">Unirse al Discord</span>
+                </a>
+            </section>
             <div class="links">
                 <a data-repo="" href="https://github.com/Dulciiss/league-accounts-clone" target="_blank" rel="noopener" data-i="fGithub">Código en GitHub</a>
                 <a data-repo="/releases" href="https://github.com/Dulciiss/league-accounts-clone/releases" target="_blank" rel="noopener" data-i="fReleases">Todas las versiones</a>
@@ -293,10 +318,13 @@
         // ====== Ajusta aquí el repositorio si cambia de nombre ======
         const REPO = 'Dulciiss/league-accounts-clone';
         const REPO_URL = 'https://github.com/' + REPO;
+        // Pega aquí el enlace de invitación permanente del servidor de soporte.
+        const DISCORD_INVITE_URL = 'https://discord.gg/WQU82EZNtD';
 
         const T = {
             es: {
                 navFeatures: 'Características', navSecurity: 'Seguridad', navDownload: 'Descargar', navFaq: 'Preguntas',
+                supportTitle: '¿Necesitas ayuda?', supportText: 'Únete a nuestro Discord para recibir soporte y hablar con la comunidad.', supportButton: 'Unirse al Discord',
                 eyebrow: 'Gestor de cuentas de League of Legends · Windows',
                 h1: 'Todas tus cuentas, <em>a un clic.</em>',
                 lead: 'Guarda tus cuentas, mira sus rangos de un vistazo e inicia sesión automáticamente. Gratis, de código abierto y con tus contraseñas cifradas en tu propio equipo.',
@@ -334,6 +362,7 @@
             },
             en: {
                 navFeatures: 'Features', navSecurity: 'Security', navDownload: 'Download', navFaq: 'FAQ',
+                supportTitle: 'Need help?', supportText: 'Join our Discord for support and to chat with the community.', supportButton: 'Join the Discord',
                 eyebrow: 'League of Legends account manager · Windows',
                 h1: 'Every account, <em>one click away.</em>',
                 lead: 'Keep all your accounts, see their ranks at a glance and sign in automatically. Free, open source, with your passwords encrypted on your own computer.',
@@ -401,6 +430,7 @@
         const LATEST_URL = REPO_URL + '/releases/latest';
         document.querySelectorAll('[data-dl]').forEach(a => { a.href = LATEST_URL; });
         document.querySelectorAll('[data-repo]').forEach(a => { a.href = REPO_URL + a.dataset.repo; });
+        document.querySelectorAll('[data-discord-invite]').forEach(a => { a.href = DISCORD_INVITE_URL; });
 
         fetch('https://api.github.com/repos/' + REPO + '/releases/latest', { headers: { 'Accept': 'application/vnd.github+json' } })
             .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))

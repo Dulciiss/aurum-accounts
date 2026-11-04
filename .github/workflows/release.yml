@@ -87,3 +87,17 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notificar el changelog en Discord
+        shell: pwsh
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          VERSION: ${{ github.ref_name }}
+          RELEASE_URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $env:RELEASE_BODY = gh release view "$env:VERSION" --json body --jq .body
+          if ($LASTEXITCODE -ne 0) {
+            throw "No se pudieron leer las notas de la release $env:VERSION."
+          }
+          node scripts/discordWebhook.js

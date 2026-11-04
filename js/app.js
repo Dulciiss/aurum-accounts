@@ -96,9 +96,122 @@
 
         let settings = loadSettings();
         let currentLang = translations[settings.language] ? settings.language : getSystemLanguage();
+        const christmasSnow = document.getElementById('christmas-snow');
+        const christmasAudio = document.getElementById('christmas-audio');
+        const christmasAudioToggle = document.getElementById('christmas-audio-toggle');
+        const CHRISTMAS_MUSIC_PREFERENCE_KEY = 'aurum-christmas-music-muted';
+        christmasAudio.src = 'assets/audio/navidad.mp3';
+        christmasAudio.loop = true;
+        christmasAudio.preload = 'none';
+        christmasAudio.volume = 0.03;
+        let christmasMusicMuted = false;
+        let christmasMusicPlaying = false;
+        let christmasPlaybackAttempt = 0;
+        let christmasFadeFrame = null;
+        let christmasFadeId = 0;
+        const CHRISTMAS_MUSIC_VOLUME = 0.03;
+        const CHRISTMAS_AUDIO_FADE_DURATION = 500;
+
+        try {
+            christmasMusicMuted = localStorage.getItem(CHRISTMAS_MUSIC_PREFERENCE_KEY) === 'true';
+        } catch (error) {
+            console.error('No se pudo leer la preferencia de música navideña:', error);
+        }
+
+        function updateChristmasMusicButton() {
+            const labelKey = christmasMusicPlaying && !christmasMusicMuted
+                ? 'christmasMusicMute'
+                : 'christmasMusicUnmute';
+            christmasAudioToggle.setAttribute('data-i18n-title', labelKey);
+            christmasAudioToggle.setAttribute('data-i18n-aria-label', labelKey);
+            christmasAudioToggle.title = t(labelKey);
+            christmasAudioToggle.setAttribute('aria-label', t(labelKey));
+            christmasAudioToggle.setAttribute('aria-pressed', String(christmasMusicPlaying && !christmasMusicMuted));
+            christmasAudioToggle.hidden = !settings.christmasTheme;
+        }
+
+        function fadeChristmasAudio(targetVolume, pauseAtEnd = false) {
+            const fadeId = ++christmasFadeId;
+            if (christmasFadeFrame !== null) cancelAnimationFrame(christmasFadeFrame);
+
+            const initialVolume = christmasAudio.volume;
+            const startedAt = performance.now();
+            const updateVolume = (now) => {
+                if (fadeId !== christmasFadeId) return;
+                const progress = Math.min((now - startedAt) / CHRISTMAS_AUDIO_FADE_DURATION, 1);
+                christmasAudio.volume = initialVolume + (targetVolume - initialVolume) * progress;
+
+                if (progress < 1) {
+                    christmasFadeFrame = requestAnimationFrame(updateVolume);
+                    return;
+                }
+
+                christmasFadeFrame = null;
+                if (pauseAtEnd) {
+                    christmasAudio.pause();
+                    christmasAudio.currentTime = 0;
+                }
+            };
+
+            christmasFadeFrame = requestAnimationFrame(updateVolume);
+        }
+
+        function stopChristmasMusic() {
+            christmasPlaybackAttempt += 1;
+            christmasMusicPlaying = false;
+            updateChristmasMusicButton();
+            fadeChristmasAudio(0, true);
+        }
+
+        async function startChristmasMusic() {
+            if (!settings.christmasTheme || christmasMusicMuted) return;
+            const playbackAttempt = ++christmasPlaybackAttempt;
+            const shouldStartFromSilence = christmasAudio.paused;
+            if (shouldStartFromSilence) christmasAudio.volume = 0;
+            christmasAudio.muted = false;
+            await christmasAudio.play();
+            if (playbackAttempt !== christmasPlaybackAttempt || !settings.christmasTheme || christmasMusicMuted) {
+                return;
+            }
+            christmasMusicPlaying = true;
+            fadeChristmasAudio(CHRISTMAS_MUSIC_VOLUME);
+            updateChristmasMusicButton();
+        }
+
+        ipcRenderer.on('christmas:stop-music', stopChristmasMusic);
+        ipcRenderer.on('christmas:resume-music', () => {
+            if (settings.christmasTheme && !christmasMusicMuted) {
+                startChristmasMusic().catch(error => {
+                    console.warn('La reproducción navideña requiere interacción del usuario:', error);
+                });
+            }
+        });
 
         function applyChristmasTheme() {
             document.body.classList.toggle('christmas-theme', settings.christmasTheme);
+            christmasSnow.hidden = !settings.christmasTheme;
+            if (settings.christmasTheme && christmasSnow.childElementCount === 0) {
+                const snowflakeCount = 40;
+                for (let index = 0; index < snowflakeCount; index += 1) {
+                    const flake = document.createElement('span');
+                    flake.className = 'christmas-snowflake';
+                    flake.style.setProperty('--snow-x', `${Math.random() * 100}%`);
+                    flake.style.setProperty('--snow-size', `${2 + Math.random() * 4}px`);
+                    flake.style.setProperty('--snow-duration', `${5 + Math.random() * 7}s`);
+                    flake.style.setProperty('--snow-delay', `${-Math.random() * 12}s`);
+                    flake.style.setProperty('--snow-drift', `${-35 + Math.random() * 70}px`);
+                    christmasSnow.appendChild(flake);
+                }
+            }
+            updateChristmasMusicButton();
+
+            if (!settings.christmasTheme) {
+                stopChristmasMusic();
+            } else if (!christmasMusicMuted && !christmasMusicPlaying) {
+                startChristmasMusic().catch(error => {
+                    console.warn('La reproducción navideña requiere interacción del usuario:', error);
+                });
+            }
         }
 
         applyChristmasTheme();
@@ -3214,6 +3327,27 @@
             showNeonNotification(t('settingsSaved'));
         });
 
+        christmasAudioToggle.addEventListener('click', async () => {
+            christmasMusicMuted = christmasMusicPlaying && !christmasMusicMuted;
+            try {
+                localStorage.setItem(CHRISTMAS_MUSIC_PREFERENCE_KEY, String(christmasMusicMuted));
+            } catch (error) {
+                console.error('No se pudo guardar la preferencia de música navideña:', error);
+            }
+
+            if (christmasMusicMuted) {
+                stopChristmasMusic();
+                return;
+            }
+
+            try {
+                await startChristmasMusic();
+            } catch (error) {
+                console.error('No se pudo iniciar la música navideña:', error);
+                showNeonNotification(t('christmasMusicError'));
+            }
+            updateChristmasMusicButton();
+        });
         btnSettings.addEventListener('click', openSettings);
         btnCloseSettings.addEventListener('click', closeSettings);
         btnXSettings.addEventListener('click', closeSettings);
@@ -3222,6 +3356,18 @@
             if (e.key === 'Escape' && settingsModal.style.display === 'flex') closeSettings();
         });
         btnOpenFolder.addEventListener('click', () => shell.showItemInFolder(dataPath));
+        document.getElementById('btn-support-discord').addEventListener('click', async (event) => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+                await ipcRenderer.invoke('support:open-discord');
+            } catch (error) {
+                console.error('No se pudo abrir el Discord de soporte:', error);
+                showNeonNotification(t('supportDiscordError'));
+            } finally {
+                button.disabled = false;
+            }
+        });
         btnCopyDiagnostics.addEventListener('click', async () => {
             btnCopyDiagnostics.disabled = true;
             try {
