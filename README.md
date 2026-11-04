@@ -90,6 +90,7 @@ Estructura del proyecto:
 1. Cambia `version` en `package.json` (por ejemplo `1.0.1`) y haz commit.
 2. Crea y sube la etiqueta: `git tag v1.0.1` y `git push origin v1.0.1`. La etiqueta debe coincidir con `version`.
 3. GitHub Actions compila en Windows y publica la release con el instalador, el Portable y `latest.yml` (el archivo que usa la actualización automática).
+4. Después de publicarla, GitHub Actions envía sus notas a Discord. Configura el secreto del repositorio `DISCORD_WEBHOOK_URL` con una URL nueva de webhook. Organiza la descripción de la release con encabezados `## Novedades` y `## Correcciones`; los encabezados que incluyan “fix”, “bug” o “correcciones” se envían en el campo de correcciones.
 
 Los usuarios con el instalador reciben la actualización la próxima vez que la app comprueba (al arrancar y cada 6 h) o al pulsar **Ajustes → Comprobar ahora**.
 
@@ -202,6 +203,7 @@ Project structure:
 1. Change `version` in `package.json` (for example `1.0.1`) and commit.
 2. Create and push the tag: `git tag v1.0.1` and `git push origin v1.0.1`. The tag must match `version`.
 3. GitHub Actions builds on Windows and publishes the release with the installer, the Portable build and `latest.yml` (the file the automatic update relies on).
+4. After publication, GitHub Actions sends the release notes to Discord. Configure the repository secret `DISCORD_WEBHOOK_URL` with a newly generated webhook URL. Use `## Novedades` and `## Correcciones` headings in the release description; headings containing “fix”, “bug” or “correcciones” are sent in the fixes field.
 
 Users with the installer get the update the next time the app checks (on startup and every 6 h) or when they press **Settings → Check now**.
 

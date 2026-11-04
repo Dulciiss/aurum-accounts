@@ -383,6 +383,19 @@ body {
     white-space: nowrap;
 }
 .settings-ghost-btn:hover { border-color: #c9a85c; }
+.settings-discord-btn {
+    color: #e8cf8f;
+    border-color: rgba(201, 168, 92, 0.4);
+    background: linear-gradient(135deg, rgba(201, 168, 92, 0.12), #171b24);
+    transition: color 0.18s, border-color 0.18s, background 0.18s, transform 0.18s;
+}
+.settings-discord-btn:hover {
+    color: #f4dfa5;
+    border-color: #c9a85c;
+    background: linear-gradient(135deg, rgba(201, 168, 92, 0.22), #1b2029);
+    transform: translateY(-1px);
+}
+.settings-discord-btn svg { color: #c9a85c; }
 
 /* Actualizaciones */
 .settings-ghost-btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
@@ -1600,6 +1613,18 @@ body.christmas-theme .sb-refresh-ring { color: #d6bd78; }
 body.christmas-theme .lp-history-tab.active,
 body.christmas-theme .settings-section-title { color: #d6bd78; }
 .setting-name-row { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.christmas-audio-toggle[hidden] { display: none !important; }
+body.christmas-theme .christmas-audio-toggle {
+    color: #d6bd78 !important;
+    border-color: rgba(214, 189, 120, 0.4) !important;
+}
+body.christmas-theme .christmas-audio-toggle:hover {
+    color: #efe0ad !important;
+    border-color: rgba(214, 189, 120, 0.75) !important;
+    box-shadow: 0 0 12px rgba(214, 189, 120, 0.2);
+}
+.christmas-audio-toggle:not([aria-pressed="true"]) .christmas-audio-on,
+.christmas-audio-toggle[aria-pressed="true"] .christmas-audio-off { display: none; }
 .christmas-setting-badge {
     padding: 2px 6px;
     border: 1px solid rgba(201, 168, 92, 0.4);
@@ -1642,4 +1667,32 @@ body.christmas-theme #auto-refresh-box.sb-refresh {
 body.christmas-theme button.sb-add {
     border-color: #d6bd78 !important;
     background: linear-gradient(110deg, #d6bd78 0%, #c9a85c 58%, #789176 100%) !important;
+}
+.christmas-snow {
+    position: fixed;
+    top: 0;
+    left: 260px;
+    width: calc(100vw - 260px);
+    height: 100vh;
+    z-index: 9999;
+    overflow: hidden;
+    pointer-events: none;
+}
+.christmas-snow[hidden] { display: none; }
+.christmas-snowflake {
+    position: absolute;
+    top: -5vh;
+    left: var(--snow-x, 50%);
+    width: var(--snow-size, 4px);
+    height: var(--snow-size, 4px);
+    background: #fff;
+    border-radius: 50%;
+    opacity: 0.8;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    animation: fall var(--snow-duration, 8s) linear var(--snow-delay, 0s) infinite;
+    will-change: transform;
+}
+@keyframes fall {
+    from { top: -5vh; transform: translateX(0); }
+    to { top: 105vh; transform: translateX(var(--snow-drift, 24px)); }
 }

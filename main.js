@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, safeStorage, Tray, Menu, nativeImage, Notification, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, safeStorage, Tray, Menu, nativeImage, Notification, globalShortcut, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -29,6 +29,8 @@ app.setPath('userData', pickDataFolder());
 // Identificador propio: Windows agrupa y muestra el icono de la app en la barra de tareas
 // (sin esto, en desarrollo aparece agrupada con el icono de Electron)
 app.setAppUserModelId('com.leagueaccounts.app');
+
+const DISCORD_SUPPORT_URL = 'https://discord.gg/WQU82EZNtD';
 
 // ---------- Cifrado de contraseñas (DPAPI de Windows vía safeStorage) ----------
 // Solo el mismo usuario de Windows en el mismo equipo puede descifrarlas.
@@ -266,6 +268,24 @@ function createWindow () {
     win.setMenuBarVisibility(false);
     win.loadFile('index.html');
 
+    let christmasMusicStoppedForVisibility = false;
+    const stopChristmasMusic = () => {
+        if (!win.isDestroyed()) {
+            christmasMusicStoppedForVisibility = true;
+            win.webContents.send('christmas:stop-music');
+        }
+    };
+    win.on('minimize', stopChristmasMusic);
+    win.on('hide', stopChristmasMusic);
+    win.on('show', () => {
+        if (christmasMusicStoppedForVisibility && !win.isDestroyed()) {
+            christmasMusicStoppedForVisibility = false;
+            win.webContents.send('christmas:resume-music');
+        }
+    });
+    let allowWindowCloseAfterFade = false;
+    let closeAfterFadeTimer = null;
+
     // Avisar a la barra de título de los cambios de estado (icono maximizar/restaurar, ocultarla en pantalla completa)
     const sendState = () => {
         if (!win.isDestroyed()) {
@@ -284,11 +304,22 @@ function createWindow () {
 
     // "Cerrar" oculta la ventana en la bandeja si el usuario lo activó (y siempre que no se esté saliendo)
     win.on('close', (event) => {
+        if (allowWindowCloseAfterFade) return;
+        event.preventDefault();
+        stopChristmasMusic();
+
         if (trayCtl.shouldHideOnClose()) {
-            event.preventDefault();
             win.hide();
             win.webContents.send('tray:hidden');
+            return;
         }
+
+        if (closeAfterFadeTimer) return;
+        closeAfterFadeTimer = setTimeout(() => {
+            if (win.isDestroyed()) return;
+            allowWindowCloseAfterFade = true;
+            win.destroy();
+        }, 550);
     });
     // Si Windows se apaga o cierra sesión, no hay que impedirlo
     win.on('session-end', () => trayCtl.markQuitting());
@@ -299,6 +330,8 @@ function createWindow () {
             if (!trayCtl.startsInTray()) {
                 win.showInactive();
                 win.minimize();
+            } else {
+                stopChristmasMusic();
             }
         } else {
             win.show();
@@ -308,6 +341,19 @@ function createWindow () {
 
 // ---------- Controles de ventana (botones de la barra de título) ----------
 const senderWindow = (event) => BrowserWindow.fromWebContents(event.sender);
+
+ipcMain.handle('support:open-discord', async (event) => {
+    if (!senderWindow(event)) {
+        throw new Error('No se pudo identificar la ventana que solicitó abrir Discord.');
+    }
+
+    try {
+        await shell.openExternal(DISCORD_SUPPORT_URL);
+    } catch (error) {
+        console.error('No se pudo abrir el Discord de soporte:', error);
+        throw error;
+    }
+});
 
 ipcMain.on('win:minimize', (event) => {
     const win = senderWindow(event);
@@ -363,7 +409,24 @@ if (!app.requestSingleInstanceLock()) {
     });
 }
 
-app.on('before-quit', () => trayCtl.markQuitting());
+let quitFadeInProgress = false;
+app.on('before-quit', (event) => {
+    trayCtl.markQuitting();
+    const windows = BrowserWindow.getAllWindows().filter(win => !win.isDestroyed());
+    if (quitFadeInProgress || windows.length === 0) return;
+
+    event.preventDefault();
+    quitFadeInProgress = true;
+    windows.forEach(win => {
+        if (!win.isDestroyed()) win.webContents.send('christmas:stop-music');
+    });
+    setTimeout(() => {
+        windows.forEach(win => {
+            if (!win.isDestroyed()) win.destroy();
+        });
+        app.quit();
+    }, 550);
+});
 app.on('will-quit', () => trayCtl.dispose());
 
 app.on('window-all-closed', () => {
