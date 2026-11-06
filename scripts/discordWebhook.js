@@ -1,8 +1,21 @@
 const DISCORD_WEBHOOK_URL_PATTERN = /^https:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[^/\s]+(?:\?.*)?$/;
-const EMBED_COLOR = 0xc9a85c;
+const EMBED_COLOR = 15844367; // Color dorado/amarillo característico de Aurum Accounts
+const TITLE_LIMIT = 256;
+const DESCRIPTION_LIMIT = 4000;
+const FIELD_NAME_LIMIT = 256;
 const FIELD_LIMIT = 1024;
+const EMPTY_SECTION_FALLBACK = 'Mejoras generales y ajustes de estabilidad.';
 const RELEASES_URL = 'https://github.com/Dulciiss/aurum-accounts/releases/tag/';
 const DOWNLOADS_URL = 'https://dulciiss.github.io/aurum-accounts/#descargar';
+
+function truncateText(value, limit) {
+    let text = String(value).trim();
+    if (text.length <= limit) return text;
+
+    text = text.slice(0, limit - 1);
+    if (/[\uD800-\uDBFF]$/.test(text)) text = text.slice(0, -1);
+    return `${text.trimEnd()}…`;
+}
 
 function normalizeItems(items, name) {
     if (!Array.isArray(items)) {
@@ -18,7 +31,7 @@ function normalizeItems(items, name) {
 }
 
 function formatField(items, emptyMessage) {
-    const lines = items.length ? items.map((item) => `• ${item}`) : [emptyMessage];
+    const lines = items.length ? items.map((item) => `• ${item}`) : [emptyMessage || EMPTY_SECTION_FALLBACK];
     let value = '';
 
     for (const line of lines) {
@@ -29,12 +42,34 @@ function formatField(items, emptyMessage) {
         if (line.length <= remaining) {
             value += separator + line;
         } else {
-            value += separator + `${line.slice(0, Math.max(0, remaining - 1))}…`;
+            value += separator + truncateText(line, remaining);
             break;
         }
     }
 
-    return value;
+    return value.trim() || EMPTY_SECTION_FALLBACK;
+}
+
+function validatePayload(payload) {
+    const embed = payload && Array.isArray(payload.embeds) && payload.embeds[0];
+    if (!embed) throw new TypeError('El payload debe incluir un embed.');
+    if (typeof embed.title !== 'string' || !embed.title.trim() || embed.title.length > TITLE_LIMIT) {
+        throw new TypeError('El título del embed es obligatorio y debe respetar el límite de Discord.');
+    }
+    if (typeof embed.description !== 'string' || !embed.description.trim() || embed.description.length > DESCRIPTION_LIMIT) {
+        throw new TypeError('La descripción del embed es obligatoria y debe respetar el límite de Discord.');
+    }
+    if (!Array.isArray(embed.fields) || embed.fields.length > 25) {
+        throw new TypeError('Los campos del embed no son válidos.');
+    }
+    for (const field of embed.fields) {
+        if (typeof field.name !== 'string' || !field.name.trim() || field.name.length > FIELD_NAME_LIMIT) {
+            throw new TypeError('El nombre de cada campo debe ser texto no vacío y respetar el límite de Discord.');
+        }
+        if (typeof field.value !== 'string' || !field.value.trim() || field.value.length > FIELD_LIMIT) {
+            throw new TypeError('El valor de cada campo debe ser texto no vacío y respetar el límite de Discord.');
+        }
+    }
 }
 
 function buildEmbed({ version, changes = [], fixes = [], publishedAt = new Date() }) {
@@ -46,24 +81,53 @@ function buildEmbed({ version, changes = [], fixes = [], publishedAt = new Date(
     }
 
     const cleanVersion = version.trim().replace(/^v/i, '');
+    if (!cleanVersion) throw new TypeError('La versión es obligatoria.');
+    
     const normalizedChanges = normalizeItems(changes, 'Novedades');
     const normalizedFixes = normalizeItems(fixes, 'Correcciones');
+
     const publishedLabel = new Intl.DateTimeFormat('es-ES', {
         dateStyle: 'medium',
         timeStyle: 'short',
         timeZone: 'UTC'
     }).format(publishedAt);
 
+    // Estructura bilingüe idéntica a la que pediste con la descripción principal y secciones detalladas
+    const descriptionText = `
+🇪🇸 **¡Ya está aquí la nueva actualización de Aurum Accounts!** Disfruta de todas las mejoras de estabilidad, optimizaciones y novedades que hemos preparado para esta versión.
+
+🇬🇧 **The new update for Aurum Accounts is finally here!** Enjoy all the stability improvements, optimizations, and new features we have prepared for this release.
+    `.trim();
+
     return {
-        title: `Aurum Accounts v${cleanVersion}`,
+        username: "Aurum Accounts Support",
+        author: {
+            name: "Neah",
+            url: "https://github.com/Dulciiss",
+            icon_url: "https://github.com/Dulciiss.png"
+        },
+        title: truncateText(`Aurum Accounts v${cleanVersion}`, TITLE_LIMIT),
         url: `${RELEASES_URL}v${encodeURIComponent(cleanVersion)}`,
-        description: '¡Nueva versión disponible!',
+        description: truncateText(descriptionText, DESCRIPTION_LIMIT),
         color: EMBED_COLOR,
         fields: [
-            { name: '✨ Novedades', value: formatField(normalizedChanges, 'Sin novedades indicadas.'), inline: false },
-            { name: '🛠️ Correcciones', value: formatField(normalizedFixes, 'Sin correcciones indicadas.'), inline: false }
+            { 
+                name: truncateText('🇪🇸 🚀 Novedades y Características', FIELD_NAME_LIMIT), 
+                value: formatField(normalizedChanges, EMPTY_SECTION_FALLBACK), 
+                inline: false 
+            },
+            { 
+                name: truncateText('🇬🇧 🚀 What\'s New & Features', FIELD_NAME_LIMIT), 
+                value: formatField(normalizedChanges, EMPTY_SECTION_FALLBACK), 
+                inline: false 
+            },
+            { 
+                name: truncateText('🛠️ Correcciones y Mejoras Técnicas / Bug Fixes', FIELD_NAME_LIMIT), 
+                value: formatField(normalizedFixes, EMPTY_SECTION_FALLBACK), 
+                inline: false 
+            }
         ],
-        footer: { text: `Aurum Accounts · Publicado el ${publishedLabel} UTC` },
+        footer: { text: `Aurum Accounts • v${cleanVersion} · Publicado el ${publishedLabel} UTC` },
         timestamp: publishedAt.toISOString()
     };
 }
@@ -102,25 +166,32 @@ async function sendDiscordChangelog({
     }
 
     const embed = buildEmbed({ version, changes, fixes, publishedAt });
+    const payload = {
+        username: "Aurum Accounts Support",
+        embeds: [embed],
+        components: [{
+            type: 1,
+            components: [{
+                type: 2,
+                style: 5,
+                label: 'Descargar / Download',
+                url: DOWNLOADS_URL
+            }]
+        }]
+    };
+
+    validatePayload(payload);
+
     const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            embeds: [embed],
-            components: [{
-                type: 1,
-                components: [{
-                    type: 5,
-                    label: 'Descargar',
-                    url: DOWNLOADS_URL
-                }]
-            }]
-        }),
+        body: JSON.stringify(payload),
         signal: AbortSignal.timeout(10000)
     });
 
     if (!response.ok) {
-        throw new Error(`Discord rechazó el webhook (HTTP ${response.status}).`);
+        const errorText = await response.text();
+        throw new Error(`Discord rechazó el webhook (HTTP ${response.status}): ${errorText}`);
     }
 }
 
@@ -130,7 +201,7 @@ async function main() {
 
     const { changes, fixes } = parseReleaseNotes(process.env.RELEASE_BODY || '');
     await sendDiscordChangelog({ version, changes, fixes });
-    console.log(`Changelog de Aurum Accounts ${version} enviado a Discord.`);
+    console.log(`Changelog de Aurum Accounts ${version} enviado a Discord con éxito.`);
 }
 
 if (require.main === module) {
