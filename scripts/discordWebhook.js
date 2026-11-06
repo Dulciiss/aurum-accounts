@@ -92,7 +92,6 @@ function buildEmbed({ version, changes = [], fixes = [], publishedAt = new Date(
         timeZone: 'UTC'
     }).format(publishedAt);
 
-    // Estructura bilingüe idéntica a la que pediste con la descripción principal y secciones detalladas
     const descriptionText = `
 🇪🇸 **¡Ya está aquí la nueva actualización de Aurum Accounts!** Disfruta de todas las mejoras de estabilidad, optimizaciones y novedades que hemos preparado para esta versión.
 
@@ -100,12 +99,6 @@ function buildEmbed({ version, changes = [], fixes = [], publishedAt = new Date(
     `.trim();
 
     return {
-        username: "Aurum Accounts Support",
-        author: {
-            name: "Neah",
-            url: "https://github.com/Dulciiss",
-            icon_url: "https://github.com/Dulciiss.png"
-        },
         title: truncateText(`Aurum Accounts v${cleanVersion}`, TITLE_LIMIT),
         url: `${RELEASES_URL}v${encodeURIComponent(cleanVersion)}`,
         description: truncateText(descriptionText, DESCRIPTION_LIMIT),
@@ -166,18 +159,25 @@ async function sendDiscordChangelog({
     }
 
     const embed = buildEmbed({ version, changes, fixes, publishedAt });
+    
+    // Payload estructurado con autor, embed y los componentes (botones) al mismo nivel
     const payload = {
         username: "Aurum Accounts Support",
+        avatar_url: "https://github.com/Dulciiss.png",
         embeds: [embed],
-        components: [{
-            type: 1,
-            components: [{
-                type: 2,
-                style: 5,
-                label: 'Descargar / Download',
-                url: DOWNLOADS_URL
-            }]
-        }]
+        components: [
+            {
+                type: 1, // Action Row
+                components: [
+                    {
+                        type: 2, // Button
+                        style: 5, // Link Button
+                        label: "Descargar / Download",
+                        url: DOWNLOADS_URL
+                    }
+                ]
+            }
+        ]
     };
 
     validatePayload(payload);
