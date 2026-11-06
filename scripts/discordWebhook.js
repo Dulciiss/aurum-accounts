@@ -72,6 +72,7 @@ function parseReleaseNotes(body = '') {
     const changes = [];
     const fixes = [];
     let currentSection = changes;
+    const fixHeadingPattern = /\b(?:fix(?:es|ed)?|bugfix(?:es)?|bug(?:s)?|correcciones?)\b/i;
 
     for (const rawLine of String(body).split(/\r?\n/)) {
         const line = rawLine.trim();
@@ -79,9 +80,7 @@ function parseReleaseNotes(body = '') {
 
         const heading = line.match(/^#{1,6}\s+(.+)$/);
         if (heading) {
-            currentSection = /\b(fix(?:es|ed)?|bug(?:s)?|correcciones?)\b/i.test(heading[1])
-                ? fixes
-                : changes;
+            currentSection = fixHeadingPattern.test(heading[1]) ? fixes : changes;
             continue;
         }
 

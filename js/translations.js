@@ -2591,7 +2591,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "That Riot ID is already on your list for this region.",
         friendAdded: "Profile added. Its rank will update during the next refresh.",
         friendsDesktopNotifications: "Desktop notifications for friends and rivals",
-        friendsProfileNotFound: "This profile could not be found on OP.GG."
+        friendsProfileNotFound: "This profile could not be found on OP.GG.",
+        friendsNoData: "No profile data is available. Verify the Riot ID and region, then try again.",
+        friendTags: "Tags", friendTagsPlaceholder: "Main, ranked...",
+        friendSave: "Save", friendCancel: "Cancel",
+        matchResultLabel: "Result", matchTypeLabel: "Queue", unknownGameType: "Unknown queue"
     },
     es: {
         navMyAccounts: "Mis cuentas", navFriendsRivals: "Amigos / Rivales", navViewSelector: "Vistas principales",
@@ -2605,7 +2609,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "Ese Riot ID ya está en la lista para esta región.",
         friendAdded: "Perfil añadido. Su rango se actualizará en la próxima actualización.",
         friendsDesktopNotifications: "Notificaciones de escritorio para amigos y rivales",
-        friendsProfileNotFound: "No se encontró este perfil en OP.GG."
+        friendsProfileNotFound: "No se encontró este perfil en OP.GG.",
+        friendsNoData: "No hay datos del perfil. Comprueba el Riot ID y la región, e inténtalo de nuevo.",
+        friendTags: "Etiquetas", friendTagsPlaceholder: "Main, clasificatorias...",
+        friendSave: "Guardar", friendCancel: "Cancelar",
+        matchResultLabel: "Resultado", matchTypeLabel: "Tipo de partida", unknownGameType: "Modo desconocido"
     },
     fr: {
         navMyAccounts: "Mes comptes", navFriendsRivals: "Amis / Rivaux", navViewSelector: "Vues principales",
@@ -2619,7 +2627,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "Ce Riot ID figure déjà dans la liste pour cette région.",
         friendAdded: "Profil ajouté. Son rang sera actualisé lors de la prochaine mise à jour.",
         friendsDesktopNotifications: "Notifications de bureau pour les amis et rivaux",
-        friendsProfileNotFound: "Profil introuvable sur OP.GG."
+        friendsProfileNotFound: "Profil introuvable sur OP.GG.",
+        friendsNoData: "Aucune donnée de profil. Vérifiez le Riot ID et la région, puis réessayez.",
+        friendTags: "Étiquettes", friendTagsPlaceholder: "Main, classé...",
+        friendSave: "Enregistrer", friendCancel: "Annuler",
+        matchResultLabel: "Résultat", matchTypeLabel: "Mode de jeu", unknownGameType: "Mode inconnu"
     },
     de: {
         navMyAccounts: "Meine Konten", navFriendsRivals: "Freunde / Rivalen", navViewSelector: "Hauptansichten",
@@ -2633,7 +2645,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "Diese Riot-ID ist für diese Region bereits vorhanden.",
         friendAdded: "Profil hinzugefügt. Der Rang wird bei der nächsten Aktualisierung abgerufen.",
         friendsDesktopNotifications: "Desktop-Benachrichtigungen für Freunde und Rivalen",
-        friendsProfileNotFound: "Dieses Profil wurde auf OP.GG nicht gefunden."
+        friendsProfileNotFound: "Dieses Profil wurde auf OP.GG nicht gefunden.",
+        friendsNoData: "Keine Profildaten verfügbar. Prüfe Riot-ID und Region und versuche es erneut.",
+        friendTags: "Schlagwörter", friendTagsPlaceholder: "Main, Rangliste...",
+        friendSave: "Speichern", friendCancel: "Abbrechen",
+        matchResultLabel: "Ergebnis", matchTypeLabel: "Spielmodus", unknownGameType: "Unbekannter Modus"
     },
     pt: {
         navMyAccounts: "Minhas contas", navFriendsRivals: "Amigos / Rivais", navViewSelector: "Visões principais",
@@ -2647,7 +2663,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "Esse Riot ID já está na lista para esta região.",
         friendAdded: "Perfil adicionado. O elo será atualizado na próxima atualização.",
         friendsDesktopNotifications: "Notificações da área de trabalho para amigos e rivais",
-        friendsProfileNotFound: "Este perfil não foi encontrado no OP.GG."
+        friendsProfileNotFound: "Este perfil não foi encontrado no OP.GG.",
+        friendsNoData: "Não há dados do perfil. Verifique o Riot ID e a região e tente novamente.",
+        friendTags: "Etiquetas", friendTagsPlaceholder: "Main, ranqueada...",
+        friendSave: "Salvar", friendCancel: "Cancelar",
+        matchResultLabel: "Resultado", matchTypeLabel: "Modo de jogo", unknownGameType: "Modo desconhecido"
     },
     ru: {
         navMyAccounts: "Мои аккаунты", navFriendsRivals: "Друзья / Соперники", navViewSelector: "Основные разделы",
@@ -2661,7 +2681,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "Этот Riot ID уже есть в списке для данного региона.",
         friendAdded: "Профиль добавлен. Ранг обновится при следующем обновлении.",
         friendsDesktopNotifications: "Уведомления для друзей и соперников",
-        friendsProfileNotFound: "Профиль не найден на OP.GG."
+        friendsProfileNotFound: "Профиль не найден на OP.GG.",
+        friendsNoData: "Данные профиля недоступны. Проверьте Riot ID и регион и попробуйте снова.",
+        friendTags: "Метки", friendTagsPlaceholder: "Основной, рейтинг...",
+        friendSave: "Сохранить", friendCancel: "Отмена",
+        matchResultLabel: "Результат", matchTypeLabel: "Режим игры", unknownGameType: "Неизвестный режим"
     },
     tr: {
         navMyAccounts: "Hesaplarım", navFriendsRivals: "Arkadaşlar / Rakipler", navViewSelector: "Ana görünümler",
@@ -2675,7 +2699,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "Bu Riot ID bu bölge için listede zaten bulunuyor.",
         friendAdded: "Profil eklendi. Derecesi sonraki yenilemede güncellenecek.",
         friendsDesktopNotifications: "Arkadaşlar ve rakipler için masaüstü bildirimleri",
-        friendsProfileNotFound: "Bu profil OP.GG'de bulunamadı."
+        friendsProfileNotFound: "Bu profil OP.GG'de bulunamadı.",
+        friendsNoData: "Profil verisi yok. Riot ID ve bölgeyi kontrol edip tekrar deneyin.",
+        friendTags: "Etiketler", friendTagsPlaceholder: "Ana rol, dereceli...",
+        friendSave: "Kaydet", friendCancel: "İptal",
+        matchResultLabel: "Sonuç", matchTypeLabel: "Oyun türü", unknownGameType: "Bilinmeyen mod"
     },
     zh: {
         navMyAccounts: "我的账号", navFriendsRivals: "好友 / 对手", navViewSelector: "主视图",
@@ -2689,7 +2717,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "该地区已添加此 Riot ID。",
         friendAdded: "玩家已添加，将在下次刷新时更新段位。",
         friendsDesktopNotifications: "好友与对手的桌面通知",
-        friendsProfileNotFound: "在 OP.GG 上找不到此玩家。"
+        friendsProfileNotFound: "在 OP.GG 上找不到此玩家。",
+        friendsNoData: "没有可用的玩家资料。请检查 Riot ID 和地区后重试。",
+        friendTags: "标签", friendTagsPlaceholder: "主玩、排位...",
+        friendSave: "保存", friendCancel: "取消",
+        matchResultLabel: "结果", matchTypeLabel: "对局类型", unknownGameType: "未知模式"
     },
     ja: {
         navMyAccounts: "自分のアカウント", navFriendsRivals: "フレンド / ライバル", navViewSelector: "メインビュー",
@@ -2703,7 +2735,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "この地域にはすでに同じRiot IDがあります。",
         friendAdded: "プロフィールを追加しました。次回の更新でランクを取得します。",
         friendsDesktopNotifications: "フレンド / ライバルのデスクトップ通知",
-        friendsProfileNotFound: "OP.GGでプロフィールが見つかりませんでした。"
+        friendsProfileNotFound: "OP.GGでプロフィールが見つかりませんでした。",
+        friendsNoData: "プロフィールデータがありません。Riot IDと地域を確認して再試行してください。",
+        friendTags: "タグ", friendTagsPlaceholder: "メイン、ランク...",
+        friendSave: "保存", friendCancel: "キャンセル",
+        matchResultLabel: "結果", matchTypeLabel: "ゲームモード", unknownGameType: "不明なモード"
     },
     ko: {
         navMyAccounts: "내 계정", navFriendsRivals: "친구 / 라이벌", navViewSelector: "주요 보기",
@@ -2717,7 +2753,11 @@ const friendsTranslations = {
         friendAlreadyAdded: "이 지역에는 해당 Riot ID가 이미 있습니다.",
         friendAdded: "프로필을 추가했습니다. 다음 새로 고침에서 랭크를 업데이트합니다.",
         friendsDesktopNotifications: "친구 및 라이벌 데스크톱 알림",
-        friendsProfileNotFound: "OP.GG에서 프로필을 찾을 수 없습니다."
+        friendsProfileNotFound: "OP.GG에서 프로필을 찾을 수 없습니다.",
+        friendsNoData: "프로필 데이터가 없습니다. Riot ID와 지역을 확인한 후 다시 시도하세요.",
+        friendTags: "태그", friendTagsPlaceholder: "주 챔피언, 랭크...",
+        friendSave: "저장", friendCancel: "취소",
+        matchResultLabel: "결과", matchTypeLabel: "게임 모드", unknownGameType: "알 수 없는 모드"
     }
 };
 

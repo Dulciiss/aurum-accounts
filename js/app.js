@@ -1,6 +1,6 @@
         const fs = require('fs');
         const path = require('path');
-        const { exec, spawn } = require('child_process');
+        const { exec, execFile, spawn } = require('child_process');
         const { ipcRenderer, clipboard } = require('electron');
         const https = require('https');
         const { BrowserWindow, shell, dialog, app: remoteApp } = require('@electron/remote');
@@ -70,10 +70,12 @@
                             region: typeof friend.region === 'string' ? friend.region.toLowerCase() : 'euw',
                             relation: friend.relation === 'rival' ? 'rival' : 'friend',
                             note: typeof friend.note === 'string' ? friend.note.slice(0, 120) : '',
+                            tags: normalizeTags(friend.tags).map(tag => tag.slice(0, 40)).slice(0, 10),
                             soloq: friend.soloq || null,
                             flex: friend.flex || null,
                             lpHistory: Array.isArray(friend.lpHistory) ? friend.lpHistory : [],
                             lpHistoryFlex: Array.isArray(friend.lpHistoryFlex) ? friend.lpHistoryFlex : [],
+                            recentGames: Array.isArray(friend.recentGames) ? friend.recentGames.slice(0, 10) : null,
                             opggStatus: friend.opggStatus || null,
                             opggUpdatedAt: Number.isFinite(friend.opggUpdatedAt) ? friend.opggUpdatedAt : null
                         })) : [];
@@ -757,6 +759,17 @@
             return !!(name && tag);
         }
 
+        function isValidRiotId(riotId) {
+            const raw = String(riotId || '').trim();
+            const separator = raw.indexOf('#');
+            if (separator <= 0 || separator !== raw.lastIndexOf('#')) return false;
+            const name = raw.slice(0, separator).trim();
+            const tag = raw.slice(separator + 1).trim();
+            return name.length >= 3 && name.length <= 16 && tag.length >= 3 && tag.length <= 5
+                && /^[\p{L}\p{N} _.'-]+$/u.test(name)
+                && /^[\p{L}\p{N}]+$/u.test(tag);
+        }
+
         function displayName(acc) {
             return splitRiotId(acc.riotId).name || acc.loginUser || '?';
         }
@@ -870,6 +883,8 @@
         function parseOpggProfile(html, acc) {
             const text = htmlToText(html);
             const { name, tag } = splitRiotId(acc.riotId);
+            const profileIconMatch = /(?:profileIcon(?:Id)?["'\s:=]+|profile_icons\/profileIcon|profileicon\/)(\d{1,5})(?:\.jpg|\.png)?/i.exec(html);
+            const profileIconId = profileIconMatch ? Number(profileIconMatch[1]) : null;
 
             if (/summoner (?:is )?not (?:found|registered)|no search results|not registered on OP\.GG/i.test(text)) {
                 return { notFound: true };
@@ -928,7 +943,7 @@
             }
 
             if (!soloq && !flexM && !level) return null; // no se reconoce la página
-            return { level, soloq: soloq || EMPTY_QUEUE(), flex, flexRankAvailable: !!flexM, lastSeason, ladder, topChampions };
+            return { level, profileIconId, soloq: soloq || EMPTY_QUEUE(), flex, flexRankAvailable: !!flexM, lastSeason, ladder, topChampions };
         }
 
         const tierIcons = {
@@ -1083,25 +1098,69 @@
 
         function renderLpHistoryChart(history) {
             if (!history.length) return '<div class="lp-history-empty">—</div>';
-            const width = 300, height = 68, inset = 6;
-            const values = history.map(point => point.score);
+            const width = 360, height = 112, inset = 12, plotLeft = 78;
+            const rankColors = {
+                IRON: '#a8a29e',
+                BRONZE: '#d88752',
+                SILVER: '#cbd5e1',
+                GOLD: '#f4c95d',
+                PLATINUM: '#58c5d8',
+                EMERALD: '#42d392',
+                DIAMOND: '#6ca8ff',
+                MASTER: '#c084fc',
+                GRANDMASTER: '#fb7185',
+                CHALLENGER: '#f5dc8b',
+                UNRANKED: '#94a3b8'
+            };
+            const rankClass = tier => {
+                const base = String(tier || 'UNRANKED').toUpperCase().split(/\s+/)[0];
+                return `rank-${rankColors[base] ? base.toLowerCase() : 'unranked'}`;
+            };
+            const last = history[history.length - 1];
+            const tierBase = last.tier.split(/\s+/)[0];
+            const rankStep = ['MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED'].includes(tierBase) ? 4 : 1;
+            const upperReference = tierBase === 'UNRANKED' ? rankWeights.IRON * 4 : last.rankOrder + rankStep;
+            const lowerReference = tierBase === 'UNRANKED' ? -1 : last.rankOrder - rankStep;
+            const referenceOrders = [
+                ...(upperReference <= rankWeights.CHALLENGER * 4 ? [upperReference] : []),
+                ...(lowerReference >= 0 ? [lowerReference] : [])
+            ];
+            const rankAtOrder = order => {
+                const weight = Math.floor(order / 4);
+                const base = Object.keys(rankWeights).find(tier => rankWeights[tier] === weight) || 'UNRANKED';
+                const division = ['IV', 'III', 'II', 'I'][order % 4];
+                return weight >= 8 || base === 'UNRANKED' ? base : `${base} ${division}`;
+            };
+            const references = referenceOrders.map(order => ({
+                score: order * 100,
+                tier: rankAtOrder(order),
+                label: prettyTier(rankAtOrder(order))
+            }));
+            const values = history.map(point => point.score).concat(references.map(point => point.score));
             const min = Math.min(...values), max = Math.max(...values);
             const spread = Math.max(100, max - min);
+            const yForScore = score => height - inset - ((score - min) / spread) * (height - inset * 2);
             const points = history.map((point, index) => {
-                const x = history.length === 1 ? width / 2 : inset + index * (width - inset * 2) / (history.length - 1);
-                const centeredValue = point.score - min + (max === min ? spread / 2 : 0);
-                const y = height - inset - (centeredValue / spread) * (height - inset * 2);
+                const x = history.length === 1 ? (plotLeft + width) / 2 : plotLeft + index * (width - plotLeft - inset) / (history.length - 1);
+                const y = yForScore(point.score);
                 return { x, y, point };
             });
             const trend = history.length > 1 ? history[history.length - 1].score - history[0].score : 0;
             const trendText = t('lpTrend').replace('{value}', `${trend > 0 ? '+' : ''}${trend}`);
             const trendClass = trend > 0 ? 'up' : trend < 0 ? 'down' : 'steady';
-            const pathData = points.map((point, index) => `${index ? 'L' : 'M'}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+            const chartSegments = points.slice(1).map((point, index) => {
+                const previous = points[index];
+                return `<path class="lp-history-line ${rankClass(point.point.tier)}" d="M${previous.x.toFixed(1)},${previous.y.toFixed(1)} L${point.x.toFixed(1)},${point.y.toFixed(1)}"></path>`;
+            }).join('');
             const chartPoints = points.map(({ x, y, point }) =>
-                `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4"><title>${escapeHtml(formatHistoryTimestamp(point.timestamp))} · ${escapeHtml(prettyTier(point.tier))} · ${point.lp} LP</title></circle>`
+                `<circle class="${rankClass(point.tier)}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3"><title>${escapeHtml(formatHistoryTimestamp(point.timestamp))} · ${escapeHtml(prettyTier(point.tier))} · ${point.lp} LP</title></circle>`
             ).join('');
+            const referenceLines = references.map(reference => {
+                const y = yForScore(reference.score);
+                return `<line class="lp-history-reference ${rankClass(reference.tier)}" x1="${plotLeft}" x2="${width}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"><title>${escapeHtml(reference.label)}</title></line>
+                    <text class="lp-history-reference-label ${rankClass(reference.tier)}" x="0" y="${Math.max(10, Math.min(height - 3, y - 3)).toFixed(1)}">${escapeHtml(reference.label)}</text>`;
+            }).join('');
             const first = history[0];
-            const last = history[history.length - 1];
 
             return `<div class="lp-history-chart-wrap">
                 <div class="lp-history-summary">
@@ -1109,8 +1168,9 @@
                     <span class="lp-history-trend ${trendClass}">${escapeHtml(trendText)}</span>
                 </div>
                 <svg class="lp-history-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(t('lpHistoryChartLabel').replace('{count}', history.length))}">
-                    <path class="lp-history-gridline" d="M0 ${height / 2}H${width}"></path>
-                    <path class="lp-history-line" d="${pathData}"></path>
+                    <path class="lp-history-gridline" d="M${plotLeft} ${height / 2}H${width}"></path>
+                    ${referenceLines}
+                    ${chartSegments}
                     ${chartPoints}
                 </svg>
                 <div class="lp-history-dates"><span>${escapeHtml(formatHistoryTimestamp(first.timestamp))}</span><span>${escapeHtml(formatHistoryTimestamp(last.timestamp))}</span></div>
@@ -1205,7 +1265,7 @@
                 });
             });
         }
-        const LEAGUE_IMAGES = ['LeagueClient.exe', 'LeagueClientUx.exe'];
+        const LEAGUE_IMAGES = ['LeagueClient.exe', 'LeagueClientUx.exe', 'LeagueClientUX.exe'];
         function listLeaguePids() {
             return Promise.all(LEAGUE_IMAGES.map(listProcessPids)).then(sets => new Set(sets.flatMap(set => [...set])));
         }
@@ -1230,6 +1290,7 @@
 
         function readLeagueClientLockfile() {
             const installsPath = path.join(process.env.ProgramData || 'C:\\ProgramData', 'Riot Games', 'RiotClientInstalls.json');
+            const installDirs = [];
             try {
                 const installs = JSON.parse(fs.readFileSync(installsPath, 'utf8'));
                 const installPath = typeof installs.product_install_full_path === 'string' ? installs.product_install_full_path : '';
@@ -1239,22 +1300,47 @@
                 const siblingGameDirs = clientPaths.map(clientPath =>
                     path.join(path.dirname(path.dirname(clientPath)), 'League of Legends')
                 );
-                const installDirs = [...new Set([
+                const gamePath = typeof installs.league_of_legends === 'string' ? installs.league_of_legends : '';
+                installDirs.push(...[
+                    gamePath,
                     installPath && path.extname(installPath) ? path.dirname(installPath) : installPath,
                     installRoot,
                     installRoot && path.join(installRoot, 'League of Legends'),
                     ...siblingGameDirs
-                ].filter(Boolean))];
-                for (const dir of installDirs) {
-                    try {
-                        const lock = parseClientLockfile(fs.readFileSync(path.join(dir, 'lockfile'), 'utf8'));
-                        if (lock) return lock;
-                    } catch (e) { /* El cliente aún no creó el lockfile de juego en esta ubicación. */ }
-                }
-            } catch (e) {
-                return null;
+                ].filter(Boolean));
+            } catch (e) { /* Se prueban las rutas de instalación habituales como respaldo. */ }
+            for (const base of [process.env.ProgramFiles, process.env['ProgramFiles(x86)'], 'C:\\Riot Games']) {
+                if (base) installDirs.push(path.join(base, 'Riot Games', 'League of Legends'), path.join(base, 'League of Legends'));
+            }
+            for (const dir of [...new Set(installDirs)]) {
+                try {
+                    const lock = parseClientLockfile(fs.readFileSync(path.join(dir, 'lockfile'), 'utf8'));
+                    if (lock) return lock;
+                } catch (e) { /* El cliente aún no creó el lockfile de juego en esta ubicación. */ }
             }
             return null;
+        }
+
+        function readLeagueClientProcessLockfile() {
+            return new Promise(resolve => {
+                const command = `Get-CimInstance Win32_Process -Filter "name = 'LeagueClientUx.exe'" | ForEach-Object { $_.CommandLine }`;
+                execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], {
+                    windowsHide: true,
+                    timeout: 3000,
+                    maxBuffer: 64 * 1024
+                }, (error, stdout) => {
+                    if (error) {
+                        resolve(null);
+                        return;
+                    }
+                    const commandLine = String(stdout || '');
+                    const port = Number(/--app-port(?:=|\s+)(\d+)/i.exec(commandLine)?.[1]);
+                    const password = /--remoting-auth-token(?:=|\s+)["']?([^\s"']+)/i.exec(commandLine)?.[1];
+                    resolve(Number.isInteger(port) && port > 0 && port <= 65535 && password
+                        ? { port, password }
+                        : null);
+                });
+            });
         }
 
         function clientResponseJson(response, endpoint) {
@@ -1445,13 +1531,14 @@
             if (clientSyncBusy) return;
             clientSyncBusy = true;
             try {
-                const lock = readLeagueClientLockfile();
+                const lock = readLeagueClientLockfile() || await readLeagueClientProcessLockfile();
                 if (!lock) {
+                    const detectedPids = await listLeaguePids();
                     const hadActiveAccount = activeClientAccountId !== null;
                     activeClientAccountId = null;
                     latestClientSnapshot = null;
                     if (hadActiveAccount) loadAccounts();
-                    setClientSyncState('offline', 'clientSyncOffline');
+                    setClientSyncState(detectedPids.size ? 'waiting' : 'offline', detectedPids.size ? 'clientSyncWaiting' : 'clientSyncOffline');
                     return;
                 }
 
@@ -1725,7 +1812,13 @@
             if (settings.launchGame) listLeaguePids().then(pids => { session.leagueBaseline = pids; });
 
             const tierBase = account.soloq && account.soloq.tier ? account.soloq.tier.toUpperCase().split(' ')[0] : 'UNRANKED';
-            document.getElementById('login-emblem-img').src = tierIcons[tierBase] || tierIcons['UNRANKED'];
+            const loginEmblemImg = document.getElementById('login-emblem-img');
+            const rankIconUrl = tierIcons[tierBase] || tierIcons['UNRANKED'];
+            loginEmblemImg.onerror = () => {
+                loginEmblemImg.style.visibility = 'hidden';
+            };
+            loginEmblemImg.onload = () => { loginEmblemImg.style.visibility = 'visible'; };
+            loginEmblemImg.src = rankIconUrl;
             loginAccountEl.textContent = account.riotId || account.loginUser;
             renderLogin();
             loginOverlay.classList.add('open');
@@ -1904,6 +1997,29 @@
             return 'wr-bad';
         }
 
+        function renderRecentGames(recentGames) {
+            if (!Array.isArray(recentGames) || !recentGames.length) return '';
+            const games = recentGames.slice(0, 10);
+            const wins = games.filter(game => game.result === 'WIN').length;
+            const losses = games.filter(game => game.result === 'LOSE').length;
+            const recentWr = Math.round((wins / Math.max(1, wins + losses)) * 100);
+            return `<div class="card-section recent-games-section">
+                <div class="sec-label">${escapeHtml(t('secRecent'))}
+                    <span class="recent-summary ${wrTier(recentWr, wins + losses)}">${wins}${escapeHtml(t('winShort'))} ${losses}${escapeHtml(t('lossShort'))} · ${recentWr}%</span>
+                </div>
+                <div class="recent-row">
+                    ${games.map(game => {
+                        const image = champImg(game.champ);
+                        const cls = game.result === 'WIN' ? 'win' : game.result === 'LOSE' ? 'loss' : 'remake';
+                        const result = t(cls === 'win' ? 'gameWin' : cls === 'loss' ? 'gameLoss' : 'gameRemake');
+                        const gameType = game.gameType || t('unknownGameType');
+                        const label = `${champName(game.champ)} - ${t('matchResultLabel')}: ${result} - ${t('matchTypeLabel')}: ${gameType}`;
+                        return `<div class="recent-game ${cls}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${image ? `<img src="${image}" alt="">` : `<span>${escapeHtml(champName(game.champ).slice(0, 2))}</span>`}</div>`;
+                    }).join('')}
+                </div>
+            </div>`;
+        }
+
         const LOGIN_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>`;
         const CLIPBOARD_ICON = `<svg class="ic-main" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
         const KEY_ICON = `<svg class="ic-main" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>`;
@@ -2011,28 +2127,7 @@
                 </div>`;
             }
 
-            // Últimas 10 partidas
-            let recentHtml = '';
-            if (!notFound && Array.isArray(account.recentGames) && account.recentGames.length) {
-                const games = account.recentGames.slice(0, 10);
-                const w = games.filter(g => g.result === 'WIN').length;
-                const l = games.filter(g => g.result === 'LOSE').length;
-                const recentWr = Math.round((w / Math.max(1, w + l)) * 100);
-                recentHtml = `
-                <div class="card-section" style="position: relative; z-index: 1;">
-                    <div class="sec-label">${escapeHtml(t('secRecent'))}
-                        <span class="recent-summary ${wrTier(recentWr, w + l)}">${w}${escapeHtml(t('winShort'))} ${l}${escapeHtml(t('lossShort'))} · ${recentWr}%</span>
-                    </div>
-                    <div class="recent-row">
-                        ${games.map(g => {
-                            const img = champImg(g.champ);
-                            const cls = g.result === 'WIN' ? 'win' : g.result === 'LOSE' ? 'loss' : 'remake';
-                            const label = `${champName(g.champ)} · ${t(cls === 'win' ? 'gameWin' : cls === 'loss' ? 'gameLoss' : 'gameRemake')}`;
-                            return `<div class="recent-game ${cls}" title="${escapeHtml(label)}">${img ? `<img src="${img}" alt="">` : `<span>${escapeHtml(champName(g.champ).slice(0, 2))}</span>`}</div>`;
-                        }).join('')}
-                    </div>
-                </div>`;
-            }
+            const recentHtml = !notFound ? renderRecentGames(account.recentGames) : '';
             const flexText = (flex.tier || 'UNRANKED') === 'UNRANKED' ? t('unranked') : `${prettyTier(flex.tier)} · ${flex.lp} LP`;
             const showLevel = hasRiotId(account) && account.level;
             const taxonomyHtml = [
@@ -2144,9 +2239,13 @@
         // ---------- Menú contextual (clic derecho en una tarjeta) ----------
         const cardMenu = document.getElementById('card-menu');
         let menuAccountId = null;
+        let menuFriendId = null;
 
         function openCardMenu(x, y, account) {
             menuAccountId = account.id;
+            menuFriendId = null;
+            cardMenu.querySelector('[data-action="delete"]').hidden = false;
+            cardMenu.querySelector('.ctx-sep').hidden = false;
             cardMenu.querySelector('[data-action="opgg"]').disabled = !hasRiotId(account);
             cardMenu.classList.add('open');
             const { width, height } = cardMenu.getBoundingClientRect();
@@ -2156,9 +2255,24 @@
             if (firstEnabled) firstEnabled.focus();
         }
 
+        function openFriendMenu(x, y, friend) {
+            menuAccountId = null;
+            menuFriendId = friend.id;
+            cardMenu.querySelector('[data-action="delete"]').hidden = true;
+            cardMenu.querySelector('.ctx-sep').hidden = true;
+            cardMenu.querySelector('[data-action="opgg"]').disabled = !hasRiotId(friend);
+            cardMenu.classList.add('open');
+            const { width, height } = cardMenu.getBoundingClientRect();
+            cardMenu.style.left = `${Math.max(8, Math.min(x, window.innerWidth - width - 8))}px`;
+            cardMenu.style.top = `${Math.max(8, Math.min(y, window.innerHeight - height - 8))}px`;
+            const firstEnabled = cardMenu.querySelector('.ctx-item:not(:disabled):not([hidden])');
+            if (firstEnabled) firstEnabled.focus();
+        }
+
         function closeCardMenu() {
             cardMenu.classList.remove('open');
             menuAccountId = null;
+            menuFriendId = null;
         }
 
         function askDelete(acc) {
@@ -2174,6 +2288,22 @@
         }
 
         function runMenuAction(action) {
+            if (menuFriendId) {
+                const friend = (settings.friendRivals || []).find(entry => entry.id === menuFriendId);
+                closeCardMenu();
+                if (!friend) return;
+                if (action === 'opgg' && hasRiotId(friend)) shell.openExternal(opggUrl(friend));
+                else if (action === 'edit') {
+                    const card = mainContent.querySelector(`[data-friend-id="${CSS.escape(friend.id)}"]`);
+                    const form = card && card.querySelector('.friend-edit-form');
+                    if (form) {
+                        form.hidden = false;
+                        const noteInput = form.querySelector('[data-friend-note]');
+                        if (noteInput) noteInput.focus();
+                    }
+                }
+                return;
+            }
             const acc = readAccounts().find(a => a.id === menuAccountId);
             closeCardMenu();
             if (!acc) return;
@@ -2195,7 +2325,7 @@
             else if (e.key === 'Delete') { e.preventDefault(); runMenuAction('delete'); }
             else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                const items = [...cardMenu.querySelectorAll('.ctx-item:not(:disabled)')];
+                const items = [...cardMenu.querySelectorAll('.ctx-item:not(:disabled):not([hidden])')];
                 const i = items.indexOf(document.activeElement);
                 const next = e.key === 'ArrowDown' ? (i + 1) % items.length : (i - 1 + items.length) % items.length;
                 items[next].focus();
@@ -2310,6 +2440,11 @@
             const soloHistory = normalizeLpHistory(friend.lpHistory).slice(-CHART_LP_HISTORY);
             const flexHistory = normalizeLpHistory(friend.lpHistoryFlex).slice(-CHART_LP_HISTORY);
             const initialQueue = soloHistory.length || !flexHistory.length ? 'solo' : 'flex';
+            const recentGamesHtml = renderRecentGames(friend.recentGames);
+            const friendTags = normalizeTags(friend.tags);
+            const tagsHtml = friendTags.length
+                ? `<div class="friend-tags">${friendTags.map(tag => `<span class="friend-tag">${escapeHtml(tag)}</span>`).join('')}</div>`
+                : '';
             const rankSummary = (queue, label) => {
                 if (!queue || !queue.tier) return `<div class="friend-rank-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(t('unranked'))}</strong></div>`;
                 return `<div class="friend-rank-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(prettyTier(queue.tier))} · ${Number(queue.lp) || 0} LP</strong></div>`;
@@ -2339,10 +2474,22 @@
                     ${rankSummary(solo, 'Solo/Duo')}
                     ${rankSummary(flex, t('flex'))}
                 </div>
+                ${recentGamesHtml}
                 ${historyMarkup}
-                <label class="friend-note-label" for="friend-note-${escapeHtml(friend.id)}">${escapeHtml(t('friendNote'))}</label>
-                <input class="friend-note-input" id="friend-note-${escapeHtml(friend.id)}" type="text" maxlength="120" data-friend-note="${escapeHtml(friend.id)}" value="${escapeHtml(friend.note || '')}" placeholder="${escapeHtml(t('friendNotePlaceholder'))}">
+                ${friend.note ? `<p class="friend-note">${escapeHtml(friend.note)}</p>` : ''}
+                ${tagsHtml}
+                <form class="friend-edit-form" hidden>
+                    <label class="friend-note-label" for="friend-note-${escapeHtml(friend.id)}">${escapeHtml(t('friendNote'))}</label>
+                    <input class="friend-note-input" id="friend-note-${escapeHtml(friend.id)}" type="text" maxlength="120" data-friend-note value="${escapeHtml(friend.note || '')}" placeholder="${escapeHtml(t('friendNotePlaceholder'))}">
+                    <label class="friend-note-label" for="friend-tags-${escapeHtml(friend.id)}">${escapeHtml(t('friendTags'))}</label>
+                    <input class="friend-note-input" id="friend-tags-${escapeHtml(friend.id)}" type="text" data-friend-tags value="${escapeHtml(friendTags.join(', '))}" placeholder="${escapeHtml(t('friendTagsPlaceholder'))}">
+                    <div class="friend-edit-actions">
+                        <button class="btn-gold friend-add-button" type="submit">${escapeHtml(t('friendSave'))}</button>
+                        <button class="friend-edit-cancel" type="button">${escapeHtml(t('friendCancel'))}</button>
+                    </div>
+                </form>
                 ${friend.opggStatus === 'notFound' ? `<div class="friend-profile-status">${escapeHtml(t('friendsProfileNotFound'))}</div>` : ''}
+                ${friend.opggStatus === 'noData' ? `<div class="friend-profile-status">${escapeHtml(t('friendsNoData'))}</div>` : ''}
             `;
 
             card.querySelectorAll('.lp-history-tab').forEach(button => button.addEventListener('click', () => {
@@ -2361,9 +2508,19 @@
                 saveSettings();
                 loadAccounts();
             });
-            card.querySelector('[data-friend-note]').addEventListener('change', event => {
-                friend.note = event.target.value.trim().slice(0, 120);
+            const editForm = card.querySelector('.friend-edit-form');
+            editForm.addEventListener('submit', event => {
+                event.preventDefault();
+                friend.note = card.querySelector('[data-friend-note]').value.trim().slice(0, 120);
+                friend.tags = normalizeTags(card.querySelector('[data-friend-tags]').value)
+                    .map(tag => tag.slice(0, 40)).slice(0, 10);
                 saveSettings();
+                loadAccounts();
+            });
+            card.querySelector('.friend-edit-cancel').addEventListener('click', () => { editForm.hidden = true; });
+            card.addEventListener('contextmenu', event => {
+                event.preventDefault();
+                openFriendMenu(event.clientX, event.clientY, friend);
             });
             return card;
         }
@@ -2372,7 +2529,8 @@
             const friends = settings.friendRivals || [];
             const searchTerm = searchInput.value.trim().toLowerCase();
             const filteredFriends = friends.filter(friend =>
-                [friend.riotId, friend.note, friend.region, friend.relation].filter(Boolean).join(' ').toLowerCase().includes(searchTerm)
+                [friend.riotId, friend.note, ...(friend.tags || []), friend.region, friend.relation]
+                    .filter(Boolean).join(' ').toLowerCase().includes(searchTerm)
             );
             const regionOptions = REGION_LIST.map(region =>
                 `<option value="${escapeHtml(region.code)}">${escapeHtml(region.label)} — ${escapeHtml(regionName(region))}</option>`
@@ -2417,7 +2575,7 @@
                 event.preventDefault();
                 const riotId = mainContent.querySelector('#friend-riot-id').value.trim();
                 const region = mainContent.querySelector('#friend-region').value;
-                if (!hasRiotId({ riotId })) {
+                if (!isValidRiotId(riotId)) {
                     showNeonNotification(t('friendInvalidRiotId'));
                     return;
                 }
@@ -2431,10 +2589,12 @@
                     region,
                     relation: mainContent.querySelector('#friend-relation').value === 'rival' ? 'rival' : 'friend',
                     note: mainContent.querySelector('#friend-note').value.trim().slice(0, 120),
+                    tags: [],
                     soloq: null,
                     flex: null,
                     lpHistory: [],
                     lpHistoryFlex: [],
+                    recentGames: null,
                     opggStatus: null,
                     opggUpdatedAt: null
                 });
@@ -2669,6 +2829,34 @@
             return null;
         }
 
+        function findGameType(o, depth = 0) {
+            if (!o || typeof o !== 'object' || Array.isArray(o) || depth > 3) return null;
+            for (const [key, value] of Object.entries(o)) {
+                if (/^(game_?type|queue_?type|queue_?id|game_?mode)$/i.test(key) &&
+                    (typeof value === 'string' || typeof value === 'number')) return value;
+            }
+            for (const value of Object.values(o)) {
+                const found = findGameType(value, depth + 1);
+                if (found !== null) return found;
+            }
+            return null;
+        }
+
+        function formatGameType(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const queueNames = {
+                400: 'Normal / Draft Pick',
+                420: 'Ranked Solo/Duo',
+                430: 'Normal / Blind Pick',
+                440: 'Ranked Flex',
+                450: 'ARAM',
+                480: 'Swiftplay',
+                490: 'Quickplay'
+            };
+            const normalized = String(value).trim();
+            return queueNames[normalized] || normalized.replace(/[_-]+/g, ' ');
+        }
+
         // Formato compacto de OP.GG MCP:
         //   class GameHistory: id,created_at,...      <- nombres de campos
         //   LolListSummonerMatches(Data([GameHistory("...", "...", ...)]))   <- valores en ese orden
@@ -2775,8 +2963,10 @@
                     const champ = findChampionRef(src);
                     let result = findResult(src) || findResult(g);
                     // Partidas de menos de 4 minutos = remake
-                    if (typeof g.game_length_second === 'number' && g.game_length_second < 240) result = 'REMAKE';
-                    return champ !== null && result ? { champ, result } : null;
+                    const duration = Number(g.game_length_second || g.game_length_seconds || g.duration);
+                    if (Number.isFinite(duration) && duration > 0 && duration < 240) result = 'REMAKE';
+                    const gameType = formatGameType(findGameType(g));
+                    return champ !== null && result ? { champ, result, gameType } : null;
                 }).filter(Boolean);
                 if (!best || games.length > best.length) best = games;
             }
@@ -2843,14 +3033,13 @@
                         // Se guarda la página para poder ver qué cambió en OP.GG
                         try { fs.writeFileSync(path.join(path.dirname(dataPath), 'opgg-debug.html'), html); } catch (e) { /* sin permiso */ }
                         console.warn(`OP.GG: no se pudieron leer los datos de ${acc.riotId} (página guardada en opgg-debug.html)`);
+                        if (isFriend) results.set(resultKey, { riotId: acc.riotId, region: acc.region, opggStatus: 'noData' });
                     } else if (data.notFound) {
                         results.set(resultKey, { riotId: acc.riotId, region: acc.region, opggStatus: 'notFound' });
                     } else {
                         let recentGames = null;
-                        if (!isFriend) {
-                            try { recentGames = await fetchRecentGames(acc); }
-                            catch (e) { console.warn(`OP.GG MCP: ${acc.riotId}:`, e.message); }
-                        }
+                        try { recentGames = await fetchRecentGames(acc); }
+                        catch (e) { console.warn(`OP.GG MCP: ${acc.riotId}:`, e.message); }
                         results.set(resultKey, { riotId: acc.riotId, region: acc.region, opggStatus: 'ok', opggUpdatedAt: Date.now(), ...data, recentGames });
                     }
                 } catch (e) {
@@ -2898,6 +3087,7 @@
                     if (r.level) a.level = r.level;
                     a.soloq = r.soloq;
                     a.flex = r.flex;
+                    if (Number.isInteger(r.profileIconId) && r.profileIconId > 0) a.profileIconId = r.profileIconId;
                     a.lastSeason = r.lastSeason;
                     a.opggUpdatedAt = r.opggUpdatedAt;
                     a.ladder = r.ladder;
@@ -2938,6 +3128,7 @@
                 friend.soloq = r.soloq;
                 friend.flex = r.flex;
                 friend.opggUpdatedAt = r.opggUpdatedAt;
+                if (r.recentGames) friend.recentGames = r.recentGames;
             });
             if ([...results.keys()].some(key => key.startsWith('account:'))) writeAccounts(disk);
             if (friendsChanged) saveSettings();
