@@ -4,8 +4,10 @@ const TITLE_LIMIT = 256;
 const DESCRIPTION_LIMIT = 4000;
 const FIELD_NAME_LIMIT = 256;
 const FIELD_LIMIT = 1024;
-const EMPTY_SECTION_FALLBACK = 'Mejoras generales y ajustes de estabilidad.';
+const EMBED_TEXT_LIMIT = 6000;
 const RELEASES_URL = 'https://github.com/Dulciiss/aurum-accounts/releases/tag/';
+const AUTHOR_URL = 'https://github.com/Dulciiss';
+const AUTHOR_ICON_URL = 'https://github.com/Dulciiss.png';
 const DOWNLOADS_URL = 'https://dulciiss.github.io/aurum-accounts/#descargar';
 
 function truncateText(value, limit) {
@@ -17,39 +19,6 @@ function truncateText(value, limit) {
     return `${text.trimEnd()}…`;
 }
 
-function normalizeItems(items, name) {
-    if (!Array.isArray(items)) {
-        throw new TypeError(`${name} debe ser una lista.`);
-    }
-
-    return items.map((item) => {
-        if (typeof item !== 'string') {
-            throw new TypeError(`Cada elemento de ${name} debe ser texto.`);
-        }
-        return item.trim();
-    }).filter(Boolean);
-}
-
-function formatField(items, emptyMessage) {
-    const lines = items.length ? items.map((item) => `• ${item}`) : [emptyMessage || EMPTY_SECTION_FALLBACK];
-    let value = '';
-
-    for (const line of lines) {
-        const separator = value ? '\n' : '';
-        const remaining = FIELD_LIMIT - value.length - separator.length;
-        if (remaining <= 0) break;
-
-        if (line.length <= remaining) {
-            value += separator + line;
-        } else {
-            value += separator + truncateText(line, remaining);
-            break;
-        }
-    }
-
-    return value.trim() || EMPTY_SECTION_FALLBACK;
-}
-
 function validatePayload(payload) {
     const embed = payload && Array.isArray(payload.embeds) && payload.embeds[0];
     if (!embed) throw new TypeError('El payload debe incluir un embed.');
@@ -58,6 +27,12 @@ function validatePayload(payload) {
     }
     if (typeof embed.description !== 'string' || !embed.description.trim() || embed.description.length > DESCRIPTION_LIMIT) {
         throw new TypeError('La descripción del embed es obligatoria y debe respetar el límite de Discord.');
+    }
+    if (!embed.author || typeof embed.author.name !== 'string' || !embed.author.name.trim()
+        || embed.author.name.length > FIELD_NAME_LIMIT
+        || typeof embed.author.url !== 'string' || !embed.author.url.trim()
+        || typeof embed.author.icon_url !== 'string' || !embed.author.icon_url.trim()) {
+        throw new TypeError('El autor del embed debe incluir nombre, URL e icono válidos.');
     }
     if (!Array.isArray(embed.fields) || embed.fields.length > 25) {
         throw new TypeError('Los campos del embed no son válidos.');
@@ -70,9 +45,16 @@ function validatePayload(payload) {
             throw new TypeError('El valor de cada campo debe ser texto no vacío y respetar el límite de Discord.');
         }
     }
+    const textLength = embed.title.length + embed.description.length
+        + embed.author.name.length
+        + embed.fields.reduce((total, field) => total + field.name.length + field.value.length, 0)
+        + (embed.footer && typeof embed.footer.text === 'string' ? embed.footer.text.length : 0);
+    if (textLength > EMBED_TEXT_LIMIT) {
+        throw new TypeError('El texto total del embed supera el límite permitido por Discord.');
+    }
 }
 
-function buildEmbed({ version, changes = [], fixes = [], publishedAt = new Date() }) {
+function buildEmbed({ version, publishedAt = new Date() }) {
     if (typeof version !== 'string' || !version.trim()) {
         throw new TypeError('La versión es obligatoria.');
     }
@@ -83,9 +65,6 @@ function buildEmbed({ version, changes = [], fixes = [], publishedAt = new Date(
     const cleanVersion = version.trim().replace(/^v/i, '');
     if (!cleanVersion) throw new TypeError('La versión es obligatoria.');
     
-    const normalizedChanges = normalizeItems(changes, 'Novedades');
-    const normalizedFixes = normalizeItems(fixes, 'Correcciones');
-
     const publishedLabel = new Intl.DateTimeFormat('es-ES', {
         dateStyle: 'medium',
         timeStyle: 'short',
@@ -99,25 +78,35 @@ function buildEmbed({ version, changes = [], fixes = [], publishedAt = new Date(
     `.trim();
 
     return {
+        author: {
+            name: 'Neah',
+            url: AUTHOR_URL,
+            icon_url: AUTHOR_ICON_URL
+        },
         title: truncateText(`Aurum Accounts v${cleanVersion}`, TITLE_LIMIT),
         url: `${RELEASES_URL}v${encodeURIComponent(cleanVersion)}`,
         description: truncateText(descriptionText, DESCRIPTION_LIMIT),
         color: EMBED_COLOR,
         fields: [
-            { 
-                name: truncateText('🇪🇸 🚀 Novedades y Características', FIELD_NAME_LIMIT), 
-                value: formatField(normalizedChanges, EMPTY_SECTION_FALLBACK), 
-                inline: false 
+            {
+                name: truncateText('🇪🇸 🚀 Novedades y Características', FIELD_NAME_LIMIT),
+                value: 'Descubre las novedades y características de esta versión en las notas de la release de GitHub.',
+                inline: false
             },
-            { 
-                name: truncateText('🇬🇧 🚀 What\'s New & Features', FIELD_NAME_LIMIT), 
-                value: formatField(normalizedChanges, EMPTY_SECTION_FALLBACK), 
-                inline: false 
+            {
+                name: truncateText('🇬🇧 🚀 What\'s New & Features', FIELD_NAME_LIMIT),
+                value: 'Explore this version’s new features in the GitHub release notes.',
+                inline: false
             },
-            { 
-                name: truncateText('🛠️ Correcciones y Mejoras Técnicas / Bug Fixes', FIELD_NAME_LIMIT), 
-                value: formatField(normalizedFixes, EMPTY_SECTION_FALLBACK), 
-                inline: false 
+            {
+                name: truncateText('🇪🇸 🛠️ Correcciones y Mejoras Técnicas', FIELD_NAME_LIMIT),
+                value: 'Incluye correcciones de errores y mejoras técnicas para una experiencia más estable.',
+                inline: false
+            },
+            {
+                name: truncateText('🇬🇧 🛠️ Bug Fixes & Technical Improvements', FIELD_NAME_LIMIT),
+                value: 'Includes bug fixes and technical improvements for a more stable experience.',
+                inline: false
             }
         ],
         footer: { text: `Aurum Accounts • v${cleanVersion} · Publicado el ${publishedLabel} UTC` },
@@ -149,8 +138,6 @@ function parseReleaseNotes(body = '') {
 
 async function sendDiscordChangelog({
     version,
-    changes = [],
-    fixes = [],
     publishedAt = new Date(),
     webhookUrl = process.env.DISCORD_WEBHOOK_URL
 }) {
@@ -158,7 +145,7 @@ async function sendDiscordChangelog({
         throw new Error('Configura DISCORD_WEBHOOK_URL con una URL válida de webhook de Discord.');
     }
 
-    const embed = buildEmbed({ version, changes, fixes, publishedAt });
+    const embed = buildEmbed({ version, publishedAt });
     
     // Payload estructurado con autor, embed y los componentes (botones) al mismo nivel
     const payload = {
@@ -199,8 +186,7 @@ async function main() {
     const version = process.env.VERSION;
     if (!version) throw new Error('Falta la variable VERSION.');
 
-    const { changes, fixes } = parseReleaseNotes(process.env.RELEASE_BODY || '');
-    await sendDiscordChangelog({ version, changes, fixes });
+    await sendDiscordChangelog({ version });
     console.log(`Changelog de Aurum Accounts ${version} enviado a Discord con éxito.`);
 }
 
