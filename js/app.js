@@ -28,6 +28,19 @@
             return translations[sysLang] ? sysLang : 'es';
         }
 
+        const TACTICAL_TAGS = Object.freeze([
+            { id: 'duo-god', labelKey: 'tacticalDuoGod' },
+            { id: 'main-otp', labelKey: 'tacticalMainOtp' },
+            { id: 'tilt-alert', labelKey: 'tacticalTiltAlert' },
+            { id: 'smurf', labelKey: 'tacticalSmurf' }
+        ]);
+
+        function normalizeTacticalTags(tags) {
+            const allowed = new Set(TACTICAL_TAGS.map(tag => tag.id));
+            const values = Array.isArray(tags) ? tags : [];
+            return [...new Set(values.filter(tag => allowed.has(tag)))].slice(0, 2);
+        }
+
         const DEFAULT_SETTINGS = {
             language: getSystemLanguage(),
             launchAtStartup: false,
@@ -71,6 +84,7 @@
                             relation: friend.relation === 'rival' ? 'rival' : 'friend',
                             note: typeof friend.note === 'string' ? friend.note.slice(0, 120) : '',
                             tags: normalizeTags(friend.tags).map(tag => tag.slice(0, 40)).slice(0, 10),
+                            tacticalTags: normalizeTacticalTags(friend.tacticalTags),
                             soloq: friend.soloq || null,
                             flex: friend.flex || null,
                             lpHistory: Array.isArray(friend.lpHistory) ? friend.lpHistory : [],
@@ -100,37 +114,28 @@
         let currentLang = translations[settings.language] ? settings.language : getSystemLanguage();
         const christmasSnow = document.getElementById('christmas-snow');
         const christmasAudio = document.getElementById('christmas-audio');
-        const christmasAudioToggle = document.getElementById('christmas-audio-toggle');
-        const CHRISTMAS_MUSIC_PREFERENCE_KEY = 'aurum-christmas-music-muted';
         christmasAudio.src = 'assets/audio/navidad.mp3';
         christmasAudio.loop = true;
         christmasAudio.preload = 'none';
-        christmasAudio.volume = 0.03;
-        let christmasMusicMuted = false;
+        const CHRISTMAS_MUSIC_VOLUME_KEY = 'aurum-christmas-music-volume';
+        let christmasMusicVolume = 3;
+        try {
+            const rawMusicVolume = localStorage.getItem(CHRISTMAS_MUSIC_VOLUME_KEY);
+            if (rawMusicVolume !== null) {
+                const savedMusicVolume = Number(rawMusicVolume);
+                if (Number.isFinite(savedMusicVolume)) {
+                    christmasMusicVolume = Math.max(0, Math.min(100, Math.round(savedMusicVolume)));
+                }
+            }
+        } catch (error) {
+            console.error('No se pudo leer el volumen de la música ambiental:', error);
+        }
+        christmasAudio.volume = christmasMusicVolume / 100;
         let christmasMusicPlaying = false;
         let christmasPlaybackAttempt = 0;
         let christmasFadeFrame = null;
         let christmasFadeId = 0;
-        const CHRISTMAS_MUSIC_VOLUME = 0.03;
         const CHRISTMAS_AUDIO_FADE_DURATION = 500;
-
-        try {
-            christmasMusicMuted = localStorage.getItem(CHRISTMAS_MUSIC_PREFERENCE_KEY) === 'true';
-        } catch (error) {
-            console.error('No se pudo leer la preferencia de música navideña:', error);
-        }
-
-        function updateChristmasMusicButton() {
-            const labelKey = christmasMusicPlaying && !christmasMusicMuted
-                ? 'christmasMusicMute'
-                : 'christmasMusicUnmute';
-            christmasAudioToggle.setAttribute('data-i18n-title', labelKey);
-            christmasAudioToggle.setAttribute('data-i18n-aria-label', labelKey);
-            christmasAudioToggle.title = t(labelKey);
-            christmasAudioToggle.setAttribute('aria-label', t(labelKey));
-            christmasAudioToggle.setAttribute('aria-pressed', String(christmasMusicPlaying && !christmasMusicMuted));
-            christmasAudioToggle.hidden = !settings.christmasTheme;
-        }
 
         function fadeChristmasAudio(targetVolume, pauseAtEnd = false) {
             const fadeId = ++christmasFadeId;
@@ -161,34 +166,55 @@
         function stopChristmasMusic() {
             christmasPlaybackAttempt += 1;
             christmasMusicPlaying = false;
-            updateChristmasMusicButton();
             fadeChristmasAudio(0, true);
         }
 
         async function startChristmasMusic() {
-            if (!settings.christmasTheme || christmasMusicMuted) return;
+            if (!settings.christmasTheme || window.aurumSoundboard.getState().muted) return;
             const playbackAttempt = ++christmasPlaybackAttempt;
             const shouldStartFromSilence = christmasAudio.paused;
             if (shouldStartFromSilence) christmasAudio.volume = 0;
             christmasAudio.muted = false;
             await christmasAudio.play();
-            if (playbackAttempt !== christmasPlaybackAttempt || !settings.christmasTheme || christmasMusicMuted) {
+            if (playbackAttempt !== christmasPlaybackAttempt || !settings.christmasTheme
+                || window.aurumSoundboard.getState().muted) {
                 return;
             }
             christmasMusicPlaying = true;
-            fadeChristmasAudio(CHRISTMAS_MUSIC_VOLUME);
-            updateChristmasMusicButton();
+            fadeChristmasAudio(christmasMusicVolume / 100);
         }
+
+        function syncChristmasMusicWithMasterAudio() {
+            if (!settings.christmasTheme) return;
+            if (window.aurumSoundboard.getState().muted) {
+                stopChristmasMusic();
+            } else if (!christmasMusicPlaying) {
+                startChristmasMusic().catch(error => {
+                    console.warn('La reproducción navideña requiere interacción del usuario:', error);
+                });
+            }
+        }
+
+        function resumeChristmasMusicAfterInteraction() {
+            if (!settings.christmasTheme || window.aurumSoundboard.getState().muted
+                || christmasMusicPlaying || !christmasAudio.paused) return;
+            startChristmasMusic().catch(error => {
+                console.warn('La reproducción navideña requiere interacción del usuario:', error);
+            });
+        }
+
+        window.addEventListener('aurum-soundboard-state-change', syncChristmasMusicWithMasterAudio);
+        document.addEventListener('pointerdown', resumeChristmasMusicAfterInteraction, true);
+        document.addEventListener('keydown', resumeChristmasMusicAfterInteraction, true);
 
         ipcRenderer.on('christmas:stop-music', stopChristmasMusic);
         ipcRenderer.on('christmas:resume-music', () => {
-            if (settings.christmasTheme && !christmasMusicMuted) {
+            if (settings.christmasTheme && !window.aurumSoundboard.getState().muted) {
                 startChristmasMusic().catch(error => {
                     console.warn('La reproducción navideña requiere interacción del usuario:', error);
                 });
             }
         });
-
         function applyChristmasTheme() {
             document.body.classList.toggle('christmas-theme', settings.christmasTheme);
             christmasSnow.hidden = !settings.christmasTheme;
@@ -205,11 +231,9 @@
                     christmasSnow.appendChild(flake);
                 }
             }
-            updateChristmasMusicButton();
-
             if (!settings.christmasTheme) {
                 stopChristmasMusic();
-            } else if (!christmasMusicMuted && !christmasMusicPlaying) {
+            } else if (!window.aurumSoundboard.getState().muted && !christmasMusicPlaying) {
                 startChristmasMusic().catch(error => {
                     console.warn('La reproducción navideña requiere interacción del usuario:', error);
                 });
@@ -259,6 +283,10 @@
             });
             document.documentElement.lang = currentLang;
             refreshWindowLabels();
+            refreshSoundboardButton();
+            refreshHextechChestButton();
+            renderDuoMatch();
+            renderRankedFocusWidget(window.aurumFocusMode.getState());
             applyViewMode(settings.viewMode);
             applyMainView(settings.activeView);
             document.querySelectorAll('.lang-option').forEach(btn => {
@@ -447,6 +475,39 @@
         let activeClientAccountId = null;
         let latestClientSnapshot = null;
         let clientSyncBusy = false;
+        let latestGameClientLock = null;
+        let gameflowPhase = '';
+        let gameflowSyncBusy = false;
+        let latestFocusQueueId = null;
+        let latestFocusQueueName = '';
+        let latestFocusStartedAt = null;
+        let lastFocusSessionSyncAt = 0;
+
+        function updateRankedFocusState(phase = gameflowPhase) {
+            const activeAccount = readAccounts().find(account => account.id === activeClientAccountId);
+            const hiddenAccount = settings.streamerMode && settings.streamerIds;
+            return window.aurumFocusMode.updateGameState({
+                phase,
+                queueId: latestFocusQueueId,
+                queueName: latestFocusQueueName,
+                startedAt: latestFocusStartedAt,
+                accountLabel: activeAccount
+                    ? hiddenAccount ? t('focusAccountHidden') : activeAccount.riotId || activeAccount.loginUser
+                    : ''
+            });
+        }
+
+        async function syncRankedFocusSession(lock) {
+            const response = await riotClientRequest('GET', '/lol-gameflow/v1/session', lock, 1000);
+            if (!response.ok) return;
+            const session = JSON.parse(response.body);
+            const gameData = session && session.gameData || {};
+            const queue = gameData.queue || session && session.queue || {};
+            latestFocusQueueId = queue.id === undefined ? null : queue.id;
+            latestFocusQueueName = queue.name || queue.shortName || queue.queueType || '';
+            latestFocusStartedAt = gameData.gameStart || gameData.startTime || session.gameStart || null;
+            updateRankedFocusState();
+        }
 
         function setClientSyncState(state, messageKey, canImport = false) {
             clientSyncBanner.dataset.state = state;
@@ -1223,6 +1284,438 @@
             }, 4000);
         }
 
+        const achievementsModal = document.getElementById('achievements-modal');
+        const achievementsAccount = document.getElementById('achievements-account');
+        const achievementsList = document.getElementById('achievements-list');
+
+        function openAchievements(account, state) {
+            achievementsAccount.textContent = account.riotId || account.loginUser || '';
+            achievementsList.innerHTML = window.aurumAchievements.catalog
+                .filter(achievement => !achievement.secret || state.unlocked[achievement.id])
+                .map(achievement => {
+                const unlockedAt = state.unlocked[achievement.id];
+                const isUnlocked = !!unlockedAt;
+                let dateLabel = '';
+                if (isUnlocked) {
+                    const date = new Date(unlockedAt);
+                    if (Number.isFinite(date.getTime())) {
+                        dateLabel = `${t('achievementUnlockedAt')} · ${date.toLocaleString(currentLang, { dateStyle: 'medium', timeStyle: 'short' })}`;
+                    }
+                }
+                return `<article class="achievement-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                    <span class="achievement-icon" aria-hidden="true">🏆</span>
+                    <div class="achievement-copy">
+                        <h4>${escapeHtml(t(achievement.nameKey))}</h4>
+                        <p>${escapeHtml(t(achievement.descriptionKey))}</p>
+                        <span class="achievement-status">${escapeHtml(dateLabel || t(isUnlocked ? 'achievementUnlockedAt' : 'achievementLocked'))}</span>
+                    </div>
+                </article>`;
+            }).join('');
+            achievementsModal.style.display = 'flex';
+            achievementsModal.setAttribute('aria-hidden', 'false');
+            document.getElementById('achievements-close').focus();
+        }
+
+        const masteryModal = document.getElementById('mastery-modal');
+        const masteryAccountLabel = document.getElementById('mastery-account');
+        const masteryLevelLabel = document.getElementById('mastery-level');
+        const masteryXpLabel = document.getElementById('mastery-xp');
+        const masteryProgress = document.getElementById('mastery-progress');
+        const masteryProgressFill = document.getElementById('mastery-progress-fill');
+        const masteryNextLevel = document.getElementById('mastery-next-level');
+        const masteryTitleSelect = document.getElementById('mastery-title-select');
+        let masteryAccountId = null;
+
+        function openMastery(account, state = window.aurumMastery.getState(account)) {
+            masteryAccountId = account.id;
+            masteryAccountLabel.textContent = account.riotId || account.loginUser || '';
+            masteryLevelLabel.textContent = t(`masteryLevel${state.level}`);
+            masteryXpLabel.textContent = t('masteryXpProgress').replace('{xp}', state.xp.toLocaleString(currentLang));
+            masteryProgress.setAttribute('aria-valuenow', String(state.progressPercent));
+            masteryProgress.setAttribute('aria-valuetext', `${state.progressPercent}%`);
+            masteryProgressFill.style.width = `${state.progressPercent}%`;
+            masteryNextLevel.textContent = state.nextLevel
+                ? t('masteryNextLevel').replace('{xp}', (state.xpForNextLevel - state.xpIntoLevel).toLocaleString(currentLang))
+                : t('masteryMaxLevel');
+            masteryTitleSelect.innerHTML = state.unlockedTitles.map(title =>
+                `<option value="${escapeHtml(title.id)}">${escapeHtml(t(title.nameKey))}</option>`
+            ).join('');
+            masteryTitleSelect.value = state.equippedTitleId;
+            masteryModal.style.display = 'flex';
+            masteryModal.setAttribute('aria-hidden', 'false');
+            document.getElementById('mastery-close').focus();
+        }
+
+        function closeMastery() {
+            masteryModal.style.display = 'none';
+            masteryModal.setAttribute('aria-hidden', 'true');
+            masteryAccountId = null;
+        }
+
+        document.getElementById('mastery-close').addEventListener('click', closeMastery);
+        document.getElementById('mastery-save').addEventListener('click', () => {
+            const account = readAccounts().find(item => item.id === masteryAccountId);
+            if (!account) {
+                closeMastery();
+                return;
+            }
+            try {
+                window.aurumMastery.equipTitle(account, masteryTitleSelect.value);
+                closeMastery();
+                loadAccounts();
+            } catch (error) {
+                console.error('No se pudo equipar el título de maestría:', error);
+                showNeonNotification(t('masteryEquipFailed'));
+            }
+        });
+        masteryModal.addEventListener('click', event => {
+            if (event.target === masteryModal) closeMastery();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && masteryModal.style.display === 'flex') closeMastery();
+        });
+
+        const hextechChestButton = document.getElementById('hextech-chest-button');
+        const hextechChestCount = document.getElementById('hextech-chest-count');
+        const hextechChestModal = document.getElementById('hextech-chest-modal');
+        const hextechChestCanvas = document.getElementById('hextech-chest-canvas');
+        const hextechChestStatus = document.getElementById('hextech-chest-status');
+        const hextechChestReward = document.getElementById('hextech-chest-reward');
+        const hextechChestAccount = document.getElementById('hextech-chest-account');
+        const hextechChestFragments = document.getElementById('hextech-chest-fragments-list');
+        const hextechChestOpenButton = document.getElementById('hextech-chest-open');
+        const hextechChestClaimButton = document.getElementById('hextech-chest-claim');
+        let cancelHextechChestAnimation = null;
+
+        function refreshHextechChestButton() {
+            try {
+                const state = window.aurumHextechChest.getState();
+                hextechChestCount.textContent = String(state.available);
+                hextechChestButton.setAttribute('aria-label', t('chestButtonLabel').replace('{count}', String(state.available)));
+                hextechChestButton.title = t('chestButtonTitle').replace('{count}', String(state.available));
+                hextechChestButton.classList.toggle('has-chest', state.available > 0);
+                hextechChestButton.disabled = false;
+            } catch (error) {
+                console.error('No se pudo actualizar el indicador de cofres Hextech:', error);
+                hextechChestButton.disabled = true;
+                hextechChestButton.title = t('chestStorageError');
+            }
+        }
+
+        function renderHextechChestFragments(fragments) {
+            hextechChestFragments.innerHTML = fragments.length
+                ? fragments.map(fragment => `<p>${escapeHtml(t(`chestFragment${fragment.id[0].toUpperCase()}${fragment.id.slice(1)}`))}</p>`).join('')
+                : `<p class="hextech-chest-empty">${escapeHtml(t('chestNoFragments'))}</p>`;
+        }
+
+        function renderHextechChestReward(reward) {
+            let title = '';
+            let description = '';
+            if (reward.type === 'masteryXp') {
+                title = t('chestRewardMastery');
+                description = t('chestRewardXpAmount').replace('{xp}', String(reward.xp));
+            } else if (reward.type === 'emblem') {
+                const emblem = window.aurumHextechChest.cosmetics.find(item => item.id === reward.emblemId);
+                title = emblem ? t(emblem.nameKey) : t('chestRewardEmblem');
+                description = reward.permanent ? t('chestDurationPermanent') : t('chestDuration24Hours');
+            } else {
+                title = t('chestRewardFragment');
+                description = t(`chestFragment${reward.fragmentId[0].toUpperCase()}${reward.fragmentId.slice(1)}`);
+            }
+            hextechChestReward.innerHTML = `<span class="hextech-reward-kicker">${escapeHtml(t('chestRewardRevealed'))}</span>
+                <strong>${escapeHtml(title)}</strong><p>${escapeHtml(description)}</p>`;
+            hextechChestReward.hidden = false;
+            hextechChestOpenButton.hidden = true;
+            hextechChestClaimButton.hidden = false;
+            hextechChestClaimButton.disabled = reward.type === 'masteryXp' && hextechChestAccount.options.length === 0;
+            hextechChestStatus.textContent = t('chestReadyToClaim');
+            hextechChestAccount.closest('.hextech-chest-account-field').hidden = reward.type !== 'masteryXp';
+        }
+
+        function refreshHextechChestModal() {
+            const accounts = readAccounts();
+            const selectedId = activeClientAccountId && accounts.some(account => account.id === activeClientAccountId)
+                ? activeClientAccountId
+                : accounts[0] && accounts[0].id;
+            hextechChestAccount.innerHTML = accounts.map((account, index) => {
+                const streamerLabel = settings.streamerMode && settings.streamerIds
+                    ? t('chestAccountN').replace('{n}', String(index + 1))
+                    : account.riotId || account.loginUser || account.id;
+                return `<option value="${escapeHtml(account.id)}">${escapeHtml(streamerLabel)}</option>`;
+            }).join('');
+            hextechChestAccount.disabled = accounts.length === 0;
+            if (selectedId) hextechChestAccount.value = selectedId;
+
+            const state = window.aurumHextechChest.getState();
+            renderHextechChestFragments(state.fragments);
+            hextechChestReward.hidden = true;
+            hextechChestClaimButton.hidden = true;
+            hextechChestOpenButton.hidden = false;
+            hextechChestOpenButton.disabled = state.available < 1;
+            hextechChestStatus.textContent = state.pendingReward
+                ? t('chestPendingReward')
+                : state.available
+                    ? t('chestDailyHint').replace('{count}', String(state.available))
+                    : t('chestNoneAvailable');
+            if (state.pendingReward) renderHextechChestReward(state.pendingReward);
+        }
+
+        function openHextechChestModal() {
+            refreshHextechChestModal();
+            hextechChestModal.style.display = 'flex';
+            hextechChestModal.setAttribute('aria-hidden', 'false');
+            (hextechChestModal.querySelector('#hextech-chest-claim:not([hidden])')
+                || hextechChestModal.querySelector('#hextech-chest-open')).focus();
+        }
+
+        function closeHextechChestModal() {
+            if (cancelHextechChestAnimation) {
+                cancelHextechChestAnimation();
+                cancelHextechChestAnimation = null;
+            }
+            hextechChestModal.style.display = 'none';
+            hextechChestModal.setAttribute('aria-hidden', 'true');
+        }
+
+        hextechChestButton.addEventListener('click', openHextechChestModal);
+        document.getElementById('hextech-chest-close').addEventListener('click', closeHextechChestModal);
+        hextechChestModal.addEventListener('click', event => {
+            if (event.target === hextechChestModal) closeHextechChestModal();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && hextechChestModal.style.display === 'flex') closeHextechChestModal();
+        });
+        hextechChestOpenButton.addEventListener('click', () => {
+            try {
+                const reward = window.aurumHextechChest.openChest({ allowMasteryXp: readAccounts().length > 0 });
+                refreshHextechChestButton();
+                hextechChestOpenButton.disabled = true;
+                hextechChestStatus.textContent = t('chestOpening');
+                cancelHextechChestAnimation = window.aurumHextechChest.animateOpening(hextechChestCanvas, () => {
+                    cancelHextechChestAnimation = null;
+                    renderHextechChestReward(reward);
+                    refreshHextechChestButton();
+                });
+            } catch (error) {
+                console.error('No se pudo abrir el cofre Hextech:', error);
+                showNeonNotification(t('chestOpenError'));
+                refreshHextechChestModal();
+            }
+        });
+        hextechChestClaimButton.addEventListener('click', () => {
+            try {
+                const state = window.aurumHextechChest.getState();
+                if (!state.pendingReward) {
+                    refreshHextechChestModal();
+                    return;
+                }
+                const account = state.pendingReward.type === 'masteryXp'
+                    ? readAccounts().find(item => item.id === hextechChestAccount.value)
+                    : null;
+                const claimed = window.aurumHextechChest.claimPending(account);
+                refreshHextechChestButton();
+                if (claimed.type === 'masteryXp') loadAccounts();
+                showNeonNotification(t('chestClaimed'));
+                closeHextechChestModal();
+            } catch (error) {
+                console.error('No se pudo reclamar la recompensa del cofre Hextech:', error);
+                showNeonNotification(t('chestClaimError'));
+            }
+        });
+        window.addEventListener('aurum-hextech-chest-earned', event => {
+            refreshHextechChestButton();
+            const earned = Number(event.detail && event.detail.earned) || 0;
+            if (earned) showNeonNotification(t('chestBonusEarned').replace('{count}', String(earned)));
+        });
+        refreshHextechChestButton();
+        setInterval(refreshHextechChestButton, 60 * 1000);
+
+        function closeAchievements() {
+            achievementsModal.style.display = 'none';
+            achievementsModal.setAttribute('aria-hidden', 'true');
+        }
+
+        document.getElementById('achievements-close').addEventListener('click', closeAchievements);
+        achievementsModal.addEventListener('click', event => {
+            if (event.target === achievementsModal) closeAchievements();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && achievementsModal.style.display === 'flex') closeAchievements();
+        });
+
+        const gamerCardModal = document.getElementById('gamer-card-modal');
+        const gamerCardPreview = document.getElementById('gamer-card-preview');
+        let currentGamerCardCanvas = null;
+
+        function gamerCardLabels() {
+            const activeEmblem = window.aurumHextechChest.getState().activeEmblem;
+            return {
+                region: t('gamerCardRegion'),
+                rank: t('gamerCardRank'),
+                winRate: t('gamerCardWinRate'),
+                streak: t('gamerCardStreak'),
+                trophies: t('gamerCardTrophies'),
+                games: t('gamerCardGames'),
+                game: t('gamerCardGame'),
+                wins: t('gamerCardWins'),
+                win: t('gamerCardWin'),
+                losses: t('gamerCardLosses'),
+                loss: t('gamerCardLoss'),
+                none: t('gamerCardNone'),
+                unranked: t('gamerCardUnranked'),
+                noData: t('gamerCardNoData'),
+                recentGames: t('gamerCardRecentGames'),
+                unlocked: t('gamerCardUnlocked'),
+                shareCard: t('gamerCardShareCard'),
+                emblem: activeEmblem ? t(activeEmblem.nameKey) : '',
+                emblemId: activeEmblem ? activeEmblem.id : ''
+            };
+        }
+
+        async function openGamerCard(account, achievementState) {
+            try {
+                const topChampion = Array.isArray(account.topChampions)
+                    ? account.topChampions.reduce((best, champion) => {
+                        const games = Number(champion.wins || 0) + Number(champion.losses || 0);
+                        const bestGames = best ? Number(best.wins || 0) + Number(best.losses || 0) : -1;
+                        return games > bestGames ? champion : best;
+                    }, null)
+                    : null;
+                const championKey = topChampion ? champId(topChampion.name) : null;
+                const assets = await window.aurumGamerCardBridge.getAssets(championKey);
+                currentGamerCardCanvas = await window.aurumGamerCard.createGamerCard(
+                    account,
+                    achievementState,
+                    gamerCardLabels(),
+                    assets
+                );
+                gamerCardPreview.replaceChildren(currentGamerCardCanvas);
+                gamerCardModal.style.display = 'flex';
+                gamerCardModal.setAttribute('aria-hidden', 'false');
+                document.getElementById('gamer-card-download').focus();
+            } catch (error) {
+                console.error('No se pudo generar la Gamer Card:', error);
+                showNeonNotification(t('gamerCardExportFailed'));
+            }
+        }
+
+        function closeGamerCard() {
+            gamerCardModal.style.display = 'none';
+            gamerCardModal.setAttribute('aria-hidden', 'true');
+            currentGamerCardCanvas = null;
+            gamerCardPreview.replaceChildren();
+        }
+
+        document.getElementById('gamer-card-close').addEventListener('click', closeGamerCard);
+        gamerCardModal.addEventListener('click', event => {
+            if (event.target === gamerCardModal) closeGamerCard();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && gamerCardModal.style.display === 'flex') closeGamerCard();
+        });
+        function canvasToPngBlob(canvas) {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob(blob => {
+                    if (blob) resolve(blob);
+                    else reject(new Error('El canvas no pudo generar un PNG.'));
+                }, 'image/png');
+            });
+        }
+
+        document.getElementById('gamer-card-download').addEventListener('click', async () => {
+            if (!currentGamerCardCanvas) return;
+            let objectUrl = null;
+            try {
+                const blob = await canvasToPngBlob(currentGamerCardCanvas);
+                const link = document.createElement('a');
+                link.download = 'aurum-gamer-card.png';
+                objectUrl = URL.createObjectURL(blob);
+                link.href = objectUrl;
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+                showNeonNotification(t('gamerCardDownloaded'));
+            } catch (error) {
+                console.error('No se pudo exportar la Gamer Card:', error);
+                showNeonNotification(t('gamerCardExportFailed'));
+                if (objectUrl) URL.revokeObjectURL(objectUrl);
+            }
+        });
+
+        const poroGameModal = document.getElementById('poro-game-modal');
+        const poroGameFab = document.getElementById('poro-game-fab');
+        const poroGameCanvas = document.getElementById('poro-game-canvas');
+        const poroGameScore = document.getElementById('poro-game-score');
+        const poroGameHighScore = document.getElementById('poro-game-high-score');
+        const poroGameStatus = document.getElementById('poro-game-status');
+        const poroGameStart = document.getElementById('poro-game-start');
+        let poroGame = null;
+
+        function openPoroGame() {
+            if (gameflowPhase === 'READYCHECK') return;
+            if (!poroGame) {
+                poroGame = window.aurumPoroDodge.createPoroDodge(
+                    poroGameCanvas,
+                    {
+                        get ready() { return t('poroReady'); },
+                        get instructions() { return t('poroInstructions'); },
+                        get gameOver() { return t('poroGameOver'); },
+                        get restartHint() { return t('poroRestartHint'); }
+                    },
+                    (score, highScore) => {
+                        poroGameScore.textContent = String(score);
+                        poroGameHighScore.textContent = String(highScore);
+                    },
+                    () => {
+                        try {
+                            const accounts = readAccounts();
+                            const account = accounts.find(item => item.id === activeClientAccountId)
+                                || accounts[0]
+                                || { id: 'poro-dodge-player' };
+                            const unlock = window.aurumAchievements.unlockAchievement(account, 'poro_dodger');
+                            if (unlock.newlyUnlocked) {
+                                showNeonNotification(t('poroAchievementToast'));
+                                if (account.id !== 'poro-dodge-player') loadAccounts();
+                            }
+                        } catch (error) {
+                            console.error('No se pudo desbloquear el logro de Poro Dodge:', error);
+                        }
+                    },
+                    () => {
+                        poroGameStatus.textContent = t('poroGameOver');
+                        poroGameStart.textContent = t('poroRestart');
+                    }
+                );
+                poroGameHighScore.textContent = String(poroGame.highScore);
+            }
+            poroGameStatus.textContent = t('poroInstructions');
+            poroGameStart.textContent = t('poroStart');
+            poroGameModal.style.display = 'flex';
+            poroGameModal.setAttribute('aria-hidden', 'false');
+            document.getElementById('poro-game-close').focus();
+        }
+
+        function closePoroGame() {
+            if (poroGame) poroGame.pause();
+            poroGameModal.style.display = 'none';
+            poroGameModal.setAttribute('aria-hidden', 'true');
+        }
+
+        poroGameFab.addEventListener('click', openPoroGame);
+        document.getElementById('poro-game-settings-open').addEventListener('click', openPoroGame);
+        document.getElementById('poro-game-close').addEventListener('click', closePoroGame);
+        poroGameModal.addEventListener('click', event => {
+            if (event.target === poroGameModal) closePoroGame();
+        });
+        poroGameStart.addEventListener('click', () => {
+            if (!poroGame) return;
+            poroGameStart.textContent = t('poroStart');
+            poroGameStatus.textContent = t('poroInstructions');
+            poroGame.start();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && poroGameModal.style.display === 'flex') closePoroGame();
+        });
+
         // Escapa un texto para SendKeys (+ ^ % ~ ( ) { } [ ] tienen significado especial)
         // y lo devuelve como cadena literal de PowerShell entre comillas simples.
         function sendKeysLiteral(str) {
@@ -1442,6 +1935,61 @@
             return changed || historyChanged;
         }
 
+        function setPoroGameflowPhase(phase) {
+            const normalized = String(phase || '').trim().toUpperCase();
+            if (!normalized) return;
+            const previousPhase = gameflowPhase;
+            gameflowPhase = normalized;
+            if (normalized !== 'INPROGRESS') {
+                latestFocusQueueId = null;
+                latestFocusQueueName = '';
+                latestFocusStartedAt = null;
+            } else if (previousPhase !== normalized) {
+                latestFocusQueueId = null;
+                latestFocusQueueName = '';
+                latestFocusStartedAt = null;
+            }
+            if (previousPhase !== normalized) updateRankedFocusState();
+
+            if (normalized === 'READYCHECK') {
+                if (previousPhase !== normalized) window.aurumSoundboard.play('readyCheck');
+                poroGameFab.hidden = true;
+                if (poroGameModal.style.display === 'flex') closePoroGame();
+                return;
+            }
+
+            const queuePhase = normalized === 'LOBBY' || normalized === 'MATCHMAKING';
+            poroGameFab.hidden = !queuePhase;
+        }
+
+        async function pollGameflowPhase() {
+            if (gameflowSyncBusy) return;
+            gameflowSyncBusy = true;
+            try {
+                const lock = readLeagueClientLockfile() || latestGameClientLock;
+                if (!lock) {
+                    setPoroGameflowPhase('NONE');
+                    return;
+                }
+                const response = await riotClientRequest('GET', '/lol-gameflow/v1/gameflow-phase', lock, 1000);
+                if (!response.ok) return;
+                let phase;
+                try { phase = JSON.parse(response.body); }
+                catch (error) { phase = String(response.body || '').trim().replace(/^"|"$/g, ''); }
+                if (typeof phase === 'string') {
+                    setPoroGameflowPhase(phase);
+                    if (phase.toUpperCase() === 'INPROGRESS' && Date.now() - lastFocusSessionSyncAt >= 5000) {
+                        lastFocusSessionSyncAt = Date.now();
+                        await syncRankedFocusSession(lock);
+                    }
+                }
+            } catch (error) {
+                console.warn('No se pudo consultar el estado de cola del cliente LCU:', error.message);
+            } finally {
+                gameflowSyncBusy = false;
+            }
+        }
+
         function syncClientProfile(profile) {
             const accounts = readAccounts();
             const matchedAccount = accounts.find(account => matchesClientAccount(account, profile));
@@ -1478,6 +2026,7 @@
             }
 
             if (changed) writeAccounts(accounts);
+            updateRankedFocusState();
             if (changed || previousActiveId !== activeClientAccountId) loadAccounts();
             if (rankChanges.length) notifyRankChanges(rankChanges);
             latestClientSnapshot = profile;
@@ -1533,6 +2082,8 @@
             try {
                 const lock = readLeagueClientLockfile() || await readLeagueClientProcessLockfile();
                 if (!lock) {
+                    latestGameClientLock = null;
+                    setPoroGameflowPhase('NONE');
                     const detectedPids = await listLeaguePids();
                     const hadActiveAccount = activeClientAccountId !== null;
                     activeClientAccountId = null;
@@ -1541,6 +2092,7 @@
                     setClientSyncState(detectedPids.size ? 'waiting' : 'offline', detectedPids.size ? 'clientSyncWaiting' : 'clientSyncOffline');
                     return;
                 }
+                latestGameClientLock = lock;
 
                 const profile = await readGameClientProfile(lock);
                 if (profile && (profile.puuid || profile.riotId)) {
@@ -1561,16 +2113,23 @@
         }
 
         // Siempre resuelve: { ok, status, note, body }
-        function riotClientRequest(method, apiPath, lock = readRiotLockfile()) {
+        function riotClientRequest(method, apiPath, lock = readRiotLockfile(), timeout = 5000, requestBody = null) {
             return new Promise(resolve => {
                 if (!lock) { resolve({ ok: false, status: 0, note: 'sin lockfile' }); return; }
                 let finished = false;
                 const finish = result => { if (!finished) { finished = true; resolve(result); } };
+                const body = requestBody === null ? null : JSON.stringify(requestBody);
                 const req = https.request({
                     host: '127.0.0.1', port: lock.port, path: apiPath, method,
-                    headers: { Authorization: 'Basic ' + Buffer.from('riot:' + lock.password).toString('base64') },
+                    headers: {
+                        Authorization: 'Basic ' + Buffer.from('riot:' + lock.password).toString('base64'),
+                        ...(body === null ? {} : {
+                            'Content-Type': 'application/json',
+                            'Content-Length': Buffer.byteLength(body)
+                        })
+                    },
                     rejectUnauthorized: false, // certificado local autofirmado
-                    timeout: 5000
+                    timeout
                 }, res => {
                     let body = '';
                     res.on('data', chunk => { if (body.length < 65536) body += chunk; });
@@ -1578,7 +2137,7 @@
                 });
                 req.on('timeout', () => { req.destroy(); finish({ ok: false, status: 0, note: 'timeout' }); });
                 req.on('error', e => finish({ ok: false, status: 0, note: e.code || 'error' }));
-                req.end();
+                req.end(body === null ? undefined : body);
             });
         }
 
@@ -1760,6 +2319,14 @@
             session.state = 'success';
             session.status = session.steps.map(() => 'done');
             session.footer = launchedGame ? 'loginLaunching' : 'loginDoneNoGame';
+            const currentAccount = readAccounts().find(account => account.id === session.account.id) || session.account;
+            try {
+                window.aurumMastery.addXp(currentAccount, 25);
+            } catch (error) {
+                console.error('No se pudo añadir XP por iniciar sesión:', error);
+            }
+            window.aurumSoundboard.play('login');
+            loadAccounts();
             renderLogin();
             loginBtnClose.focus();
             if (session.fromTray) {
@@ -2052,11 +2619,15 @@
             }
         }
 
-        function renderCard(account, visibleIndex, visibleCount) {
+        function renderCard(account, visibleIndex, visibleCount, achievementState) {
             const newCard = document.createElement('div');
             newCard.className = 'account-card';
             newCard.dataset.accountId = account.id;
             newCard.classList.toggle('client-active', account.id === activeClientAccountId);
+            const masteryState = window.aurumMastery.getState(account);
+            const masteryBadgeLabel = `${t('masteryBadgeLabel')} · ${masteryState.badgeText} · ${t(masteryState.equippedTitle.nameKey)}`;
+            newCard.classList.toggle('mastery-tier-5', masteryState.level >= 5 && masteryState.level < 7);
+            newCard.classList.toggle('mastery-tier-7', masteryState.level >= 7);
 
             const soloq = account.soloq || EMPTY_QUEUE();
             const flex = account.flex || EMPTY_QUEUE();
@@ -2151,12 +2722,17 @@
                 <div style="position: relative; z-index: 1; display: flex; gap: 14px; align-items: center;">
                     <img src="${iconUrl}" alt="" style="width: 52px; height: 52px; min-width: 52px; object-fit: contain; transform: scale(3.5); transform-origin: center; filter: drop-shadow(0 0 8px ${rankTheme.glow});">
                     <div style="flex-grow: 1; min-width: 0;">
-                        <div class="acc-name-line sens sens-id" title="${escapeHtml(account.riotId || account.loginUser)}">
-                            ${profileIconHtml}
-                            <span class="acc-name">${escapeHtml(shownName)}</span>${tag ? `<span class="acc-tag">#${escapeHtml(tag)}</span>` : ''}
+                        <div class="acc-name-line">
+                            <span class="acc-name-identity sens sens-id" title="${escapeHtml(account.riotId || account.loginUser)}">
+                                ${profileIconHtml}
+                                <span class="acc-name">${escapeHtml(shownName)}</span>${tag ? `<span class="acc-tag">#${escapeHtml(tag)}</span>` : ''}
+                            </span>
                         </div>
                         <div class="acc-badges">
                             <span class="acc-badge region">${escapeHtml(region)}</span>
+                            <button type="button" class="acc-badge mastery-badge" aria-label="${escapeHtml(masteryBadgeLabel)}" title="${escapeHtml(masteryBadgeLabel)}">
+                                ${escapeHtml(masteryState.badgeText)}<span aria-hidden="true">·</span>${escapeHtml(t(masteryState.equippedTitle.nameKey))}
+                            </button>
                             ${showLevel ? `<span class="acc-badge">${escapeHtml(t('levelShort'))} ${escapeHtml(account.level)}</span>` : ''}
                             ${account.loginUser ? `<span class="acc-badge user sens sens-login" title="${escapeHtml(t('fieldLoginUser'))}">${USER_ICON}${escapeHtml(account.loginUser)}</span>` : ''}
                             ${activeAccountHtml}
@@ -2192,11 +2768,19 @@
 
                 ${account.description ? `<div class="acc-description sens sens-desc" style="position: relative; z-index: 1;" title="${escapeHtml(account.description)}">${escapeHtml(account.description)}</div>` : ''}
 
-                <div class="card-actions" style="position: relative; z-index: 1; margin-top: 12px; display: flex; gap: 8px; border-top: 1px solid #1f2029; padding-top: 12px;">
+                <div class="card-actions" style="position: relative; z-index: 1; margin-top: 12px; border-top: 1px solid #1f2029; padding-top: 12px;">
+                    <div class="account-quick-actions">
                     ${reorderActions}
-                    <button class="btn-login">${LOGIN_ICON}<span>${escapeHtml(t('loginAction'))}</span></button>
+                    <div class="account-quick-buttons">
+                    <button type="button" class="card-icon-btn achievement-button" data-tip="${escapeHtml(t('achievementsButton'))}" aria-label="${escapeHtml(t('achievementsButton'))}">🏆</button>
+                    <button type="button" class="card-icon-btn gamer-card-button" data-tip="${escapeHtml(t('gamerCardExportTooltip'))}" aria-label="${escapeHtml(t('gamerCardExportTooltip'))}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="3"/></svg>
+                    </button>
                     <button class="card-icon-btn" data-copy="riot" data-tip="${escapeHtml(t('copyRiotId'))}" aria-label="${escapeHtml(t('copyRiotId'))}" ${hasRiotId(account) ? '' : 'disabled'}>${CLIPBOARD_ICON}${OK_ICON}</button>
                     <button class="card-icon-btn" data-copy="password" data-tip="${escapeHtml(t('copyPassword'))}" aria-label="${escapeHtml(t('copyPassword'))}">${KEY_ICON}${OK_ICON}</button>
+                    </div>
+                    </div>
+                    <button type="button" class="btn-login" aria-label="${escapeHtml(t('loginAction'))}">${LOGIN_ICON}<span>${escapeHtml(t('loginAction'))}</span></button>
                 </div>
             `;
 
@@ -2208,6 +2792,18 @@
                 e.stopPropagation();
                 if (btn.dataset.copy) copyFromAccount(account, btn.dataset.copy, btn);
             }));
+            newCard.querySelector('.achievement-button').addEventListener('click', event => {
+                event.stopPropagation();
+                openAchievements(account, achievementState);
+            });
+            newCard.querySelector('.mastery-badge').addEventListener('click', event => {
+                event.stopPropagation();
+                openMastery(account);
+            });
+            newCard.querySelector('.gamer-card-button').addEventListener('click', event => {
+                event.stopPropagation();
+                openGamerCard(account, achievementState);
+            });
 
             newCard.querySelector('.btn-login').addEventListener('click', () => {
                 startLogin(account);
@@ -2429,6 +3025,31 @@
             loadAccounts();
         }
 
+        function friendRecentStatus(recentGames) {
+            if (!Array.isArray(recentGames) || !recentGames.length) return '';
+            const results = recentGames.slice(0, 10).map(game => {
+                const result = String(game && game.result || '').toUpperCase();
+                if (result === 'WIN' || result === 'VICTORY') return 'WIN';
+                if (result === 'LOSE' || result === 'LOSS' || result === 'DEFEAT') return 'LOSE';
+                return '';
+            });
+            const decisive = results.filter(Boolean);
+            if (!decisive.length) return '';
+            const wins = decisive.filter(result => result === 'WIN').length;
+            const winRate = Math.round(wins / decisive.length * 100);
+            let winStreak = 0;
+            if (results[0] === 'WIN') {
+                for (const result of results) {
+                    if (result !== 'WIN') break;
+                    winStreak += 1;
+                }
+            }
+            return `<div class="friend-recent-status">
+                ${winStreak >= 4 ? `<span class="friend-status-badge on-streak">${escapeHtml(t('friendOnStreak'))} · ${winStreak}</span>` : ''}
+                <span class="friend-status-badge recent-win-rate">${winRate}% ${escapeHtml(t('friendRecentWinRate'))}</span>
+            </div>`;
+        }
+
         function renderFriendCard(friend) {
             const card = document.createElement('article');
             card.className = 'account-card friend-card';
@@ -2445,6 +3066,19 @@
             const tagsHtml = friendTags.length
                 ? `<div class="friend-tags">${friendTags.map(tag => `<span class="friend-tag">${escapeHtml(tag)}</span>`).join('')}</div>`
                 : '';
+            const tacticalTags = normalizeTacticalTags(friend.tacticalTags);
+            const tacticalTagsHtml = tacticalTags.length
+                ? `<div class="friend-tactical-badges">${tacticalTags.map(id => {
+                    const tag = TACTICAL_TAGS.find(item => item.id === id);
+                    return tag ? `<span class="rival-tactical-badge ${tag.id}">${escapeHtml(t(tag.labelKey))}</span>` : '';
+                }).join('')}</div>`
+                : '';
+            const recentStatusHtml = friendRecentStatus(friend.recentGames);
+            const tacticalTagInputs = TACTICAL_TAGS.map(tag => `
+                <label class="tactical-tag-option ${tag.id}">
+                    <input type="checkbox" data-tactical-tag value="${tag.id}" ${tacticalTags.includes(tag.id) ? 'checked' : ''}>
+                    <span>${escapeHtml(t(tag.labelKey))}</span>
+                </label>`).join('');
             const rankSummary = (queue, label) => {
                 if (!queue || !queue.tier) return `<div class="friend-rank-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(t('unranked'))}</strong></div>`;
                 return `<div class="friend-rank-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(prettyTier(queue.tier))} · ${Number(queue.lp) || 0} LP</strong></div>`;
@@ -2465,11 +3099,15 @@
             card.innerHTML = `
                 <header class="friend-card-head">
                     <div>
-                        <div class="friend-card-name">${escapeHtml(friend.riotId)}</div>
+                        <div class="friend-card-identity">
+                            <div class="friend-card-name">${escapeHtml(friend.riotId)}</div>
+                            ${tacticalTagsHtml}
+                        </div>
                         <div class="friend-card-meta">${escapeHtml(regionName(friendRegion))} · ${escapeHtml(t(friend.relation === 'rival' ? 'friendTypeRival' : 'friendTypeFriend'))}</div>
                     </div>
                     <button type="button" class="friend-remove" data-remove-friend="${escapeHtml(friend.id)}" aria-label="${escapeHtml(t('friendRemove'))}" title="${escapeHtml(t('friendRemove'))}">×</button>
                 </header>
+                ${recentStatusHtml}
                 <div class="friend-ranks">
                     ${rankSummary(solo, 'Solo/Duo')}
                     ${rankSummary(flex, t('flex'))}
@@ -2483,6 +3121,11 @@
                     <input class="friend-note-input" id="friend-note-${escapeHtml(friend.id)}" type="text" maxlength="120" data-friend-note value="${escapeHtml(friend.note || '')}" placeholder="${escapeHtml(t('friendNotePlaceholder'))}">
                     <label class="friend-note-label" for="friend-tags-${escapeHtml(friend.id)}">${escapeHtml(t('friendTags'))}</label>
                     <input class="friend-note-input" id="friend-tags-${escapeHtml(friend.id)}" type="text" data-friend-tags value="${escapeHtml(friendTags.join(', '))}" placeholder="${escapeHtml(t('friendTagsPlaceholder'))}">
+                    <fieldset class="tactical-tag-picker">
+                        <legend>${escapeHtml(t('friendTacticalTags'))}</legend>
+                        <span class="tactical-tag-hint">${escapeHtml(t('friendTacticalTagsHint'))}</span>
+                        <div class="tactical-tag-options">${tacticalTagInputs}</div>
+                    </fieldset>
                     <div class="friend-edit-actions">
                         <button class="btn-gold friend-add-button" type="submit">${escapeHtml(t('friendSave'))}</button>
                         <button class="friend-edit-cancel" type="button">${escapeHtml(t('friendCancel'))}</button>
@@ -2509,11 +3152,19 @@
                 loadAccounts();
             });
             const editForm = card.querySelector('.friend-edit-form');
+            const tacticalInputs = [...editForm.querySelectorAll('[data-tactical-tag]')];
+            const updateTacticalTagLimit = () => {
+                const selectedCount = tacticalInputs.filter(input => input.checked).length;
+                tacticalInputs.forEach(input => { input.disabled = !input.checked && selectedCount >= 2; });
+            };
+            tacticalInputs.forEach(input => input.addEventListener('change', updateTacticalTagLimit));
+            updateTacticalTagLimit();
             editForm.addEventListener('submit', event => {
                 event.preventDefault();
                 friend.note = card.querySelector('[data-friend-note]').value.trim().slice(0, 120);
                 friend.tags = normalizeTags(card.querySelector('[data-friend-tags]').value)
                     .map(tag => tag.slice(0, 40)).slice(0, 10);
+                friend.tacticalTags = normalizeTacticalTags(tacticalInputs.filter(input => input.checked).map(input => input.value));
                 saveSettings();
                 loadAccounts();
             });
@@ -2614,6 +3265,19 @@
 
         function loadAccounts() {
             const allAccounts = readAccounts();
+            renderDuoFeed();
+            const achievementStates = new Map();
+            const newlyUnlocked = [];
+            allAccounts.forEach(account => {
+                const state = window.aurumAchievements.evaluateAchievements(account, allAccounts);
+                achievementStates.set(account.id, state);
+                state.newlyUnlocked.forEach(achievement => {
+                    newlyUnlocked.push(`${displayName(account)} · ${t(achievement.nameKey)}`);
+                });
+            });
+            if (newlyUnlocked.length) {
+                showNeonNotification(`${t('achievementUnlockedToast')}: ${newlyUnlocked.join(' · ')}`);
+            }
             syncTray(allAccounts);
             populateRegionSelects(allAccounts);
             populateCategorySelect(allAccounts);
@@ -2639,7 +3303,7 @@
                 renderNoResults();
                 return;
             }
-            filteredAccounts.forEach((acc, index) => renderCard(acc, index, filteredAccounts.length));
+            filteredAccounts.forEach((acc, index) => renderCard(acc, index, filteredAccounts.length, achievementStates.get(acc.id)));
         }
 
         // ---------- Imágenes de campeones (Data Dragon, CDN de imágenes oficial de LoL) ----------
@@ -2966,7 +3630,9 @@
                     const duration = Number(g.game_length_second || g.game_length_seconds || g.duration);
                     if (Number.isFinite(duration) && duration > 0 && duration < 240) result = 'REMAKE';
                     const gameType = formatGameType(findGameType(g));
-                    return champ !== null && result ? { champ, result, gameType } : null;
+                    const timestamp = g.created_at ?? g.createdAt ?? g.played_at ?? g.playedAt ?? g.timestamp ?? null;
+                    const id = g.id ?? g.gameId ?? g.game_id ?? g.matchId ?? g.match_id ?? null;
+                    return champ !== null && result ? { id, champ, result, gameType, timestamp } : null;
                 }).filter(Boolean);
                 if (!best || games.length > best.length) best = games;
             }
@@ -3092,7 +3758,14 @@
                     a.opggUpdatedAt = r.opggUpdatedAt;
                     a.ladder = r.ladder;
                     a.topChampions = r.topChampions;
-                    if (r.recentGames) a.recentGames = r.recentGames; // si falla, se conservan las anteriores
+                    if (r.recentGames) {
+                        try {
+                            window.aurumMastery.addNewGames(a, r.recentGames);
+                        } catch (error) {
+                            console.error(`No se pudo añadir XP por partidas nuevas de ${a.riotId}:`, error);
+                        }
+                        a.recentGames = r.recentGames; // si falla, se conservan las anteriores
+                    }
                 }
             });
             let friendsChanged = false;
@@ -3354,10 +4027,51 @@
         btnAdd.addEventListener('click', () => openDrawer('add'));
         // ---------- Modal de ajustes ----------
         const setLanguageSel = document.getElementById('set-language');
+        const setVisualTheme = document.getElementById('set-visual-theme');
         const setLaunchStartup = document.getElementById('set-launch-startup');
         const setStartMinimized = document.getElementById('set-start-minimized');
         const setChristmasTheme = document.getElementById('set-christmas-theme');
+        const setRankedFocus = document.getElementById('set-ranked-focus');
         const setAutoRefresh = document.getElementById('set-auto-refresh');
+        const soundboardVolume = document.getElementById('soundboard-volume');
+        const soundboardVolumeValue = document.getElementById('soundboard-volume-value');
+        const christmasMusicVolumeInput = document.getElementById('christmas-music-volume');
+        const christmasMusicVolumeValue = document.getElementById('christmas-music-volume-value');
+        const soundboardToggle = document.getElementById('soundboard-toggle');
+        const rankedFocusWidget = document.getElementById('ranked-focus-widget');
+        const rankedFocusTimer = document.getElementById('ranked-focus-timer');
+        const rankedFocusQueue = document.getElementById('ranked-focus-queue');
+        const rankedFocusAccount = document.getElementById('ranked-focus-account');
+        const rankedFocusExit = document.getElementById('ranked-focus-exit');
+        rankedFocusExit.addEventListener('click', () => {
+            try {
+                window.aurumFocusMode.setEnabled(false);
+                setRankedFocus.checked = false;
+                updateRankedFocusState();
+            } catch (error) {
+                console.error('No se pudo desactivar Ranked Focus:', error);
+                showNeonNotification(t('focusSaveError'));
+            }
+        });
+        const aurumMatchModal = document.getElementById('aurum-match-modal');
+        const duoQueueFilter = document.getElementById('duo-queue-filter');
+        const duoRoleFilter = document.getElementById('duo-role-filter');
+        const duoFeed = document.getElementById('duo-feed');
+        const duoFeedEmpty = document.getElementById('duo-feed-empty');
+        const duoBoardStatus = document.getElementById('duo-board-status');
+        const duoPublishModal = document.getElementById('duo-publish-modal');
+        const duoPublishForm = document.getElementById('duo-publish-form');
+        const duoPublishStatus = document.getElementById('duo-publish-status');
+        const duoPublishButton = document.getElementById('duo-publish-submit');
+        const duoPublicConsent = document.getElementById('duo-public-consent');
+        const duoAccountSelect = document.getElementById('duo-account');
+        const duoPrimaryRole = document.getElementById('duo-primary-role');
+        const duoSecondaryRole = document.getElementById('duo-secondary-role');
+        const duoQueueSelect = document.getElementById('duo-queue');
+        const duoPlayStyle = document.getElementById('duo-play-style');
+        const duoVoiceSelect = document.getElementById('duo-voice');
+        const duoGoalInput = document.getElementById('duo-goal');
+        let duoLcuFriends = [];
         const setRankNotifications = document.getElementById('set-rank-notifications');
         const setDesktopNotifications = document.getElementById('set-desktop-notifications');
         const setRefreshMinutes = document.getElementById('set-refresh-minutes');
@@ -3376,6 +4090,19 @@
         const setTrayShortcutOn = document.getElementById('set-tray-shortcut-on');
         const shortcutBtn = document.getElementById('set-shortcut-btn');
         const shortcutWarn = document.getElementById('shortcut-warn');
+        const settingsTabs = Array.from(document.querySelectorAll('[data-settings-tab]'));
+        const settingsSections = Array.from(document.querySelectorAll('[data-settings-category]'));
+        const settingsContent = document.getElementById('settings-content');
+        const SETTINGS_CATEGORY_STORAGE_KEY = 'aurum-settings-selected-category';
+        let activeSettingsCategory = 'general';
+        try {
+            const savedCategory = localStorage.getItem(SETTINGS_CATEGORY_STORAGE_KEY);
+            if (settingsTabs.some(tab => tab.dataset.settingsTab === savedCategory)) {
+                activeSettingsCategory = savedCategory;
+            }
+        } catch (error) {
+            console.error('No se pudo restaurar la categoría de Ajustes:', error);
+        }
 
         function highlightPreset(minutes) {
             presetButtons.forEach(b => b.classList.toggle('active', parseInt(b.dataset.min, 10) === minutes));
@@ -3386,12 +4113,551 @@
             setStartMinimized.disabled = !setLaunchStartup.checked;
         }
 
+        function refreshSoundboardButton() {
+            const state = window.aurumSoundboard.getState();
+            soundboardToggle.classList.toggle('is-muted', state.muted);
+            soundboardToggle.setAttribute('aria-pressed', String(!state.muted));
+            const label = t(state.muted ? 'soundUnmute' : 'soundMute');
+            soundboardToggle.title = label;
+            soundboardToggle.setAttribute('aria-label', label);
+        }
+
+        function duoRoleOptions(selectedRole) {
+            const roles = window.aurumDuoFinder.roles;
+            const emptyOption = `<option value="">${escapeHtml(t('duoNoSecondaryRole'))}</option>`;
+            return (selectedRole === '' ? emptyOption : '') + roles.map(role =>
+                `<option value="${role}">${escapeHtml(t(`duoRole${role[0].toUpperCase()}${role.slice(1)}`))}</option>`
+            ).join('');
+        }
+
+        function getDuoWinRate(account) {
+            const value = getDuoWinRateValue(account);
+            return value === null ? t('duoNoRecentGames') : `${value}%`;
+        }
+
+        function getDuoWinRateValue(account) {
+            const games = account && Array.isArray(account.recentGames) ? account.recentGames.slice(0, 10) : [];
+            const results = games.map(game => String(game && game.result || '').toUpperCase());
+            const decisive = results.filter(result => ['WIN', 'VICTORY', 'LOSE', 'LOSS', 'DEFEAT'].includes(result));
+            if (!decisive.length) return null;
+            const wins = decisive.filter(result => result === 'WIN' || result === 'VICTORY').length;
+            return Math.round(wins / decisive.length * 100);
+        }
+
+        function setDuoBoardStatus(messageKey, state = '') {
+            duoBoardStatus.textContent = messageKey ? t(messageKey) : '';
+            if (state) duoBoardStatus.dataset.state = state;
+            else delete duoBoardStatus.dataset.state;
+        }
+
+        function duoRoleLabel(role) {
+            return role ? t(`duoRole${role[0].toUpperCase()}${role.slice(1)}`) : '';
+        }
+
+        function duoAccountLabel(account, accountIndex) {
+            const hiddenId = settings.streamerMode && settings.streamerIds;
+            const hiddenLogin = settings.streamerMode && settings.streamerLogin;
+            if (hiddenId) return t('duoAccountNumber').replace('{n}', String(accountIndex + 1));
+            return account.riotId || (!hiddenLogin ? account.loginUser : '') || t('duoUnknownAccount');
+        }
+
+        function duoRankDetails(queue, hiddenRank) {
+            if (hiddenRank) return { text: t('duoHidden'), tier: 'UNRANKED', lp: '' };
+            const rawTier = String(queue && queue.tier || 'UNRANKED').toUpperCase();
+            if (rawTier === 'UNRANKED') return { text: t('unranked'), tier: 'UNRANKED', lp: '' };
+            const tier = rawTier.split(/\s+/)[0];
+            const lp = Math.max(0, Number(queue && queue.lp) || 0);
+            return { text: `${prettyTier(rawTier)} · ${lp} LP`, tier, lp: `${lp} LP` };
+        }
+
+        function duoCreateEntry(account, details, index, own) {
+            const hiddenId = settings.streamerMode && settings.streamerIds;
+            const hiddenLogin = settings.streamerMode && settings.streamerLogin;
+            const hiddenRank = settings.streamerMode && settings.streamerIds;
+            const sourceAccount = account || {};
+            const rankQueue = details.rankTier
+                ? { tier: details.rankTier, lp: details.rankLp }
+                : details.rank_tier
+                    ? { tier: details.rank_tier, lp: details.rank_lp }
+                    : details.queue === 'flex' ? sourceAccount.flex : sourceAccount.soloq;
+            const profileIconId = Number(sourceAccount.profileIconId);
+            const profileIcon = Number.isInteger(profileIconId) && profileIconId > 0 && ddragon.version
+                ? `https://ddragon.leagueoflegends.com/cdn/${ddragon.version}/img/profileicon/${profileIconId}.png`
+                : '';
+            const riotId = details.riotId || sourceAccount.riotId || '';
+            const name = hiddenId
+                ? own ? t('duoAccountNumber').replace('{n}', String(index + 1)) : t('duoAccountHidden')
+                : riotId || (!hiddenLogin ? sourceAccount.loginUser : '') || t('duoUnknownAccount');
+            const rank = duoRankDetails(rankQueue, hiddenRank);
+            const winRateValue = details.winRate !== undefined ? details.winRate : details.win_rate;
+            return {
+                type: own ? 'own' : 'friend',
+                id: details.id,
+                ownerId: details.ownerId || details.owner_id || '',
+                accountId: sourceAccount.id || details.accountId || details.account_key || '',
+                riotId,
+                summonerId: sourceAccount.summonerId || details.summonerId || '',
+                displayName: name,
+                region: details.region || sourceAccount.region || 'euw',
+                profileIcon: sourceAccount.profileIcon || profileIcon,
+                rank,
+                winRate: hiddenRank ? t('duoHidden')
+                    : winRateValue !== null && winRateValue !== undefined && winRateValue !== ''
+                        && Number.isFinite(Number(winRateValue)) ? `${Number(winRateValue)}%`
+                        : getDuoWinRate(sourceAccount),
+                queue: details.queue || 'soloDuo',
+                primaryRole: details.primaryRole || '',
+                secondaryRole: details.secondaryRole || '',
+                playStyle: details.playStyle || details.play_style || '',
+                voice: details.voice || 'any',
+                goal: details.goal || '',
+                publishedAt: details.publishedAt || details.created_at && Date.parse(details.created_at) || Date.now(),
+                tacticalTags: Array.isArray(sourceAccount.tacticalTags) ? sourceAccount.tacticalTags : []
+            };
+        }
+
+        function duoFriendEntries() {
+            const entries = [];
+            const seen = new Set(readAccounts().map(account => String(account.riotId || '').toLocaleLowerCase()).filter(Boolean));
+            const contacts = [
+                ...(Array.isArray(settings.friendRivals) ? settings.friendRivals : []),
+                ...duoLcuFriends
+            ];
+            contacts.forEach((friend, index) => {
+                const riotId = String(friend && friend.riotId || '').trim();
+                if (!riotId || seen.has(riotId.toLocaleLowerCase())) return;
+                seen.add(riotId.toLocaleLowerCase());
+                const current = {
+                    ...friend,
+                    id: friend.id || `lcu-friend-${index}`,
+                    riotId,
+                    region: friend.region || 'euw',
+                    soloq: friend.soloq || { tier: 'UNRANKED', lp: 0 },
+                    flex: friend.flex || { tier: 'UNRANKED', lp: 0 },
+                    recentGames: Array.isArray(friend.recentGames) ? friend.recentGames : []
+                };
+                entries.push(duoCreateEntry(current, {
+                    id: current.id,
+                    queue: 'soloDuo',
+                    primaryRole: '',
+                    secondaryRole: '',
+                    playStyle: current.note || '',
+                    publishedAt: current.opggUpdatedAt || Date.now()
+                }, index, false));
+            });
+            return entries;
+        }
+
+        let duoRenderedEntries = [];
+
+        function renderDuoCard(entry, index) {
+            const tierIcon = tierIcons[entry.rank.tier] || tierIcons.UNRANKED;
+            const avatar = entry.profileIcon
+                ? `<img src="${escapeHtml(entry.profileIcon)}" alt="" aria-hidden="true">`
+                : `<span>${escapeHtml((entry.displayName || '?').slice(0, 1).toUpperCase())}</span>`;
+            const roles = [entry.primaryRole, entry.secondaryRole].filter(Boolean);
+            const roleChips = roles.length
+                ? roles.map(role => `<span class="duo-role-chip">${escapeHtml(duoRoleLabel(role))}</span>`).join('')
+                : `<span class="duo-role-chip is-muted">${escapeHtml(t('duoRoleFlexible'))}</span>`;
+            const tags = entry.tacticalTags.map(id => TACTICAL_TAGS.find(tag => tag.id === id)).filter(Boolean);
+            const tagMarkup = tags.map(tag => `<span class="rival-tactical-badge ${tag.id}">${escapeHtml(t(tag.labelKey))}</span>`).join('');
+            const age = Math.max(0, Math.floor((Date.now() - entry.publishedAt) / 60000));
+            const ageText = age < 1 ? t('duoJustNow') : age < 60
+                ? t('duoMinutesAgo').replace('{n}', String(age))
+                : t('duoHoursAgo').replace('{n}', String(Math.floor(age / 60)));
+            const ownerActions = entry.type === 'own'
+                ? `<button type="button" class="duo-card-action is-secondary" data-duo-action="renew" data-duo-index="${index}">${escapeHtml(t('duoRenew'))}</button>
+                   <button type="button" class="duo-card-action is-danger" data-duo-action="delete" data-duo-index="${index}">${escapeHtml(t('duoDelete'))}</button>`
+                : `<button type="button" class="duo-card-action is-primary" data-duo-action="invite" data-duo-index="${index}">${escapeHtml(t('duoInviteToLobby'))}</button>`;
+            const voice = entry.voice === 'yes' ? t('duoVoiceYes') : entry.voice === 'no' ? t('duoVoiceNo') : t('duoVoiceAny');
+            const queueName = t(entry.queue === 'flex' ? 'duoQueueFlex' : 'duoQueueSolo');
+            const region = regionLabel(entry.region);
+            return `<article class="duo-listing-card ${entry.type === 'own' ? 'is-own' : ''}" role="listitem">
+                <div class="duo-listing-player">
+                    <div class="duo-listing-avatar">${avatar}</div>
+                    <div class="duo-listing-identity">
+                        <div class="duo-listing-name-row">
+                            <strong>${escapeHtml(entry.displayName)}</strong>
+                            ${entry.type === 'own' ? `<span class="duo-owner-badge">${escapeHtml(t('duoYourListing'))}</span>` : ''}
+                        </div>
+                        <span class="duo-listing-region">${escapeHtml(region)} · ${escapeHtml(entry.type === 'own' ? queueName : t('duoFriendListing'))} · ${escapeHtml(ageText)}</span>
+                    </div>
+                </div>
+                <div class="duo-listing-rank">
+                    <img src="${escapeHtml(tierIcon)}" alt="" aria-hidden="true">
+                    <div><strong>${escapeHtml(entry.rank.text)}</strong><span>${escapeHtml(t('duoWinRate'))}: ${escapeHtml(entry.winRate)}</span></div>
+                </div>
+                <div class="duo-listing-preferences">
+                    <div class="duo-listing-roles">${roleChips}</div>
+                    <div class="duo-listing-tactics">
+                        ${entry.playStyle ? `<span>✦ ${escapeHtml(entry.playStyle)}</span>` : ''}
+                        <span>${escapeHtml(t('duoVoice'))}: ${escapeHtml(voice)}</span>
+                        ${entry.goal ? `<span>${escapeHtml(t('duoGoal'))}: ${escapeHtml(entry.goal)}</span>` : ''}
+                        ${tagMarkup}
+                    </div>
+                </div>
+                <div class="duo-listing-actions">${ownerActions}</div>
+            </article>`;
+        }
+
+        function renderDuoFeed() {
+            const accounts = readAccounts();
+            const accountIndex = new Map(accounts.map((account, index) => [account.id, index]));
+            const ownerId = window.aurumDuoFinder.getOwnerId();
+            const globalEntries = window.aurumDuoFinder.getPosts()
+                .map(post => {
+                    const account = accounts.find(item => item.id === post.accountId);
+                    const own = post.ownerId
+                        ? post.ownerId === ownerId
+                        : !window.aurumDuoFinder.isOnline();
+                    return duoCreateEntry(account || post, post, account ? accountIndex.get(account.id) || 0 : 0, own);
+                })
+                .filter(Boolean);
+            const globalIds = new Set(globalEntries.map(entry => entry.riotId.toLocaleLowerCase()).filter(Boolean));
+            const friendEntries = duoFriendEntries().filter(entry => !globalIds.has(entry.riotId.toLocaleLowerCase()));
+            const queueFilter = duoQueueFilter.value;
+            const roleFilter = duoRoleFilter.value;
+            const allEntries = [...globalEntries, ...friendEntries].filter(entry => {
+                const matchesQueue = queueFilter === 'all' || entry.type === 'friend' || entry.queue === queueFilter;
+                const matchesRole = roleFilter === 'all' || entry.type === 'friend'
+                    || entry.primaryRole === roleFilter || entry.secondaryRole === roleFilter;
+                return matchesQueue && matchesRole;
+            });
+            duoRenderedEntries = allEntries;
+            duoFeed.innerHTML = allEntries.map(renderDuoCard).join('');
+            duoFeed.hidden = allEntries.length === 0;
+            duoFeedEmpty.hidden = allEntries.length > 0;
+            duoFeedEmpty.classList.toggle('is-offline', !window.aurumDuoFinder.isOnline());
+        }
+
+        function renderDuoPublishForm() {
+            const accounts = readAccounts();
+            const profile = window.aurumDuoFinder.getProfile();
+            const selectedId = accounts.some(account => account.id === profile.accountId)
+                ? profile.accountId
+                : accounts.some(account => account.id === activeClientAccountId)
+                    ? activeClientAccountId
+                    : accounts[0] && accounts[0].id || '';
+            duoAccountSelect.innerHTML = accounts.length
+                ? accounts.map((account, index) => `<option value="${escapeHtml(account.id)}">${escapeHtml(duoAccountLabel(account, index))}</option>`).join('')
+                : `<option value="">${escapeHtml(t('duoNoAccounts'))}</option>`;
+            duoAccountSelect.disabled = !accounts.length;
+            duoAccountSelect.value = selectedId;
+            duoPrimaryRole.innerHTML = duoRoleOptions(profile.primaryRole);
+            duoPrimaryRole.value = profile.primaryRole;
+            duoSecondaryRole.innerHTML = duoRoleOptions('');
+            duoSecondaryRole.value = profile.secondaryRole;
+            duoQueueSelect.value = profile.queue;
+            duoPlayStyle.value = profile.playStyle;
+            duoVoiceSelect.value = profile.voice;
+            duoGoalInput.value = profile.goal;
+            duoPublishButton.disabled = !accounts.length;
+            duoPublicConsent.checked = false;
+        }
+
+        function setDuoPublishStatus(messageKey, state = '') {
+            duoPublishStatus.textContent = messageKey ? t(messageKey) : '';
+            if (state) duoPublishStatus.dataset.state = state;
+            else delete duoPublishStatus.dataset.state;
+        }
+
+        function openDuoPublish() {
+            renderDuoPublishForm();
+            setDuoPublishStatus('');
+            duoPublishModal.style.display = 'flex';
+            duoPublishModal.setAttribute('aria-hidden', 'false');
+            duoAccountSelect.focus();
+        }
+
+        function closeDuoPublish() {
+            duoPublishModal.style.display = 'none';
+            duoPublishModal.setAttribute('aria-hidden', 'true');
+        }
+
+        function renderDuoMatch() {
+            renderDuoFeed();
+            if (duoPublishModal.style.display === 'flex') renderDuoPublishForm();
+        }
+
+        function openAurumMatch() {
+            renderDuoMatch();
+            setDuoBoardStatus('');
+            aurumMatchModal.style.display = 'flex';
+            aurumMatchModal.setAttribute('aria-hidden', 'false');
+            syncDuoLcuFriends();
+        }
+
+        function closeAurumMatch() {
+            closeDuoPublish();
+            aurumMatchModal.style.display = 'none';
+            aurumMatchModal.setAttribute('aria-hidden', 'true');
+        }
+
+        async function publishDuoAnnouncement(event) {
+            event.preventDefault();
+            if (!duoAccountSelect.value) {
+                setDuoPublishStatus('duoNoAccountForAnnouncement', 'error');
+                return;
+            }
+            if (!duoPublicConsent.checked) {
+                setDuoPublishStatus('duoPublicConsentRequired', 'error');
+                return;
+            }
+            const account = readAccounts().find(item => item.id === duoAccountSelect.value);
+            if (!account || !account.riotId) {
+                setDuoPublishStatus('duoPublicIdentityMissing', 'error');
+                return;
+            }
+            const queue = duoQueueSelect.value === 'flex' ? account.flex : account.soloq;
+            const profile = window.aurumDuoFinder.getProfile();
+            const profileToSave = {
+                ...profile,
+                accountId: account.id,
+                primaryRole: duoPrimaryRole.value,
+                secondaryRole: duoSecondaryRole.value,
+                queue: duoQueueSelect.value,
+                playStyle: duoPlayStyle.value,
+                voice: duoVoiceSelect.value,
+                goal: duoGoalInput.value
+            };
+            duoPublishButton.disabled = true;
+            setDuoPublishStatus('duoPublishSending');
+            try {
+                const result = await window.aurumDuoFinder.publishPost({
+                    ...profileToSave,
+                    id: undefined,
+                    riotId: account.riotId,
+                    region: account.region,
+                    rankTier: queue && queue.tier || 'UNRANKED',
+                    rankLp: queue && queue.lp,
+                    winRate: getDuoWinRateValue(account)
+                });
+                window.aurumDuoFinder.saveProfile(profileToSave);
+                renderDuoFeed();
+                if (result.ok) {
+                    setDuoBoardStatus('duoPublished', 'success');
+                } else {
+                    setDuoBoardStatus('duoOfflinePublished', 'offline');
+                }
+                closeDuoPublish();
+            } catch (error) {
+                console.error('No se pudo publicar el anuncio de Aurum Match:', error);
+                setDuoPublishStatus('duoPublishError', 'error');
+            } finally {
+                duoPublishButton.disabled = false;
+            }
+        }
+
+        async function syncDuoLcuFriends() {
+            const lock = readLeagueClientLockfile() || latestGameClientLock;
+            if (!lock) {
+                if (window.aurumDuoFinder.isOnline()) setDuoBoardStatus('duoLcuOffline');
+                return;
+            }
+            try {
+                const response = await riotClientRequest('GET', '/lol-chat/v1/friends', lock);
+                if (!response.ok) {
+                    setDuoBoardStatus('duoFriendListError', 'error');
+                    return;
+                }
+                const friends = JSON.parse(response.body);
+                duoLcuFriends = (Array.isArray(friends) ? friends : []).map(friend => {
+                    const gameName = String(friend && (friend.gameName || friend.name || friend.displayName) || '').trim();
+                    const gameTag = String(friend && (friend.gameTag || friend.tagLine || friend.tag) || '').trim().replace(/^#/, '');
+                    const riotId = gameName && gameTag ? `${gameName}#${gameTag}` : '';
+                    return {
+                        ...friend,
+                        riotId,
+                        summonerId: friend && friend.summonerId,
+                        profileIconId: friend && friend.profileIconId
+                    };
+                }).filter(friend => friend.riotId);
+                if (window.aurumDuoFinder.isOnline()) setDuoBoardStatus('duoFriendListUpdated', 'success');
+                renderDuoFeed();
+            } catch (error) {
+                console.error('No se pudo actualizar la lista de amigos del LCU:', error);
+                setDuoBoardStatus('duoFriendListError', 'error');
+            }
+        }
+
+        async function inviteDuoEntry(entry) {
+            if (!entry || !entry.riotId) {
+                setDuoBoardStatus('duoFriendNotFound', 'error');
+                return;
+            }
+            const lock = readLeagueClientLockfile() || latestGameClientLock;
+            if (!lock) {
+                try {
+                    clipboard.writeText(entry.riotId);
+                    setDuoBoardStatus('duoInviteCopied', 'success');
+                } catch (error) {
+                    console.error('No se pudo copiar el Riot ID:', error);
+                    setDuoBoardStatus('duoCopyError', 'error');
+                }
+                return;
+            }
+
+            setDuoBoardStatus('duoInviteSending');
+            try {
+                let summonerId = Number(entry.summonerId);
+                if (!Number.isSafeInteger(summonerId) || summonerId <= 0) {
+                    const friendsResponse = await riotClientRequest('GET', '/lol-chat/v1/friends', lock);
+                    if (!friendsResponse.ok) {
+                        setDuoBoardStatus('duoFriendListError', 'error');
+                        return;
+                    }
+                    const separator = entry.riotId.lastIndexOf('#');
+                    const targetName = entry.riotId.slice(0, separator).trim().toLocaleLowerCase();
+                    const targetTag = entry.riotId.slice(separator + 1).trim().toLocaleLowerCase();
+                    const friends = JSON.parse(friendsResponse.body);
+                    const friend = (Array.isArray(friends) ? friends : []).find(item => {
+                        const gameName = String(item && (item.gameName || item.name || item.displayName) || '').trim();
+                        const gameTag = String(item && (item.gameTag || item.tagLine || item.tag) || '').trim().replace(/^#/, '');
+                        return gameName.toLocaleLowerCase() === targetName && gameTag.toLocaleLowerCase() === targetTag;
+                    });
+                    summonerId = Number(friend && friend.summonerId);
+                }
+                if (!Number.isSafeInteger(summonerId) || summonerId <= 0) {
+                    setDuoBoardStatus('duoFriendNotFound', 'error');
+                    return;
+                }
+                const response = await riotClientRequest(
+                    'POST',
+                    '/lol-lobby/v2/lobby/invitations',
+                    lock,
+                    5000,
+                    [{ toSummonerId: summonerId }]
+                );
+                if (!response.ok) {
+                    setDuoBoardStatus('duoInviteError', 'error');
+                    return;
+                }
+                setDuoBoardStatus('duoInviteSent', 'success');
+            } catch (error) {
+                console.error('No se pudo invitar desde el cliente LCU:', error);
+                setDuoBoardStatus('duoInviteError', 'error');
+            }
+        }
+
+        async function handleDuoFeedAction(event) {
+            const button = event.target.closest('[data-duo-action]');
+            if (!button) return;
+            const index = Number(button.dataset.duoIndex);
+            const entry = duoRenderedEntries[index];
+            if (!entry) return;
+            if (button.dataset.duoAction === 'invite') {
+                await inviteDuoEntry(entry);
+                return;
+            }
+            if (entry.type !== 'own') return;
+            button.disabled = true;
+            const result = button.dataset.duoAction === 'renew'
+                ? await window.aurumDuoFinder.renewPost(entry.id)
+                : await window.aurumDuoFinder.deletePost(entry.id);
+            button.disabled = false;
+            if (!result.ok) {
+                setDuoBoardStatus('duoPostUpdateError', 'error');
+                return;
+            }
+            const action = button.dataset.duoAction;
+            setDuoBoardStatus(result.offline
+                ? action === 'renew' ? 'duoOfflinePostRenewed' : 'duoOfflinePostDeleted'
+                : action === 'renew' ? 'duoPostRenewed' : 'duoPostDeleted',
+            result.offline ? 'offline' : 'success');
+            renderDuoFeed();
+        }
+
+        document.getElementById('btn-aurum-match').addEventListener('click', openAurumMatch);
+        document.getElementById('aurum-match-close').addEventListener('click', closeAurumMatch);
+        aurumMatchModal.addEventListener('click', event => {
+            if (event.target === aurumMatchModal) closeAurumMatch();
+        });
+        document.getElementById('duo-publish-open').addEventListener('click', openDuoPublish);
+        document.getElementById('duo-publish-empty').addEventListener('click', openDuoPublish);
+        document.getElementById('duo-publish-close').addEventListener('click', closeDuoPublish);
+        document.getElementById('duo-publish-cancel').addEventListener('click', closeDuoPublish);
+        duoPublishModal.addEventListener('click', event => {
+            if (event.target === duoPublishModal) closeDuoPublish();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape') return;
+            if (duoPublishModal.style.display === 'flex') closeDuoPublish();
+            else if (aurumMatchModal.style.display === 'flex') closeAurumMatch();
+        });
+        duoPublishForm.addEventListener('submit', publishDuoAnnouncement);
+        duoQueueFilter.addEventListener('change', renderDuoFeed);
+        duoRoleFilter.addEventListener('change', renderDuoFeed);
+        duoFeed.addEventListener('click', handleDuoFeedAction);
+        document.getElementById('duo-refresh').addEventListener('click', syncDuoLcuFriends);
+        window.aurumDuoFinder.initialize(({ online }) => {
+            setDuoBoardStatus(online ? 'duoGlobalOnline' : 'duoOfflineMode', online ? 'success' : 'offline');
+            renderDuoFeed();
+        }).catch(error => {
+            console.error('No se pudo iniciar el tablón de Aurum Match:', error);
+            setDuoBoardStatus('duoOfflineMode', 'offline');
+            renderDuoFeed();
+        });
+
+        function renderRankedFocusWidget(state) {
+            const isActive = !!(state && state.active);
+            rankedFocusWidget.hidden = !isActive;
+            rankedFocusWidget.setAttribute('aria-hidden', String(!isActive));
+            if (!isActive) return;
+
+            const totalMinutes = Math.floor(state.elapsedSeconds / 60);
+            const seconds = state.elapsedSeconds % 60;
+            const minutes = totalMinutes % 60;
+            const hours = Math.floor(totalMinutes / 60);
+            rankedFocusTimer.textContent = hours
+                ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+                : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            rankedFocusQueue.textContent = t(state.queueType === 'flex' ? 'focusQueueFlex' : 'focusQueueSoloDuo');
+            rankedFocusAccount.textContent = state.accountLabel || t('focusAccountUnknown');
+        }
+
+        window.addEventListener('aurum-ranked-focus-change', event => {
+            renderRankedFocusWidget(event.detail);
+        });
+
+        function setSettingsCategory(category, focusTab = false) {
+            const selectedTab = settingsTabs.find(tab => tab.dataset.settingsTab === category);
+            if (!selectedTab) return;
+
+            activeSettingsCategory = category;
+            settingsTabs.forEach(tab => {
+                const isSelected = tab === selectedTab;
+                tab.classList.toggle('is-active', isSelected);
+                tab.setAttribute('aria-selected', String(isSelected));
+                tab.tabIndex = isSelected ? 0 : -1;
+            });
+            settingsSections.forEach(section => {
+                section.hidden = section.dataset.settingsCategory !== category;
+            });
+            settingsContent.setAttribute('aria-labelledby', selectedTab.id);
+
+            try {
+                localStorage.setItem(SETTINGS_CATEGORY_STORAGE_KEY, category);
+            } catch (error) {
+                console.error('No se pudo guardar la categoría de Ajustes:', error);
+            }
+            if (focusTab) selectedTab.focus();
+        }
+
         function fillSettingsForm() {
             setLanguageSel.value = currentLang;
+            setVisualTheme.value = window.aurumTheme.getTheme();
             setLaunchStartup.checked = settings.launchAtStartup;
             setStartMinimized.checked = settings.startMinimized;
             setChristmasTheme.checked = settings.christmasTheme;
+            setRankedFocus.checked = window.aurumFocusMode.getState().enabled;
             setAutoRefresh.checked = settings.autoRefresh;
+            const soundState = window.aurumSoundboard.getState();
+            soundboardVolume.value = String(soundState.volume);
+            soundboardVolumeValue.value = `${soundState.volume}%`;
+            soundboardVolumeValue.textContent = `${soundState.volume}%`;
+            christmasMusicVolumeInput.value = String(christmasMusicVolume);
+            christmasMusicVolumeValue.value = `${christmasMusicVolume}%`;
+            christmasMusicVolumeValue.textContent = `${christmasMusicVolume}%`;
             setRankNotifications.checked = settings.rankChangeNotifications;
             setDesktopNotifications.checked = settings.desktopRankNotifications;
             setRefreshMinutes.value = settings.refreshMinutes;
@@ -3420,6 +4686,7 @@
             accountsCountLabel.textContent = readAccounts().length;
             document.getElementById('app-version-label').textContent = remoteApp.getVersion();
             fillSettingsForm();   // Cancelar descarta cambios: el formulario siempre parte de lo guardado
+            setSettingsCategory(activeSettingsCategory);
             settingsModal.style.display = 'flex';
         }
 
@@ -3455,6 +4722,49 @@
             highlightPreset(parseInt(setRefreshMinutes.value, 10));
         });
         setAutoRefresh.addEventListener('change', syncDependentControls);
+        soundboardVolume.addEventListener('input', () => {
+            try {
+                const state = window.aurumSoundboard.setVolume(soundboardVolume.value);
+                soundboardVolumeValue.value = `${state.volume}%`;
+                soundboardVolumeValue.textContent = `${state.volume}%`;
+            } catch (error) {
+                console.error('No se pudo guardar el volumen de audio:', error);
+                soundboardVolume.value = String(window.aurumSoundboard.getState().volume);
+            }
+        });
+        christmasMusicVolumeInput.addEventListener('input', () => {
+            const volume = Math.max(0, Math.min(100, Math.round(Number(christmasMusicVolumeInput.value))));
+            try {
+                localStorage.setItem(CHRISTMAS_MUSIC_VOLUME_KEY, String(volume));
+                christmasMusicVolume = volume;
+                christmasMusicVolumeValue.value = `${volume}%`;
+                christmasMusicVolumeValue.textContent = `${volume}%`;
+                if (christmasMusicPlaying) fadeChristmasAudio(christmasMusicVolume / 100);
+            } catch (error) {
+                console.error('No se pudo guardar el volumen de la música ambiental:', error);
+                christmasMusicVolumeInput.value = String(christmasMusicVolume);
+            }
+        });
+        document.querySelectorAll('[data-sound-preview]').forEach(button => {
+            button.addEventListener('click', () => {
+                try {
+                    window.aurumSoundboard.play(button.dataset.soundPreview);
+                } catch (error) {
+                    console.error('No se pudo reproducir la vista previa de audio:', error);
+                }
+            });
+        });
+        soundboardToggle.addEventListener('click', () => {
+            try {
+                window.aurumSoundboard.toggleMuted();
+                refreshSoundboardButton();
+            } catch (error) {
+                console.error('No se pudo actualizar el silencio de audio:', error);
+            }
+        });
+        setVisualTheme.addEventListener('change', () => {
+            setVisualTheme.value = window.aurumTheme.setTheme(setVisualTheme.value);
+        });
         setLaunchStartup.addEventListener('change', syncDependentControls);
         setDesktopNotifications.addEventListener('change', async () => {
             if (setDesktopNotifications.checked && !(await ensureDesktopNotificationPermission())) {
@@ -3476,6 +4786,7 @@
             settings = {
                 ...settings,
                 language: setLanguageSel.value,
+                visualTheme: window.aurumTheme.setTheme(setVisualTheme.value),
                 launchAtStartup: setLaunchStartup.checked,
                 startMinimized: setStartMinimized.checked,
                 christmasTheme: setChristmasTheme.checked,
@@ -3496,6 +4807,14 @@
                 trayShortcut: pendingShortcut,
                 trayHintShown: settings.trayHintShown
             };
+            try {
+                window.aurumFocusMode.setEnabled(setRankedFocus.checked);
+                updateRankedFocusState();
+            } catch (error) {
+                console.error('No se pudo guardar la preferencia de Ranked Focus:', error);
+                setRankedFocus.checked = window.aurumFocusMode.getState().enabled;
+                showNeonNotification(t('focusSaveError'));
+            }
             saveSettings();
             applyChristmasTheme();
             applyStreamerMode();
@@ -3518,30 +4837,24 @@
             showNeonNotification(t('settingsSaved'));
         });
 
-        christmasAudioToggle.addEventListener('click', async () => {
-            christmasMusicMuted = christmasMusicPlaying && !christmasMusicMuted;
-            try {
-                localStorage.setItem(CHRISTMAS_MUSIC_PREFERENCE_KEY, String(christmasMusicMuted));
-            } catch (error) {
-                console.error('No se pudo guardar la preferencia de música navideña:', error);
-            }
-
-            if (christmasMusicMuted) {
-                stopChristmasMusic();
-                return;
-            }
-
-            try {
-                await startChristmasMusic();
-            } catch (error) {
-                console.error('No se pudo iniciar la música navideña:', error);
-                showNeonNotification(t('christmasMusicError'));
-            }
-            updateChristmasMusicButton();
-        });
         btnSettings.addEventListener('click', openSettings);
         btnCloseSettings.addEventListener('click', closeSettings);
         btnXSettings.addEventListener('click', closeSettings);
+        settingsTabs.forEach(tab => {
+            tab.addEventListener('click', () => setSettingsCategory(tab.dataset.settingsTab));
+            tab.addEventListener('keydown', event => {
+                const currentIndex = settingsTabs.indexOf(tab);
+                let nextIndex = currentIndex;
+                if (event.key === 'ArrowDown' || event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % settingsTabs.length;
+                else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + settingsTabs.length) % settingsTabs.length;
+                else if (event.key === 'Home') nextIndex = 0;
+                else if (event.key === 'End') nextIndex = settingsTabs.length - 1;
+                else return;
+                event.preventDefault();
+                setSettingsCategory(settingsTabs[nextIndex].dataset.settingsTab, true);
+            });
+        });
+        setSettingsCategory(activeSettingsCategory);
         settingsModal.addEventListener('mousedown', (e) => { if (e.target === settingsModal) closeSettings(); });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && settingsModal.style.display === 'flex') closeSettings();
@@ -3618,6 +4931,8 @@
             cl.toggle('st-pass', !!settings.streamerPass);
             streamerBtn.classList.toggle('active', on);
             streamerBtn.setAttribute('aria-pressed', String(on));
+            updateRankedFocusState();
+            renderDuoMatch();
             if (on && settings.streamerPass) accPassword.type = 'password';   // si estaba a la vista, se vuelve a ocultar
             populateCategorySelect(readAccounts());
             syncTray();   // el menú de la bandeja también oculta nombres y marca la casilla
@@ -3820,6 +5135,8 @@
         applyLanguage();
         syncWithGameClient();
         setInterval(syncWithGameClient, 5000);
+        pollGameflowPhase();
+        setInterval(pollGameflowPhase, 750);
         if (accountsRecovered) showNeonNotification(t('accountsRecovered'));
         // Refresca la ruta del inicio con Windows: si la app se actualiza y cambia de nombre o de
         // carpeta, la entrada que registró la versión anterior quedaría apuntando a un .exe que ya no existe.

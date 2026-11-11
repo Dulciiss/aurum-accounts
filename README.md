@@ -29,6 +29,16 @@ Aplicación de escritorio (Electron) para guardar todas tus cuentas de League of
 - **Historial de Solo/Dúo y Flex** con gráfica del progreso, guardado local de hasta 180 cambios y avisos en la app o en Windows al subir o bajar de división/rango. La primera consulta establece la referencia y no genera avisos.
 - **Notificaciones de escritorio nativas**: avisos opcionales en el sistema operativo para enterarte al instante de los cambios de LP o de división tanto en tus cuentas como en tus amigos.
 - **Sección de Amigos y Rivales**: vista independiente para realizar un seguimiento de perfiles externos mediante su Riot ID, con notas personalizadas, historiales propios e integración de actualización con OP.GG.
+- **Temas visuales Season II**: cambia entre Hextech, Void y Soul Fighter desde Ajustes; la selección se aplica al instante y se conserva al volver a abrir la app.
+- **Aurum Trophies**: logros automáticos por cuenta para rachas, ascensos de LP, remontadas, partidas nocturnas y colección de cuentas; sus desbloqueos y fechas se conservan localmente.
+- **Maestría de cuenta Season III / Ascendancy**: gana XP al iniciar sesión, detectar partidas recientes nuevas o desbloquear logros. Cada cuenta progresa por siete niveles, desbloquea títulos equipables y muestra un badge con barra de progreso; los niveles 5 y 7 realzan sutilmente el borde de la tarjeta. El progreso se guarda localmente por PUUID (con Riot ID/ID local como alternativa).
+- **Cofres Hextech diarios**: abre un cofre diario y consigue cofres extra por cada tres logros distintos. Las recompensas locales incluyen XP de maestría, emblemas temporales o permanentes para Gamer Cards y consejos tácticos originales que quedan en tu colección.
+- **Soundboard ambiental Season III**: efectos cristalinos sintetizados localmente con Web Audio para inicios de sesión, cofres, niveles y `ReadyCheck` del cliente LCU. El volumen y el silencio se guardan en la app; el audio se activa tras una interacción del usuario.
+- **Ranked Focus**: al activarlo, reduce distracciones y muestra un temporizador flotante con la cuenta activa durante partidas clasificatorias Solo/Dúo o Flex detectadas por el LCU; al salir de la partida restaura la interfaz.
+- **Aurum Match**: tablón global para publicar anuncios de Dúo o Flex, filtrar por cola y rol, y gestionar tus publicaciones. Muestra rangos y estadísticas disponibles; puedes invitar desde el LCU o copiar el Riot ID si el cliente no está abierto. Publicar requiere confirmar que el Riot ID, región, rango y winrate serán visibles globalmente durante un máximo de dos horas. El modo streamer los oculta en la interfaz, pero no sustituye el consentimiento ni elimina un anuncio ya publicado. Si Supabase no está disponible, la app usa anuncios locales y amigos seguidos como alternativa.
+- **Gamer Cards exportables**: genera una tarjeta PNG con el tema activo, Riot ID, rango, estadísticas recientes y trofeos; puedes previsualizarla y descargarla desde cada cuenta.
+- **Rival Radar**: asigna hasta dos badges tácticos a cada amigo o rival y consulta su racha y porcentaje de victorias recientes.
+- **Poro Dodge**: juega con un Poro mientras esperas en Lobby o Matchmaking; esquiva habilidades, recoge galletas, guarda tu récord local y desbloquea el logro secreto al conseguir 500 puntos. Se oculta automáticamente al aparecer `ReadyCheck`.
 - **Tema navideño opcional**: un toque festivo con detalles en las tarjetas y un sutil paisaje SVG de pinos nevados anclado en la parte inferior.
 - **Diagnóstico seguro** desde Ajustes: copia al portapapeles un informe Markdown de versiones, arquitectura y servicios, sin nombres de cuenta, credenciales ni rutas locales.
 - **Añadir cuentas** una a una o **en bloque** (`usuario:contraseña:región:RiotID#TAG`; región y Riot ID son opcionales).
@@ -50,12 +60,23 @@ Requiere **Windows 10/11 de 64 bits** y el **Riot Client** instalado.
 
 > **Windows SmartScreen:** la aplicación no está firmada digitalmente, así que Windows puede mostrar el aviso *"Windows protegió su PC"*. Pulsa **Más información → Ejecutar de todos modos**. Si prefieres no fiarte de un `.exe`, puedes revisar todo el código de este repositorio y compilarlo tú mismo (ver [Desarrollo](#desarrollo)).
 
+### Configurar el tablón global de Aurum Match
+
+Para habilitar Aurum Match global en una instancia Supabase:
+
+1. Activa **Anonymous Sign-Ins** en la configuración de autenticación del proyecto.
+2. Ejecuta `supabase/migrations/20261111180000_create_duo_announcements.sql` en el SQL Editor. La migración crea la tabla, limita las escrituras al propietario mediante RLS y añade la tabla a la publicación Realtime.
+3. La aplicación conserva la sesión anónima localmente. Cada instalación tiene su propia identidad; reinstalar o borrar los datos de la app puede impedir gestionar los anuncios anteriores creados por esa identidad.
+4. Los anuncios solo se publican tras marcar la casilla de consentimiento. Los lectores solo pueden consultar publicaciones recientes; los anuncios expirados no aparecen en el feed y la app conserva el modo local si Supabase falla.
+
+La clave `sb_publishable_...` incluida en el renderer es una clave pública de cliente y no debe sustituirse por una `service_role` o un secreto. La privacidad y autorización dependen de RLS, no de ocultar esa clave.
+
 ### Seguridad y privacidad
 
 - **Las contraseñas se guardan cifradas** con la protección de datos de Windows (DPAPI, a través de `safeStorage` de Electron). Solo pueden descifrarse con **tu mismo usuario de Windows en este mismo equipo**.
 - Los datos (`accounts.json` y `settings.json`) se guardan **en local**, en la carpeta de datos de la aplicación. Puedes abrirla desde **Ajustes → Abrir carpeta de datos**.
 - La app **no envía tus credenciales a ningún servidor**: solo las escribe en el Riot Client de tu propio PC, simulando el teclado mediante PowerShell.
-- La aplicación se conecta únicamente a: **OP.GG** (rangos y estadísticas), **Riot Data Dragon** y **Community Dragon** (imágenes de campeones y emblemas de rango), **GitHub** (comprobar actualizaciones) y las API locales del Riot Client (`127.0.0.1`) para abrir el juego y sincronizar la sesión activa. La sincronización consulta el cliente de League of Legends cada 5 segundos mientras está disponible.
+- La aplicación se conecta a **OP.GG** (rangos y estadísticas), **Riot Data Dragon** y **Community Dragon** (imágenes de campeones y emblemas de rango), **GitHub** (actualizaciones), **Supabase** (solo las publicaciones globales de Aurum Match, después del consentimiento explícito) y las API locales del Riot Client (`127.0.0.1`). Supabase usa autenticación anónima y políticas RLS; nunca se envían las credenciales de las cuentas. Los anuncios con más de dos horas dejan de ser visibles en el tablón, aunque sus filas permanecen en la base de datos hasta que se eliminen o se configure una tarea de limpieza.
 - **Copias de seguridad:** al exportar se copia `accounts.json`, con las contraseñas cifradas para tu usuario de Windows. Si lo importas en otro equipo o usuario, tendrás que volver a introducirlas. **Importar reemplaza la lista actual de cuentas.**
 - **Protección de datos:** `accounts.json` se escribe de forma segura y la app guarda una copia automática (`accounts.json.bak`). Si el archivo se daña, la app restaura la última copia buena y te avisa.
 - **No subas nunca tu `accounts.json` a ningún sitio público.** Está incluido en el `.gitignore` de este proyecto.
@@ -78,6 +99,7 @@ Estructura del proyecto:
 ├── style.css            # estilos base
 ├── css/app.css          # estilos de la interfaz
 ├── js/app.js            # lógica de la aplicación
+├── js/mastery.js        # XP, niveles y títulos por cuenta
 ├── js/translations.js   # todos los textos, en los 10 idiomas
 ├── icon.ico · logo.svg
 └── package.json
@@ -142,6 +164,16 @@ A desktop app (Electron) to keep all your League of Legends accounts in one plac
 - **Solo/Duo and Flex rank history** with a progress chart, up to 180 saved changes and in-app or Windows alerts when a division/tier changes. The first reading sets the baseline without an alert.
 - **Native desktop notifications**: optional OS-level alerts to instantly notify you of LP or tier promotions/demotions across your accounts and friends.
 - **Friends & Rivals section**: an independent view to monitor external profiles via Riot ID, featuring custom notes, independent histories, and automated OP.GG refreshing.
+- **Season II visual themes**: switch between Hextech, Void and Soul Fighter in Settings; the selected theme applies instantly and is restored when the app reopens.
+- **Aurum Trophies**: automatic per-account achievements for win streaks, LP climbs, comebacks, late-night games and account collections; unlocks and dates are stored locally.
+- **Season III / Ascendancy account mastery**: earn XP for signing in, detecting new recent games or unlocking achievements. Each account progresses through seven levels, unlocks equipable titles and displays a badge with an XP progress bar; levels 5 and 7 subtly accent the card border. Progress is stored locally by PUUID (with Riot ID/local ID as a fallback).
+- **Daily Hextech Chests**: open one chest per local calendar day and earn bonus chests for every three distinct achievements. Local rewards include mastery XP, temporary or permanent Gamer Card emblems, and original tactical tips saved to your collection.
+- **Season III ambient soundboard**: locally synthesized crystalline Web Audio effects for sign-ins, chests, mastery levels and the LCU `ReadyCheck`. Volume and mute preferences are saved in the app; audio starts after user interaction.
+- **Ranked Focus**: when enabled, it reduces distractions and displays a floating match timer with the active account during LCU-detected ranked Solo/Duo or Flex games; leaving the match restores the normal interface.
+- **Aurum Match**: a global Duo/Flex noticeboard with queue and role filters and listing management. Invite through the LCU or copy a Riot ID when the client is offline. Posting requires explicit confirmation that the Riot ID, region, rank and win rate will be visible globally for up to two hours. Streamer mode hides these details in the UI but does not replace consent or remove a listing already posted. If Supabase is unavailable, the app falls back to local listings and tracked friends.
+- **Exportable Gamer Cards**: create a PNG card using the active theme, Riot ID, rank, recent stats and trophies; preview and download it from each account.
+- **Rival Radar**: assign up to two tactical badges to each friend or rival and see their recent streak and win rate.
+- **Poro Dodge**: play as a Poro while waiting in Lobby or Matchmaking; dodge abilities, collect cookies, save your local high score and unlock a secret achievement at 500 points. It automatically hides when `ReadyCheck` appears.
 - **Optional Christmas theme**: a festive look with card decorations and a subtle snowy pine landscape SVG anchored at the bottom.
 - **Privacy-safe diagnostics** in Settings: copies a Markdown report of app/system versions, architecture and service status without account names, credentials or local paths.
 - **Add accounts** one by one or **en bulk** (`username:password:region:RiotID#TAG`; region and Riot ID are optional).
@@ -163,12 +195,23 @@ Requires **64-bit Windows 10/11** and the **Riot Client** installed.
 
 > **Windows SmartScreen:** the app is not digitally signed, so Windows may show a *"Windows protected your PC"* warning. Click **More info → Run anyway**. If you'd rather not trust an `.exe`, you can read all the code in this repository and build it yourself (see [Development](#development)).
 
+### Global Aurum Match board setup
+
+To enable the global board on a Supabase project:
+
+1. Enable **Anonymous Sign-Ins** in the project's authentication settings.
+2. Run `supabase/migrations/20261111180000_create_duo_announcements.sql` in the SQL Editor. It creates the table, restricts writes to each owner with RLS, and adds the table to the Realtime publication.
+3. The app persists the anonymous session locally. Each installation has its own identity; reinstalling or clearing app data may prevent managing older listings created by that identity.
+4. Listings are published only after the user checks the consent box. Readers can query recent listings only; expired posts are hidden from the feed and the app falls back to local mode if Supabase is unavailable.
+
+The renderer's `sb_publishable_...` key is a public client key; never replace it with a `service_role` key or secret. Privacy and authorization rely on RLS, not on hiding this key.
+
 ### Security and privacy
 
 - **Passwords are stored encrypted** using Windows data protection (DPAPI, through Electron's `safeStorage`). They can only be decrypted by **the same Windows user on the same computer**.
 - Data (`accounts.json` and `settings.json`) is stored **locally**, in the app's data folder. You can open it from **Settings → Open data folder**.
 - The app **does not send your credentials to any server**: it only types them into the Riot Client on your own PC, simulating the keyboard through PowerShell.
-- The app only connects to: **OP.GG** (ranks and stats), **Riot Data Dragon** and **Community Dragon** (champion images and rank emblems), **GitHub** (update checks) and the Riot Client's own local APIs (`127.0.0.1`) to launch the game and sync the active session. Sync polls the League of Legends client every 5 seconds while it is available.
+- The app connects to **OP.GG** (ranks and stats), **Riot Data Dragon** and **Community Dragon** (champion images and rank emblems), **GitHub** (updates), **Supabase** (only global Aurum Match listings after explicit consent) and the Riot Client's local APIs (`127.0.0.1`). Supabase uses anonymous authentication and RLS; account credentials are never sent. Listings older than two hours are no longer visible on the board, though their database rows remain until deleted or a cleanup job is configured.
 - **Backups:** exporting copies `accounts.json`, with passwords encrypted for your Windows user. If you import it on another computer or user, you will need to enter them again. **Importing replaces the current account list.**
 - **Data protection:** `accounts.json` is written safely and the app keeps an automatic backup (`accounts.json.bak`). If the file gets corrupted, the app restores the last good copy and lets you know.
 - **Never upload your `accounts.json` anywhere public.** It is already listed in this project's `.gitignore`.
@@ -191,6 +234,7 @@ Project structure:
 ├── style.css            # base styles
 ├── css/app.css          # UI styles
 ├── js/app.js            # application logic
+├── js/mastery.js        # per-account XP, levels and titles
 ├── js/translations.js   # all texts, in the 10 languages
 ├── icon.ico · logo.svg
 └── package.json

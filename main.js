@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain, safeStorage, Tray, Menu, nativeImage, Notif
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { fileURLToPath } = require('url');
+const https = require('https');
 const { createUpdater } = require('./updater');
 
 // ---------- Carpeta de datos fija ----------
@@ -243,6 +245,82 @@ ipcMain.handle('diagnostics:collect', (event) => {
     };
 });
 
+function assertGamerCardRenderer(event) {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const frameUrl = event.senderFrame && event.senderFrame.url;
+    let senderPath = '';
+    try { senderPath = frameUrl ? path.resolve(fileURLToPath(frameUrl)) : ''; } catch (error) { senderPath = ''; }
+    if (!window || window.isDestroyed() || senderPath !== path.resolve(path.join(__dirname, 'index.html'))) {
+        throw new Error('Gamer Card requests are only allowed from the application window.');
+    }
+}
+
+function fetchChampionSplash(championKey) {
+    if (typeof championKey !== 'string' || !/^[A-Za-z0-9]+$/.test(championKey)) {
+        return Promise.reject(new Error('Invalid champion key.'));
+    }
+
+    return new Promise((resolve, reject) => {
+        let settled = false;
+        const fail = error => {
+            if (settled) return;
+            settled = true;
+            reject(error);
+        };
+        const request = https.get(
+            `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championKey}_0.jpg`,
+            { headers: { Accept: 'image/jpeg' } },
+            response => {
+                if (response.statusCode !== 200 || !String(response.headers['content-type'] || '').startsWith('image/')) {
+                    response.resume();
+                    fail(new Error(`Champion splash request failed with HTTP ${response.statusCode || 'unknown'}.`));
+                    return;
+                }
+
+                const chunks = [];
+                let byteLength = 0;
+                const maxBytes = 15 * 1024 * 1024;
+                response.on('data', chunk => {
+                    byteLength += chunk.length;
+                    if (byteLength > maxBytes) {
+                        const error = new Error('Champion splash image exceeded the 15 MB limit.');
+                        fail(error);
+                        request.destroy(error);
+                        return;
+                    }
+                    chunks.push(chunk);
+                });
+                response.on('end', () => {
+                    if (settled) return;
+                    settled = true;
+                    const mimeType = String(response.headers['content-type']).split(';')[0];
+                    resolve(`data:${mimeType};base64,${Buffer.concat(chunks).toString('base64')}`);
+                });
+                response.on('error', fail);
+            }
+        );
+        request.setTimeout(8000, () => request.destroy(new Error('Champion splash request timed out.')));
+        request.on('error', fail);
+    });
+}
+
+ipcMain.handle('gamer-card:get-assets', async (event, championKey) => {
+    assertGamerCardRenderer(event);
+    const logoSvg = fs.readFileSync(path.join(__dirname, 'logo.svg'));
+    let splashDataUrl = null;
+    if (championKey) {
+        try {
+            splashDataUrl = await fetchChampionSplash(championKey);
+        } catch (error) {
+            console.warn('No se pudo cargar el splash art para la Gamer Card:', error.message);
+        }
+    }
+    return {
+        logoDataUrl: `data:image/svg+xml;base64,${logoSvg.toString('base64')}`,
+        splashDataUrl
+    };
+});
+
 function createWindow () {
     const win = new BrowserWindow({
         width: 1100,
@@ -254,6 +332,7 @@ function createWindow () {
         show: false, // se muestra en 'ready-to-show' para evitar parpadeos
         backgroundColor: '#0b0c10',
         webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: true,
             contextIsolation: false,
             // Con la ventana oculta en la bandeja, Chromium frenaría los temporizadores: el inicio de sesión
